@@ -64,6 +64,8 @@ namespace wkpdftoxcorelib
 
         private void FillSettings(IntPtr globalSettings, IntPtr objectSettings)
         {
+            // From https://wkhtmltopdf.org/libwkhtmltox/pagesettings.html#pagePdfGlobal
+            // Pdf global settings
             GlobalSetting(globalSettings, "size.width", PrintSettings.PaperSize.Width);
             GlobalSetting(globalSettings, "size.height", PrintSettings.PaperSize.Height);
             GlobalSetting(globalSettings, "orientation", PrintSettings.Orientation?.ToString());
@@ -84,8 +86,63 @@ namespace wkpdftoxcorelib
             GlobalSetting(globalSettings, "ImageDPI", PrintSettings.ImageDPI);
             GlobalSetting(globalSettings, "ImageQuality", PrintSettings.ImageQuality);
             GlobalSetting(globalSettings, "load.cookieJar", PrintSettings.CookieJar);
-            
+
+            // Toc settings
+            // ObjectSetting(objectSettings, "toc.useDottedLines", true);
+            // ObjectSetting(objectSettings, "toc.captionText", true);
+            // ObjectSetting(objectSettings, "toc.forwardLinks", true);
+            // ObjectSetting(objectSettings, "toc.backLinks", true);
+            // ObjectSetting(objectSettings, "toc.indentation", true);
+            // ObjectSetting(objectSettings, "toc.fontScale", true);
+            // ObjectSetting(objectSettings, "tocXsl", true);
+
+            ObjectSetting(objectSettings, "page", true);
+            ObjectSetting(objectSettings, "header", true);
+            ObjectSetting(objectSettings, "footer", true);
+            ObjectSetting(objectSettings, "useExternalLinks", PrintSettings.UseExternalLinks);
+            // ObjectSetting(objectSettings, "replacements", true);
+            ObjectSetting(objectSettings, "produceForms", PrintSettings.ProduceForms);
+            ObjectSetting(objectSettings, "includeInOutline", PrintSettings.IncludeInOutline);
+            ObjectSetting(objectSettings, "pagesCount", PrintSettings.PagesCount);
+
+            // Load settings
+            ObjectSetting(objectSettings, "load.username", LoadSettings.Username);
+            ObjectSetting(objectSettings, "load.password", LoadSettings.Password);
+            ObjectSetting(objectSettings, "load.jsdelay", LoadSettings.JSDelay);
+            ObjectSetting(objectSettings, "load.blockLocalFileAccess", LoadSettings.BlockLocalFileAccess);
+            ObjectSetting(objectSettings, "load.stopSlowScript", LoadSettings.StopSlowScript);
+            ObjectSetting(objectSettings, "load.debugJavascript", LoadSettings.DebugJavascript);
+            ObjectSetting(objectSettings, "load.loadErrorHandling", LoadSettings.LoadErrorHandling?.ToString());
+            ObjectSetting(objectSettings, "load.proxy", LoadSettings.Proxy);
+
+            // web settings
+            ObjectSetting(objectSettings, "web.background", PrintSettings.PrintBackground);
+            ObjectSetting(objectSettings, "web.loadImages", PrintSettings.LoadImages);
+            ObjectSetting(objectSettings, "web.enableJavascript", PrintSettings.EnableJavascript);
+            ObjectSetting(objectSettings, "web.enableIntelligentShrinking", PrintSettings.EnableIntelligentShrinking);
+            ObjectSetting(objectSettings, "web.minimumFontSize", PrintSettings.MinimumFontSize);
+            ObjectSetting(objectSettings, "web.printMediaType", PrintSettings.PrintMediaType);
+            ObjectSetting(objectSettings, "web.defaultEncoding", PrintSettings.DefaultEncoding);
+            // ObjectSetting(objectSettings, "web.userStyleSheet", false);
+            // ObjectSetting(objectSettings, "web.enablePlugins", false);
+
+            // headers and footers
+            HeaderFooter(objectSettings, "header", PrintSettings.Header);
+            HeaderFooter(objectSettings, "footer", PrintSettings.Footer);
         }
+
+        private void HeaderFooter(IntPtr objectSettings, string prefix, HeaderFooterSettings settings)
+        {
+            ObjectSetting(objectSettings, prefix + ".fontSize", settings.FontSize);
+            ObjectSetting(objectSettings, prefix + ".fontName", settings.FontName);
+            ObjectSetting(objectSettings, prefix + ".left", settings.Left);
+            ObjectSetting(objectSettings, prefix + ".center", settings.Center);
+            ObjectSetting(objectSettings, prefix + ".right", settings.Right);
+            ObjectSetting(objectSettings, prefix + ".line", settings.Line);
+            ObjectSetting(objectSettings, prefix + ".spacing", settings.Spacing);
+            // ObjectSetting(objectSettings, "header.htmlUrl", PrintSettings.Header.HtmlContent);
+        }
+            
 
         private void GlobalSetting(IntPtr settings, string name, string value)
         {
@@ -113,6 +170,11 @@ namespace wkpdftoxcorelib
         }
 
         private void ObjectSetting(IntPtr settings, string name, bool? value)
+        {
+
+        }
+        
+        private void ObjectSetting(IntPtr settings, string name, double? value)
         {
 
         }
