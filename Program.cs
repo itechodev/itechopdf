@@ -27,11 +27,12 @@ namespace wkpdftoxcorelib
             // Also in https://stackoverflow.com/questions/15299869/header-height-and-positioning-header-from-top-of-page-in-wkhtmltopdf. Height 1.3x body content. Why? I don't know
             // https://stackoverflow.com/questions/27443586/wkhtmltopdf-footer-size-issues
 
-            htmltopdf.PrintSettings.Margins.Top = Math.Ceiling(height / 1.3);
-            htmltopdf.PrintSettings.Margins.Bottom = Math.Ceiling(height / 1.3);
-            // htmltopdf.PrintSettings.DPI = 600;
-
-            htmltopdf.PrintSettings.EnableIntelligentShrinking = true;
+            htmltopdf.PrintSettings.Margins.Top = height; // Math.Ceiling(height / 1.3);
+            htmltopdf.PrintSettings.Margins.Bottom = height; // Math.Ceiling(height / 1.3);
+            
+            htmltopdf.PrintSettings.DPI = 600;
+            htmltopdf.PrintSettings.EnableIntelligentShrinking = false;
+            
             
             htmltopdf.PrintSettings.Header.HtmlContent = $"<!DOCTYPE html><body style='margin:0; background-color: lime;'><div style='display: inline-block; width: 20mm; height: {height}mm; background-color: pink'>Quite good header</div></body>";
             htmltopdf.PrintSettings.Header.Spacing = 0;
