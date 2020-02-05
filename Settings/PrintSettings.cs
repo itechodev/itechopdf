@@ -63,8 +63,8 @@
         /// </summary>
         public string DefaultEncoding { get; set; }
 
-        public HeaderFooterSettings Header { get; set; } = new HeaderFooterSettings();
-        public HeaderFooterSettings Footer { get; set; } = new HeaderFooterSettings();
+        public HeaderFooter Header { get; set; }
+        public HeaderFooter Footer { get; set; }
 
         /// <summary>
         /// The URL or path of the web page to convert, if "-" input is read from stdin. Default = ""

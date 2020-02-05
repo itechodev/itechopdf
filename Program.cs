@@ -34,10 +34,10 @@ namespace wkpdftoxcorelib
             htmltopdf.PrintSettings.EnableIntelligentShrinking = false;
             
             
-            htmltopdf.PrintSettings.Header.HtmlContent = $"<!DOCTYPE html><body style='margin:0; background-color: lime;'><div style='display: inline-block; width: 20mm; height: {height}mm; background-color: pink'>Quite good header</div></body>";
+            htmltopdf.PrintSettings.Header = new HtmlHeaderFooter($"<!DOCTYPE html><body style='margin:0; background-color: lime;'><div style='display: inline-block; width: 20mm; height: {height}mm; background-color: pink'>Quite good header</div></body>");
             htmltopdf.PrintSettings.Header.Spacing = 0;
             
-            htmltopdf.PrintSettings.Footer.HtmlContent = $"<!DOCTYPE html><body style='margin:0; padding:0; background-color: red; height: {height}mm;'>Print on {DateTime.Today.ToShortDateString()} - {DateTime.Now.ToLongTimeString()}</body>";
+            htmltopdf.PrintSettings.Footer = new HtmlHeaderFooter($"<!DOCTYPE html><body style='margin:0; padding:0; background-color: red; height: {height}mm;'>Print on {DateTime.Today.ToShortDateString()} - {DateTime.Now.ToLongTimeString()}</body>");
             htmltopdf.PrintSettings.Footer.Spacing = 0;
 
             var doc = htmltopdf.HtmlToPdf("<body style='background-color: yellow; margin:0; padding:0;'>To PDF seems to be working just fine</div>");

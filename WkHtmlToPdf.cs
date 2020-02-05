@@ -152,20 +152,32 @@ namespace wkpdftoxcorelib
             HeaderFooter(objectSettings, "footer", PrintSettings.Footer);
         }
 
-        private void HeaderFooter(IntPtr objectSettings, string prefix, HeaderFooterSettings settings)
+        private void HeaderFooter(IntPtr objectSettings, string prefix, HeaderFooter settings)
         {
-            ObjectSetting(objectSettings, prefix + ".fontSize", settings.FontSize);
-            ObjectSetting(objectSettings, prefix + ".fontName", settings.FontName);
-            ObjectSetting(objectSettings, prefix + ".left", settings.Left);
-            ObjectSetting(objectSettings, prefix + ".center", settings.Center);
-            ObjectSetting(objectSettings, prefix + ".right", settings.Right);
             ObjectSetting(objectSettings, prefix + ".line", settings.Line);
             ObjectSetting(objectSettings, prefix + ".spacing", settings.Spacing);
 
-            if (!String.IsNullOrEmpty(settings.HtmlContent))
+            if (settings is StandardHeaderFooter std)
             {
-                var file = CreateTempororyFile(settings.HtmlContent);
-                ObjectSetting(objectSettings, prefix + ".htmlUrl", file);
+                ObjectSetting(objectSettings, prefix + ".fontSize", std.FontSize);
+                ObjectSetting(objectSettings, prefix + ".fontName", std.FontName);
+                ObjectSetting(objectSettings, prefix + ".left", std.Left);
+                ObjectSetting(objectSettings, prefix + ".center", std.Center);
+                ObjectSetting(objectSettings, prefix + ".right", std.Right);
+                return;
+            }
+
+            if (settings is HtmlHeaderFooter html)
+            {
+                var tempfile = CreateTempororyFile(html.Html);
+                ObjectSetting(objectSettings, prefix + ".htmlUrl", tempfile);
+                return;
+            }
+
+            if (settings is FileHeaderFooter file)
+            {
+                ObjectSetting(objectSettings, prefix + ".htmlUrl", file.FilePath);
+                return;
             }
         }
 
