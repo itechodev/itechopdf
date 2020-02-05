@@ -31,7 +31,7 @@ namespace wkpdftoxcorelib
             // 6. The conversion is performed by calling wkhtmltopdf_convert.
             // 7. The converter object is destroyed by calling wkhtmltopdf_destroy_converter.
 
-            if (WkHtmlToXBinding.wkhtmltopdf_init(0) == 1)
+            if (WkHtmlToXBinding.wkhtmltopdf_init(0) != 1)
             {
                 throw new Exception("Could not initialize WkHtmlToPDF library");
             }
@@ -44,7 +44,7 @@ namespace wkpdftoxcorelib
 
             var converter = WkHtmlToXBinding.wkhtmltopdf_create_converter(globalSettings);
 
-            WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, "<p>Conversions done</p>");
+            WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, "<b>All</b> is working...");
             // WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, new byte[] { .. });
 
             if (!WkHtmlToXBinding.wkhtmltopdf_convert(converter))
