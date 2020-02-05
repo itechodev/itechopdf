@@ -9,8 +9,9 @@ namespace wkpdftoxcorelib
         {
             var worker = new WkHtmlToPdf();
             Console.WriteLine("WkHTML version:" + worker.GetVersion());
-            // worker.PrintSettings.UseLocalLinks = true;
-            worker.HtmlToPdf("To PDF seems to be working just fine");
+            
+            var doc = worker.HtmlToPdf("To PDF seems to be working just fine");
+            doc.SaveToFile("output.pdf");
         }
     }
 }

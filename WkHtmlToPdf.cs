@@ -84,8 +84,8 @@ namespace wkpdftoxcorelib
         {
             // From https://wkhtmltopdf.org/libwkhtmltox/pagesettings.html#pagePdfGlobal
             // Pdf global settings
-            GlobalSetting(globalSettings, "size.width", PrintSettings.PaperSize.Width);
-            GlobalSetting(globalSettings, "size.height", PrintSettings.PaperSize.Height);
+            GlobalSetting(globalSettings, "size.width", PrintSettings.PaperSize?.Width);
+            GlobalSetting(globalSettings, "size.height", PrintSettings.PaperSize?.Height);
             GlobalSetting(globalSettings, "orientation", PrintSettings.Orientation?.ToString());
             GlobalSetting(globalSettings, "colorMode", PrintSettings.ColorMode?.ToString());
             GlobalSetting(globalSettings, "dpi", PrintSettings.DPI);
@@ -114,9 +114,7 @@ namespace wkpdftoxcorelib
             // ObjectSetting(objectSettings, "toc.fontScale", true);
             // ObjectSetting(objectSettings, "tocXsl", true);
 
-            ObjectSetting(objectSettings, "page", true);
-            ObjectSetting(objectSettings, "header", true);
-            ObjectSetting(objectSettings, "footer", true);
+            // ObjectSetting(objectSettings, "page", true);
             ObjectSetting(objectSettings, "useExternalLinks", PrintSettings.UseExternalLinks);
             // ObjectSetting(objectSettings, "replacements", true);
             ObjectSetting(objectSettings, "produceForms", PrintSettings.ProduceForms);
