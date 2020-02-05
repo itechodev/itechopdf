@@ -6,6 +6,7 @@ using wkpdftoxcorelib.Settings;
 
 namespace wkpdftoxcorelib
 {
+
     // Elegant wrapper around C bindings to WkHtmlToPdf
     public class WkHtmlToPdf
     {
@@ -20,19 +21,18 @@ namespace wkpdftoxcorelib
             return Marshal.PtrToStringAnsi(WkHtmlToXBinding.wkhtmltopdf_version()) + (extended ? " (Extended QT)" : "");
         }
 
-        public void HtmlToPdf(string html)
+        public PdfDocument HtmlFileToPdf(string filename)
         {
-            // 1. A wkhtmltopdf_global_settings object is creating by calling wkhtmltopdf_create_global_settings.
-            //    Non web page specific Setting for the conversion are set by multiple calls to wkhtmltopdf_set_global_setting.
-            // 2. A wkhtmltopdf_converter object is created by calling wkhtmltopdf_create_converter, which consumes the global_settings instance.
-            //    A number of object (web pages) are added to the conversion process, this is done by
-            // 3. Creating a wkhtmltopdf_object_settings instance by calling wkhtmltopdf_create_object_settings.
-            //    Setting web page specific Setting by multiple calls to wkhtmltopdf_set_object_setting.
-            // 4. Adding the object to the conversion process by calling wkhtmltopdf_add_object
-            // 5. A number of callback function are added to the converter object.
-            // 6. The conversion is performed by calling wkhtmltopdf_convert.
-            // 7. The converter object is destroyed by calling wkhtmltopdf_destroy_converter.
+            return HtmlToPdf(File.ReadAllBytes(filename));   
+        }
 
+        public PdfDocument HtmlToPdf(string html)
+        {
+            return HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(html));
+        }
+
+        public PdfDocument HtmlToPdf(byte[] bytes)
+        {
             if (WkHtmlToXBinding.wkhtmltopdf_init(0) != 1)
             {
                 throw new Exception("Could not initialize WkHtmlToPDF library");
@@ -48,7 +48,7 @@ namespace wkpdftoxcorelib
 
             var converter = WkHtmlToXBinding.wkhtmltopdf_create_converter(globalSettings);
 
-            WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, "<b>All</b> is working...");
+            WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, bytes);
             // WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, new byte[] { .. });
 
             if (!WkHtmlToXBinding.wkhtmltopdf_convert(converter))
@@ -57,8 +57,7 @@ namespace wkpdftoxcorelib
             }
 
             byte[] ret = GetConversionResult(converter);
-            File.WriteAllBytes("output.pdf", ret);
-
+            
             // Clear all temp files
             foreach (string file in _tempFiles)
             {
@@ -70,6 +69,8 @@ namespace wkpdftoxcorelib
             WkHtmlToXBinding.wkhtmltopdf_destroy_global_settings(globalSettings);
             WkHtmlToXBinding.wkhtmltopdf_destroy_object_settings(objectSettings);
             WkHtmlToXBinding.wkhtmltopdf_destroy_converter(converter);
+
+            return new PdfDocument(ret);
         }
 
         private string CreateTempororyFile(string content)
