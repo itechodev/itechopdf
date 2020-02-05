@@ -23,25 +23,23 @@ namespace wkpdftoxcorelib
             htmltopdf.PrintSettings.Margins.Left = 0;
             htmltopdf.PrintSettings.Margins.Right = 0;
 
+            htmltopdf.PrintSettings.Margins.Top = 25 + 10; // 25mm header + 10mm spacing + 1mm margin top
+            htmltopdf.PrintSettings.Margins.Bottom = 25 + 10; 
+            
+            // htmltopdf.PrintSettings.Header = new HtmlHeaderFooter($"<!DOCTYPE html><html style='margin:0; padding:0;'><body style='margin:0; padding:0; background-color: green;'><div style='background-color: pink; height: 2cm;'>Quite</br> good </br>header</div></body></html");
+            
+            htmltopdf.PrintSettings.Header = new FileHeaderFooter("header.html");
+            htmltopdf.PrintSettings.Footer = new FileHeaderFooter("header.html");
 
-            // Also in https://stackoverflow.com/questions/15299869/header-height-and-positioning-header-from-top-of-page-in-wkhtmltopdf. Height 1.3x body content. Why? I don't know
-            // https://stackoverflow.com/questions/27443586/wkhtmltopdf-footer-size-issues
+            // htmltopdf.PrintSettings.Header = new StandardHeaderFooter("Left", "Center", "Right");
+            // htmltopdf.PrintSettings.Footer = new StandardHeaderFooter("Left", "Center", "Right");
+            htmltopdf.PrintSettings.Footer.Spacing = 10; // 1 cm 
+            htmltopdf.PrintSettings.Header.Spacing = 10; // 1 cm
 
-            htmltopdf.PrintSettings.Margins.Top = height; // Math.Ceiling(height / 1.3);
-            htmltopdf.PrintSettings.Margins.Bottom = height; // Math.Ceiling(height / 1.3);
-            
-            htmltopdf.PrintSettings.DPI = 600;
-            htmltopdf.PrintSettings.EnableIntelligentShrinking = false;
-            
-            
-            htmltopdf.PrintSettings.Header = new HtmlHeaderFooter($"<!DOCTYPE html><body style='margin:0; background-color: lime;'><div style='display: inline-block; width: 20mm; height: {height}mm; background-color: pink'>Quite good header</div></body>");
-            htmltopdf.PrintSettings.Header.Spacing = 0;
-            
-            htmltopdf.PrintSettings.Footer = new HtmlHeaderFooter($"<!DOCTYPE html><body style='margin:0; padding:0; background-color: red; height: {height}mm;'>Print on {DateTime.Today.ToShortDateString()} - {DateTime.Now.ToLongTimeString()}</body>");
-            htmltopdf.PrintSettings.Footer.Spacing = 0;
 
             var doc = htmltopdf.HtmlToPdf("<body style='background-color: yellow; margin:0; padding:0;'>To PDF seems to be working just fine</div>");
             doc?.SaveToFile("output.pdf");
         }
     }
 }
+

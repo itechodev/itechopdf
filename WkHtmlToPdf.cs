@@ -154,6 +154,10 @@ namespace wkpdftoxcorelib
 
         private void HeaderFooter(IntPtr objectSettings, string prefix, HeaderFooter settings)
         {
+            if (settings == null)
+            {
+                return;
+            }
             ObjectSetting(objectSettings, prefix + ".line", settings.Line);
             ObjectSetting(objectSettings, prefix + ".spacing", settings.Spacing);
 
