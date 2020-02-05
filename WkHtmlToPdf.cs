@@ -46,12 +46,16 @@ namespace wkpdftoxcorelib
 
             var converter = WkHtmlToXBinding.wkhtmltopdf_create_converter(globalSettings);
 
+            WkHtmlToXBinding.wkhtmltopdf_set_error_callback(converter, (IntPtr cc, string str) => {
+                Console.WriteLine("Error: " + str);
+            });
+
             WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, bytes);
             // WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, new byte[] { .. });
 
             if (!WkHtmlToXBinding.wkhtmltopdf_convert(converter))
             {
-                // Convert failed
+                return null;
             }
 
             byte[] ret = GetConversionResult(converter);
@@ -73,7 +77,8 @@ namespace wkpdftoxcorelib
 
         private string CreateTempororyFile(string content)
         {
-            var path = Path.GetTempFileName();
+            // For some reason it should end in html
+            var path = Path.GetTempFileName() + ".html";
             File.WriteAllText(path, content);
             // Keep reference to file can later delete it
             _tempFiles.Add(path);
@@ -160,7 +165,7 @@ namespace wkpdftoxcorelib
             if (!String.IsNullOrEmpty(settings.HtmlContent))
             {
                 var file = CreateTempororyFile(settings.HtmlContent);
-                ObjectSetting(objectSettings, "header.htmlUrl", file);
+                ObjectSetting(objectSettings, prefix + ".htmlUrl", file);
             }
         }
 
