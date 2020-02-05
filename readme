@@ -1,0 +1,5 @@
+1) Get Wrapper around wkhtmltox. Either P/Invoke or through command line
+    DinkPDF or Pecbhkin great examples.
+
+2) Because of the limitation by wkhtmltox with regards to conver and headings / footers we need to merge PDF's. Free PDF libs include PDFClown / PDFSharp
+
