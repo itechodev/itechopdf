@@ -7,11 +7,10 @@ namespace wkpdftoxcorelib
     {
         static void Main(string[] args)
         {
-            WkHtmlToXBinding.wkhtmltopdf_init(0);
+            var worker = new WkHtmlToPdf();
+            Console.WriteLine("WkHTML version:" + worker.GetVersion());
 
-            string version =  Marshal.PtrToStringAnsi(WkHtmlToXBinding.wkhtmltopdf_version());
-
-            Console.WriteLine("WkHTML version:" + version);   
+            worker.Convert();
         }
     }
 }

@@ -3,33 +3,33 @@ using System.Runtime.InteropServices;
 
 namespace wkpdftoxcorelib
 {
-   
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void VoidCallback(IntPtr converter);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void StringCallback(IntPtr converter, [MarshalAs(UnmanagedType.LPStr)] string str);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void IntCallback(IntPtr converter, int integer);
+
+    /// <summary>
+    /// This enum "extends" UnmanagedType enum from System.Runtime.InteropServices v4.1.0 which doesn't have LPUTF8Str (enum value is 48) enumartion defined
+    /// </summary>
+    public enum CustomUnmanagedType
+    {
+        LPUTF8Str = 48
+    }
+
     internal unsafe static class WkHtmlToXBinding
     {
         const string LIBRARY = "libwkhtmltox";
         const CharSet CHARSET = CharSet.Unicode;
         const CallingConvention CALLING = CallingConvention.Cdecl;
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void VoidCallback(IntPtr converter);
-        
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void StringCallback(IntPtr converter, [MarshalAs(UnmanagedType.LPStr)] string str);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void IntCallback(IntPtr converter, int integer);
-
-        /// <summary>
-        /// This enum "extends" UnmanagedType enum from System.Runtime.InteropServices v4.1.0 which doesn't have LPUTF8Str (enum value is 48) enumartion defined
-        /// </summary>
-        public enum CustomUnmanagedType
-        {
-            LPUTF8Str=48
-        }
 
         [DllImport(LIBRARY, CharSet = CHARSET, CallingConvention = CALLING)]
         public static extern int wkhtmltopdf_extended_qt();
-        
+
         [DllImport(LIBRARY, CharSet = CHARSET, CallingConvention = CALLING)]
         public static extern IntPtr wkhtmltopdf_version();
 
@@ -74,7 +74,7 @@ namespace wkpdftoxcorelib
             [MarshalAs((short)CustomUnmanagedType.LPUTF8Str)]
             string name,
             byte* value, int valueSize);
-        
+
         [DllImport(LIBRARY, CharSet = CHARSET, CallingConvention = CALLING)]
         public static extern int wkhtmltopdf_destroy_object_settings(IntPtr settings);
 
@@ -82,10 +82,10 @@ namespace wkpdftoxcorelib
         public static extern IntPtr wkhtmltopdf_create_converter(IntPtr globalSettings);
 
         [DllImport(LIBRARY, CharSet = CHARSET, CallingConvention = CALLING)]
-        public static extern void wkhtmltopdf_add_object(IntPtr converter, 
-            IntPtr objectSettings, 
+        public static extern void wkhtmltopdf_add_object(IntPtr converter,
+            IntPtr objectSettings,
             byte[] data);
-        
+
         [DllImport(LIBRARY, CharSet = CHARSET, CallingConvention = CALLING)]
         public static extern void wkhtmltopdf_add_object(IntPtr converter,
             IntPtr objectSettings,
