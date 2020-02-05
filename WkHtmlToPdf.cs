@@ -1,24 +1,23 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using wkpdftoxcorelib.Settings;
 
 namespace wkpdftoxcorelib
 {
     // Elegant wrapper around C bindings to WkHtmlToPdf
     public class WkHtmlToPdf
     {
-        
+        public PrintSettings PrintSettings = new PrintSettings();
+        public LoadSettings LoadSettings = new LoadSettings();
+
         public string GetVersion()
         {
-            return Marshal.PtrToStringAnsi(WkHtmlToXBinding.wkhtmltopdf_version());
+            bool extended = WkHtmlToXBinding.wkhtmltopdf_extended_qt() == 1;
+            return Marshal.PtrToStringAnsi(WkHtmlToXBinding.wkhtmltopdf_version()) + (extended ? " (Extended QT)" : "");
         }
 
-        public bool ExtendedQt()
-        {
-            return WkHtmlToXBinding.wkhtmltopdf_extended_qt() == 1;
-        }
-
-        public void Convert()
+        public void HtmlToPdf(string html)
         {
             // 1. A wkhtmltopdf_global_settings object is creating by calling wkhtmltopdf_create_global_settings.
             //    Non web page specific Setting for the conversion are set by multiple calls to wkhtmltopdf_set_global_setting.
@@ -37,6 +36,8 @@ namespace wkpdftoxcorelib
             }
             var globalSettings =  WkHtmlToXBinding.wkhtmltopdf_create_global_settings();
             var objectSettings = WkHtmlToXBinding.wkhtmltopdf_create_object_settings();
+
+            FillSettings(globalSettings, objectSettings);
 
             // Set global and object settings
             // SetGlobalSetting(globalSettings, "", "");
@@ -60,6 +61,62 @@ namespace wkpdftoxcorelib
             WkHtmlToXBinding.wkhtmltopdf_destroy_object_settings(objectSettings);
             WkHtmlToXBinding.wkhtmltopdf_destroy_converter(converter);
         }
+
+        private void FillSettings(IntPtr globalSettings, IntPtr objectSettings)
+        {
+            GlobalSetting(globalSettings, "size.width", PrintSettings.PaperSize.Width);
+            GlobalSetting(globalSettings, "size.height", PrintSettings.PaperSize.Height);
+            GlobalSetting(globalSettings, "orientation", PrintSettings.Orientation?.ToString());
+            GlobalSetting(globalSettings, "colorMode", PrintSettings.ColorMode?.ToString());
+            GlobalSetting(globalSettings, "dpi", PrintSettings.DPI);
+            GlobalSetting(globalSettings, "pageOffset", PrintSettings.PageOffset);
+            GlobalSetting(globalSettings, "copies", PrintSettings.Copies);
+            GlobalSetting(globalSettings, "colate", PrintSettings.Collate);
+            GlobalSetting(globalSettings, "outline", PrintSettings.Outline);
+            GlobalSetting(globalSettings, "outlineDepth", PrintSettings.OutlineDepth);
+            GlobalSetting(globalSettings, "dumpOutline", PrintSettings.DumpOutline);
+            GlobalSetting(globalSettings, "documentTitle", PrintSettings.DocumentTitle);
+            GlobalSetting(globalSettings, "useCompression", PrintSettings.UseCompression);
+            GlobalSetting(globalSettings, "margin.top", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Top));
+            GlobalSetting(globalSettings, "margin.bottom", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Bottom));
+            GlobalSetting(globalSettings, "margin.left", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Left));
+            GlobalSetting(globalSettings, "margin.right", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Right));
+            GlobalSetting(globalSettings, "ImageDPI", PrintSettings.ImageDPI);
+            GlobalSetting(globalSettings, "ImageQuality", PrintSettings.ImageQuality);
+            GlobalSetting(globalSettings, "load.cookieJar", PrintSettings.CookieJar);
+            
+        }
+
+        private void GlobalSetting(IntPtr settings, string name, string value)
+        {
+
+        }
+
+        private void GlobalSetting(IntPtr settings, string name, int? value)
+        {
+
+        }
+
+        private void GlobalSetting(IntPtr settings, string name, bool? value)
+        {
+
+        }
+
+        private void ObjectSetting(IntPtr settings, string name, string value)
+        {
+
+        }
+
+        private void ObjectSetting(IntPtr settings, string name, int? value)
+        {
+
+        }
+
+        private void ObjectSetting(IntPtr settings, string name, bool? value)
+        {
+
+        }
+
 
         private byte[] GetConversionResult(IntPtr converter)
         {
