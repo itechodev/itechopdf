@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using wkpdftoxcorelib.Settings;
@@ -10,6 +11,8 @@ namespace wkpdftoxcorelib
     {
         public PrintSettings PrintSettings = new PrintSettings();
         public LoadSettings LoadSettings = new LoadSettings();
+
+        private List<string> _tempFiles = new List<string>();
 
         public string GetVersion()
         {
@@ -56,10 +59,26 @@ namespace wkpdftoxcorelib
             byte[] ret = GetConversionResult(converter);
             File.WriteAllBytes("output.pdf", ret);
 
+            // Clear all temp files
+            foreach (string file in _tempFiles)
+            {
+                File.Delete(file);
+            }
+            _tempFiles.Clear();
+
             // Destroy all
             WkHtmlToXBinding.wkhtmltopdf_destroy_global_settings(globalSettings);
             WkHtmlToXBinding.wkhtmltopdf_destroy_object_settings(objectSettings);
             WkHtmlToXBinding.wkhtmltopdf_destroy_converter(converter);
+        }
+
+        private string CreateTempororyFile(string content)
+        {
+            var path = Path.GetTempFileName();
+            File.WriteAllText(path, content);
+            // Keep reference to file can later delete it
+            _tempFiles.Add(path);
+            return path;
         }
 
         private void FillSettings(IntPtr globalSettings, IntPtr objectSettings)
@@ -140,7 +159,12 @@ namespace wkpdftoxcorelib
             ObjectSetting(objectSettings, prefix + ".right", settings.Right);
             ObjectSetting(objectSettings, prefix + ".line", settings.Line);
             ObjectSetting(objectSettings, prefix + ".spacing", settings.Spacing);
-            // ObjectSetting(objectSettings, "header.htmlUrl", PrintSettings.Header.HtmlContent);
+
+            if (!String.IsNullOrEmpty(settings.HtmlContent))
+            {
+                var file = CreateTempororyFile(settings.HtmlContent);
+                ObjectSetting(objectSettings, "header.htmlUrl", file);
+            }
         }
             
 
