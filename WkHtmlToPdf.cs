@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using wkpdftoxcorelib.Settings;
@@ -23,7 +24,7 @@ namespace wkpdftoxcorelib
 
         public PdfDocument HtmlFileToPdf(string filename)
         {
-            return HtmlToPdf(File.ReadAllBytes(filename));   
+            return HtmlToPdf(File.ReadAllBytes(filename));
         }
 
         public PdfDocument HtmlToPdf(string html)
@@ -37,14 +38,11 @@ namespace wkpdftoxcorelib
             {
                 throw new Exception("Could not initialize WkHtmlToPDF library");
             }
-            var globalSettings =  WkHtmlToXBinding.wkhtmltopdf_create_global_settings();
+            var globalSettings = WkHtmlToXBinding.wkhtmltopdf_create_global_settings();
             var objectSettings = WkHtmlToXBinding.wkhtmltopdf_create_object_settings();
 
-            FillSettings(globalSettings, objectSettings);
-
             // Set global and object settings
-            // SetGlobalSetting(globalSettings, "", "");
-            // SetObjectSetting(objectSettings, "", "");
+            FillSettings(globalSettings, objectSettings);
 
             var converter = WkHtmlToXBinding.wkhtmltopdf_create_converter(globalSettings);
 
@@ -57,7 +55,7 @@ namespace wkpdftoxcorelib
             }
 
             byte[] ret = GetConversionResult(converter);
-            
+
             // Clear all temp files
             foreach (string file in _tempFiles)
             {
@@ -167,43 +165,66 @@ namespace wkpdftoxcorelib
                 ObjectSetting(objectSettings, "header.htmlUrl", file);
             }
         }
-            
+
 
         private void GlobalSetting(IntPtr settings, string name, string value)
         {
-
+            if (String.IsNullOrEmpty(value))
+            {
+                return;
+            }
+            WkHtmlToXBinding.wkhtmltopdf_set_global_setting(settings, name, value);
         }
 
         private void GlobalSetting(IntPtr settings, string name, int? value)
         {
-
+            if (value.HasValue)
+            {
+                WkHtmlToXBinding.wkhtmltopdf_set_global_setting(settings, name, value.ToString());
+            }
         }
 
         private void GlobalSetting(IntPtr settings, string name, bool? value)
         {
-
+            if (value.HasValue)
+            {
+                WkHtmlToXBinding.wkhtmltopdf_set_global_setting(settings, name, value.Value ? "true" : "false");
+            }
         }
 
         private void ObjectSetting(IntPtr settings, string name, string value)
         {
-
+            if (String.IsNullOrEmpty(value))
+            {
+                return;
+            }
+            WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value);
         }
 
         private void ObjectSetting(IntPtr settings, string name, int? value)
         {
 
+            if (value.HasValue)
+            {
+                WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value.ToString());
+            }
         }
 
         private void ObjectSetting(IntPtr settings, string name, bool? value)
         {
-
+            if (value.HasValue)
+            {
+                WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value.Value ? "true" : "false");
+            }
         }
-        
+
         private void ObjectSetting(IntPtr settings, string name, double? value)
         {
-
+            if (value.HasValue)
+            {
+                WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value.Value.ToString("0.##", CultureInfo.InvariantCulture));
+            }
         }
-
 
         private byte[] GetConversionResult(IntPtr converter)
         {
@@ -225,7 +246,7 @@ namespace wkpdftoxcorelib
         {
             return WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value);
         }
-        
+
         private string GetString(byte[] buffer)
         {
             var walk = Array.FindIndex(buffer, a => a == 0);
