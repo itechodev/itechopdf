@@ -14,20 +14,23 @@ namespace wkpdftoxcorelib.Settings
 
         public double? Right { get; set; }
 
-        public MarginSettings()
+        public MarginSettings(Unit unit = Unit.Millimeters)
         {
-            Unit = Unit.Millimeters;
+            Unit = unit;
         }
 
-        public MarginSettings(double top, double right, double bottom, double left) : this()
+        public MarginSettings(double top, double right, double bottom, double left, Unit unit) : this(unit)
+        {
+            Set(top, right, bottom, left, unit);
+        }
+
+        public void Set(double top, double right, double bottom, double left, Unit unit)
         {
             Top = top;
-
             Bottom = bottom;
-
             Left = left;
-
             Right = right;
+            Unit = unit;
         }
 
         public string GetMarginValue(double? value)
@@ -52,7 +55,6 @@ namespace wkpdftoxcorelib.Settings
             }
 
             return value.Value.ToString("0.##", CultureInfo.InvariantCulture) + strUnit;
-
         }
     }
     
