@@ -43,9 +43,10 @@
         public bool? EnableJavascript { get; set; }
 
         /// <summary>
-        /// Should we enable intelligent shrinkng to fit more content on one page. Has no effect for wkhtmltoimage. Default = true
+        /// Should we enable intelligent shrinkng to fit more content on one page. Has no effect for wkhtmltoimage. Default = false
+        /// Should be used with caution. It mangles with your CSS units including mm, cm, inch.
         /// </summary>
-        public bool? EnableIntelligentShrinking { get; set; }
+        public bool? EnableIntelligentShrinking { get; set; } = false;
 
         /// <summary>
         /// The minimum font size allowed. Default = -1
