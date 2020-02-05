@@ -102,13 +102,9 @@ namespace wkpdftoxcorelib
             GlobalSetting(globalSettings, "dumpOutline", PrintSettings.DumpOutline);
             GlobalSetting(globalSettings, "documentTitle", PrintSettings.DocumentTitle);
             GlobalSetting(globalSettings, "useCompression", PrintSettings.UseCompression);
-            GlobalSetting(globalSettings, "margin.top", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Top));
-            GlobalSetting(globalSettings, "margin.bottom", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Bottom));
-            GlobalSetting(globalSettings, "margin.left", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Left));
-            GlobalSetting(globalSettings, "margin.right", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Right));
-            GlobalSetting(globalSettings, "ImageDPI", PrintSettings.ImageDPI);
             GlobalSetting(globalSettings, "ImageQuality", PrintSettings.ImageQuality);
             GlobalSetting(globalSettings, "load.cookieJar", PrintSettings.CookieJar);
+            GlobalSetting(globalSettings, "ImageDPI", PrintSettings.ImageDPI);
 
             // Toc settings
             // ObjectSetting(objectSettings, "toc.useDottedLines", true);
@@ -150,6 +146,32 @@ namespace wkpdftoxcorelib
             // headers and footers
             HeaderFooter(objectSettings, "header", PrintSettings.Header);
             HeaderFooter(objectSettings, "footer", PrintSettings.Footer);
+
+            // 25mm header + 10mm spacing + 1mm margin top
+            // Set margins. Header and footers may affect marings
+            if (PrintSettings.Margins.Top.HasValue)
+            {
+                if (PrintSettings.Header?.Height == null)
+                {
+                    throw new Exception("Header height should be explicit when margin top is explicit.");
+                }
+                double value = PrintSettings.Margins.Top.Value + (PrintSettings.Header.Spacing ?? 0) + PrintSettings.Header.Height.Value;
+                GlobalSetting(globalSettings, "margin.top", PrintSettings.Margins.GetMarginValue(value));
+            }
+
+            if (PrintSettings.Margins.Bottom.HasValue)
+            {
+                if (PrintSettings.Footer?.Height == null)
+                {
+                    throw new Exception("Footer height should be explicit when margin bottom is explicit.");
+                }
+                double value = PrintSettings.Margins.Bottom.Value + (PrintSettings.Footer.Spacing ?? 0) + PrintSettings.Footer.Height.Value;
+                GlobalSetting(globalSettings, "margin.bottom", PrintSettings.Margins.GetMarginValue(value));
+            }
+            
+            GlobalSetting(globalSettings, "margin.left", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Left));
+            GlobalSetting(globalSettings, "margin.right", PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Right));
+            
         }
 
         private void HeaderFooter(IntPtr objectSettings, string prefix, HeaderFooter settings)

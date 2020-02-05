@@ -3,3 +3,13 @@
 
 2) Because of the limitation by wkhtmltox with regards to conver and headings / footers we need to merge PDF's. Free PDF libs include PDFClown / PDFSharp
 
+
+
+Header and footer sizes.
+
+You can use dynamic header and footer size, but with the following limitations:
+    -There is a small top and bottom margin about (0.15 cm)
+    -You need to add a top margin manually if you want one
+
+
+
