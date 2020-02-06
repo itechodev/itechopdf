@@ -93,22 +93,22 @@ namespace wkpdftoxcorelib.Wrapper
             double? marginTop = printSettings.Margins.Top;
             double? marginBottom = printSettings.Margins.Bottom;
 
-            if (printSettings.Margins.Top.HasValue)
+            if (marginTop.HasValue)
             {
-                if (printSettings.Header?.Height == null)
+                if (printSettings.Header != null && printSettings.Header.Height == null)
                 {
                     throw new Exception("Header height should be explicit when margin top is explicit.");
                 }
-                marginTop = printSettings.Margins.Top.Value + (printSettings.Header.Spacing ?? 0) + printSettings.Header.Height.Value;
+                marginTop = marginTop.Value + (printSettings.Header?.Spacing ?? 0) + (printSettings.Header?.Height ?? 0);
             }
 
-            if (printSettings.Margins.Bottom.HasValue)
+            if (marginBottom.HasValue)
             {
-                if (printSettings.Footer?.Height == null)
+                if (printSettings.Footer != null && printSettings.Footer.Height == null)
                 {
                     throw new Exception("Footer height should be explicit when margin bottom is explicit.");
                 }
-                marginBottom = printSettings.Margins.Bottom.Value + (printSettings.Footer.Spacing ?? 0) + printSettings.Footer.Height.Value;
+                marginBottom = marginBottom.Value + (printSettings.Footer?.Spacing ?? 0) + (printSettings.Footer?.Height ?? 0);
             }
 
             return new WkHtmlToPdfSettings
@@ -132,8 +132,8 @@ namespace wkpdftoxcorelib.Wrapper
                 DumpOutline = printSettings.DumpOutline,
                 EnableIntelligentShrinking = printSettings.EnableIntelligentShrinking,
                 EnableJavascript = printSettings.EnableJavascript,
-                Footer = BuildHeaderFooter(printSettings.Header),
-                Header = BuildHeaderFooter(printSettings.Footer),
+                Footer = BuildHeaderFooter(printSettings.Footer),
+                Header = BuildHeaderFooter(printSettings.Header),
                 ImageDPI = printSettings.ImageDPI,
                 ImageQuality = printSettings.ImageQuality,
                 IncludeInOutline = printSettings.IncludeInOutline,
@@ -162,6 +162,11 @@ namespace wkpdftoxcorelib.Wrapper
 
         private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings)
         {
+            if (settings == null)
+            {
+                return null;
+            }
+            
             var htmlDoc = new HtmlDocument();
             if (settings is StandardHeaderFooter std)
             {
