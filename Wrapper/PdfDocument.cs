@@ -3,16 +3,21 @@ using System.Collections.Generic;
 
 namespace wkpdftoxcorelib.Wrapper
 {
+
     public class PdfDocument
     {
-        private List<string> _tempFiles = new List<string>();
+        public LoadSettings LoadSettings { get; set; } = new LoadSettings();
+        public PrintSettings PrintSettings { get; set; } = new PrintSettings();
+        public string HtmlContent { get; private set; }
+        public string FileContent { get; private set; }
 
-        private LoadSettings LoadSettings { get; } = new LoadSettings();
-        private PrintSettings PrintSettings { get; } = new PrintSettings();
+        public PdfDocument()
+        {
+        }
 
         public void AddStandardHeader(string left, string center, string right, double? spacing = null, bool line = true, int? fontSize = null, string fontName = null)
         {
-            new StandardHeaderFooter
+            PrintSettings.Header = new StandardHeaderFooter
             {
                 Center = center,
                 FontName = fontName,
@@ -26,7 +31,7 @@ namespace wkpdftoxcorelib.Wrapper
 
         public void AddHtmlHeader(string html, double? height = null, double? spacing = null, bool line = false)
         {
-            new HtmlHeaderFooter(html) 
+            PrintSettings.Header = new HtmlHeaderFooter(html) 
             {
                 Height = height,
                 Spacing = spacing,
@@ -36,7 +41,7 @@ namespace wkpdftoxcorelib.Wrapper
         
         public void AddFileHeader(string filePath, double? height = null, double? spacing = null, bool line = false)
         {
-            new FileHeaderFooter(filePath) 
+            PrintSettings.Header = new FileHeaderFooter(filePath) 
             {
                 Height = height,
                 Spacing = spacing,
@@ -52,27 +57,21 @@ namespace wkpdftoxcorelib.Wrapper
 
         public void FromHtml(string html)
         {
-
+            if (!String.IsNullOrEmpty(FileContent))
+            {
+                throw new Exception($"Source already to file {FileContent}. Create another document.");
+            }
+            HtmlContent = html;
         }
 
         public void FromFile(string filename)
         {
-
+            if (!String.IsNullOrEmpty(HtmlContent))
+            {
+                throw new Exception($"Source already set as HTML. Create another document.");
+            }
+            FileContent = filename;
         }
 
-        public void AppendDocument(PdfDocument doc)
-        {
-
-        }
-
-        public void PrependDocument(PdfDocument doc)
-        {
-
-        }
-
-        public byte[] Render()
-        {
-            return null;
-        }
     }
 }

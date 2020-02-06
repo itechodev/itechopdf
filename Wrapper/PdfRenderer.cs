@@ -1,43 +1,73 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Web;
 using HtmlAgilityPack;
 using wkpdftoxcorelib.Core;
 
 namespace wkpdftoxcorelib.Wrapper
 {
-    public class WkHtmlToPdfWrapper
+    public class PdfRenderer
     {
+        private List<PdfDocument> _documents { get; set; } = new List<PdfDocument>();
         private List<string> _tempFiles = new List<string>();
-
-        public LoadSettings LoadSettings { get; } = new LoadSettings();
-        public PrintSettings PrintSettings { get; } = new PrintSettings();
 
         public string GetVersion()
         {
             return WkHtmlToPdf.GetVersion() + (WkHtmlToPdf.ExtendedQt() ? " (Extended QT)" : "");
         }
 
-        public PdfDocument HtmlFileToPdf(string filename)
+        public void Add(PdfDocument doc)
         {
-            return HtmlToPdf(File.ReadAllText(filename));
+            _documents.Add(doc);
         }
 
-        public PdfDocument HtmlToPdf(string html)
+        public void InsertAt(PdfDocument doc, int index)
+        {
+            _documents.Insert(index, doc);
+        }
+
+        public void Clear()
+        {
+            _documents.Clear();
+        }
+
+        public byte[] RenderToBytes()
+        {
+            List<byte[]> pdfs = new List<byte[]>();
+            foreach (var doc in _documents)
+            {
+                if (doc.FileContent != null)
+                {
+                    pdfs.Add(HtmlFileToPdf(doc.FileContent, doc.LoadSettings, doc.PrintSettings));
+                }
+                else if (doc.HtmlContent != null)
+                {
+                    pdfs.Add(HtmlToPdf(doc.HtmlContent, doc.LoadSettings, doc.PrintSettings));
+                }
+                // Keep track of number count.
+            }
+            // Merge all PDF's and return one result.
+
+            return null;
+        }
+
+        private byte[] HtmlFileToPdf(string filename, LoadSettings loadSettings, PrintSettings printSettings)
+        {
+            return HtmlToPdf(File.ReadAllText(filename), loadSettings, printSettings);
+        }
+
+        private byte[] HtmlToPdf(string html, LoadSettings loadSettings, PrintSettings printSettings)
         {
             try
             {
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(html);
-                FormatHtml(htmlDoc, Environment.CurrentDirectory);    
+                FormatHtml(htmlDoc, Environment.CurrentDirectory);
                 using (var sw = new StringWriter())
                 {
                     htmlDoc.Save(sw);
-                    var bytes = WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(LoadSettings, PrintSettings));
-                    
-                    return new PdfDocument(bytes);
+                    return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(loadSettings, printSettings));
+
                 }
             }
             finally
@@ -45,6 +75,7 @@ namespace wkpdftoxcorelib.Wrapper
                 CleanUp();
             }
         }
+
 
         private void CleanUp()
         {
@@ -59,38 +90,38 @@ namespace wkpdftoxcorelib.Wrapper
         {
             // 25mm header + 10mm spacing + 1mm margin top
             // Set margins. Header and footers may affect marings
-            double? marginTop = PrintSettings.Margins.Top;
-            double? marginBottom = PrintSettings.Margins.Bottom;
+            double? marginTop = printSettings.Margins.Top;
+            double? marginBottom = printSettings.Margins.Bottom;
 
-            if (PrintSettings.Margins.Top.HasValue)
+            if (printSettings.Margins.Top.HasValue)
             {
-                if (PrintSettings.Header?.Height == null)
+                if (printSettings.Header?.Height == null)
                 {
                     throw new Exception("Header height should be explicit when margin top is explicit.");
                 }
-                marginTop = PrintSettings.Margins.Top.Value + (PrintSettings.Header.Spacing ?? 0) + PrintSettings.Header.Height.Value;
+                marginTop = printSettings.Margins.Top.Value + (printSettings.Header.Spacing ?? 0) + printSettings.Header.Height.Value;
             }
 
-            if (PrintSettings.Margins.Bottom.HasValue)
+            if (printSettings.Margins.Bottom.HasValue)
             {
-                if (PrintSettings.Footer?.Height == null)
+                if (printSettings.Footer?.Height == null)
                 {
                     throw new Exception("Footer height should be explicit when margin bottom is explicit.");
                 }
-                marginBottom = PrintSettings.Margins.Bottom.Value + (PrintSettings.Footer.Spacing ?? 0) + PrintSettings.Footer.Height.Value;
+                marginBottom = printSettings.Margins.Bottom.Value + (printSettings.Footer.Spacing ?? 0) + printSettings.Footer.Height.Value;
             }
 
             return new WkHtmlToPdfSettings
             {
                 BlockLocalFileAccess = loadSettings.BlockLocalFileAccess,
                 DebugJavascript = loadSettings.DebugJavascript,
-                JSDelay = LoadSettings.JSDelay,
-                LoadErrorHandling = LoadSettings.LoadErrorHandling?.ToString(),
-                Password = LoadSettings.Password,
-                Proxy = LoadSettings.Proxy,
-                StopSlowScript = LoadSettings.StopSlowScript,
-                Username = LoadSettings.Username,
-                
+                JSDelay = loadSettings.JSDelay,
+                LoadErrorHandling = loadSettings.LoadErrorHandling?.ToString(),
+                Password = loadSettings.Password,
+                Proxy = loadSettings.Proxy,
+                StopSlowScript = loadSettings.StopSlowScript,
+                Username = loadSettings.Username,
+
                 Collate = printSettings.Collate,
                 ColorMode = printSettings.ColorMode?.ToString(),
                 CookieJar = printSettings.CookieJar,
@@ -104,14 +135,14 @@ namespace wkpdftoxcorelib.Wrapper
                 Footer = BuildHeaderFooter(printSettings.Header),
                 Header = BuildHeaderFooter(printSettings.Footer),
                 ImageDPI = printSettings.ImageDPI,
-                ImageQuality = PrintSettings.ImageQuality,
-                IncludeInOutline = PrintSettings.IncludeInOutline,
-                LoadImages = PrintSettings.LoadImages,
-                MarginLeft = PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Left),
-                MarginRight = PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Right),
-                MarginBottom = PrintSettings.Margins.GetMarginValue(marginBottom),
-                MarginTop = PrintSettings.Margins.GetMarginValue(marginTop),
-                MinimumFontSize = PrintSettings.MinimumFontSize,
+                ImageQuality = printSettings.ImageQuality,
+                IncludeInOutline = printSettings.IncludeInOutline,
+                LoadImages = printSettings.LoadImages,
+                MarginLeft = printSettings.Margins.GetMarginValue(printSettings.Margins.Left),
+                MarginRight = printSettings.Margins.GetMarginValue(printSettings.Margins.Right),
+                MarginBottom = printSettings.Margins.GetMarginValue(marginBottom),
+                MarginTop = printSettings.Margins.GetMarginValue(marginTop),
+                MinimumFontSize = printSettings.MinimumFontSize,
                 Orientation = printSettings.Orientation?.ToString(),
                 Outline = printSettings.Outline,
                 OutlineDepth = printSettings.OutlineDepth,
@@ -120,12 +151,12 @@ namespace wkpdftoxcorelib.Wrapper
                 PaperHeight = printSettings.PaperSize.Height,
                 PaperWidth = printSettings.PaperSize.Width,
                 PaperSize = null,
-                PrintBackground = PrintSettings.PrintBackground,
-                PrintMediaType = PrintSettings.PrintMediaType,
-                ProduceForms = PrintSettings.ProduceForms,
-                UseCompression = PrintSettings.UseCompression,
-                UseExternalLinks = PrintSettings.UseExternalLinks,
-                UseLocalLinks = PrintSettings.UseExternalLinks,
+                PrintBackground = printSettings.PrintBackground,
+                PrintMediaType = printSettings.PrintMediaType,
+                ProduceForms = printSettings.ProduceForms,
+                UseCompression = printSettings.UseCompression,
+                UseExternalLinks = printSettings.UseExternalLinks,
+                UseLocalLinks = printSettings.UseExternalLinks,
             };
         }
 
@@ -147,7 +178,7 @@ namespace wkpdftoxcorelib.Wrapper
             }
 
             if (settings is HtmlHeaderFooter html)
-            {    
+            {
                 htmlDoc.LoadHtml(html.Html);
             }
 
@@ -156,10 +187,10 @@ namespace wkpdftoxcorelib.Wrapper
                 htmlDoc.Load(file.FilePath);
             }
 
-            FormatHtml(htmlDoc, Environment.CurrentDirectory);    
+            FormatHtml(htmlDoc, Environment.CurrentDirectory);
             var path = CreateTempFile();
             htmlDoc.Save(path);
-            
+
             return new HeaderFooterSettings
             {
                 Spacing = settings.Spacing,
@@ -177,7 +208,7 @@ namespace wkpdftoxcorelib.Wrapper
             return path;
         }
 
-         private void FormatHtml(HtmlDocument htmlDoc, string baseUrl)
+        private void FormatHtml(HtmlDocument htmlDoc, string baseUrl)
         {
             // Fixed paths for resources
             FixedPath(htmlDoc, baseUrl, "//img", "src");
@@ -217,5 +248,6 @@ namespace wkpdftoxcorelib.Wrapper
             }
             return Path.Join(baseUrl, url);
         }
+
     }
 }
