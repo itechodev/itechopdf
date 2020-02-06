@@ -1,0 +1,82 @@
+<head>
+    <meta charset="utf-8">
+    <title>Some Page</title>
+    <meta name="author" content="Foo Bar">
+    <link rel="author" href="mailto:Foo%20Bar%20%3cfoo%40bar.com%3e">
+    <meta name="description" lang="en" content="Some really nice page">
+    <meta name="keywords" lang="en" content="foo,bar,page,pdf,wkhtmltopdf,exiftool,qpdf">
+    <meta name="generator" lang="en" content="Brackets">
+</head>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0
+    }
+</style>
+
+<body style='background-color: yellow; margin:0; padding:0;'>To PDF seems to be working just fine</div>
+
+<pre>
+    Ask Question
+Asked 8 years, 8 months ago
+Active 2 years, 4 months ago
+Viewed 46k times
+First National Bank
+Imagine yourself at First National Bank
+View all job openings!
+
+28
+
+
+14
+I am using wkhtmltopdf to generate a PDF file that is going to a printer and have some troubles with making the content fill up an entire page in the resulting PDF.
+
+In the CSS I've set the width and height to 2480 X 3508 pixels (a4 300 dpi) and when creating the PDF I use 0 for margins but still end up with a small white border to the right and bottom. Also tried to use mm and percentage but with the same result.
+
+I'd need someone to please provide an example on how to style the HTML and what options to use at command line so that the resulting PDF pages fill out the entire background. One way might be to include bleeding (this might be necessary anyway) but any tips are welcome. At the moment I am creating one big HTML page (without CSS page breaks - might help?) but if needed it would be fine to generate each page separately and then feed them all to wkhtmltopdf.
+
+wkhtmltopdf
+shareimprove this question
+edited Aug 30 '13 at 17:11
+
+Brian Webster
+25.6k4646 gold badges136136 silver badges211211 bronze badges
+asked May 19 '11 at 11:16
+
+Lorentz
+55111 gold badge44 silver badges1111 bronze badges
+hi, did you manage to fix this problem? – user961627 Sep 24 '12 at 9:16
+add a comment
+7 Answers
+active oldest votes
+ 
+37
+
+wkhtmltopdf v 0.11.0 rc2
+
+What ended up working:
+
+wkhtmltopdf --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0 <url> <output>
+shortens to
+
+wkhtmltopdf -T 0 -B 0 -L 0 -R 0 <url> <output>
+Using html from stdin (Note dash)
+
+echo "<h1>Testing Some Html</h2>" | wkhtmltopdf -T 0 -B 0 -L 0 -R 0 - <output>
+Using html from stdin to stdout
+
+echo "Testing Some Html" | wkhtmltopdf -T 0 -B 0 -L 0 -R 0 - test.pdf
+
+echo "Testing Some Html" | wkhtmltopdf -T 0 -B 0 -L 0 -R 0 - - > test.pdf
+
+What did not work:
+
+Using --dpi
+Using --page-width and --page-height
+Using --zoom
+shareimprove this answer
+edited Sep 25 '17 at 10:09
+</pre>
+
+    </body>
