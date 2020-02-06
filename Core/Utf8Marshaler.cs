@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace wkpdftoxcorelib
+namespace wkpdftoxcorelib.Core
 {
     public class Utf8Marshaler : ICustomMarshaler
     {

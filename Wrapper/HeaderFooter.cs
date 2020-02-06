@@ -1,4 +1,4 @@
-namespace wkpdftoxcorelib.Settings
+namespace wkpdftoxcorelib.Wrapper
 {
     public abstract class HeaderFooter
     {
@@ -17,7 +17,5 @@ namespace wkpdftoxcorelib.Settings
         /// The amount of space to put between the footer and the content, e.g. "1.8". Be aware that if this is too large the footer will be printed outside the pdf document. This can be corrected with the margin.bottom setting. Default = 0.00
         /// </summary>
         public double? Spacing { get; set; }
-
     }
-    
 }

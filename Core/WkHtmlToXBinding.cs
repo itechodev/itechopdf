@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace wkpdftoxcorelib
+namespace wkpdftoxcorelib.Core
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void VoidCallback(IntPtr converter);

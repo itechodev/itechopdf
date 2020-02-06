@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using wkpdftoxcorelib.Settings;
+using wkpdftoxcorelib.Wrapper;
 
 namespace wkpdftoxcorelib
 {
@@ -13,7 +12,7 @@ namespace wkpdftoxcorelib
 
         static void ExplicitHeights()
         {
-            var htmltopdf = new WkHtmlToPdf();
+            var htmltopdf = new WkHtmlToPdfWrapper();
             Console.WriteLine("WkHTML version:" + htmltopdf.GetVersion());
             // htmltopdf.PrintSettings.Margins.Set(0, 0, 0, 0, Unit.Centimeters);
 

@@ -1,31 +1,7 @@
-﻿namespace wkpdftoxcorelib.Settings
+namespace wkpdftoxcorelib.Core
 {
-    public enum ColorMode
-    {
-        Color,
-        Grayscale
-    }
 
-    public enum Orientation
-    {
-        Landscape,
-        Portrait
-    }
-
-    public enum Unit
-    {
-        Inches,
-        Millimeters,
-        Centimeters
-    }
-    
-    public enum SettingsType
-    {
-        Global,
-        Object,
-    }
- 
-    public class PrintSettings
+    public class WkHtmlToPdfSettings
     {
         /// <summary>
         /// Should we print the background. Default = true
@@ -63,8 +39,8 @@
         /// </summary>
         public string DefaultEncoding { get; set; }
 
-        public HeaderFooter Header { get; set; }
-        public HeaderFooter Footer { get; set; }
+        public HeaderFooterSettings Header { get; set; }
+        public HeaderFooterSettings Footer { get; set; }
 
         /// <summary>
         /// The URL or path of the web page to convert, if "-" input is read from stdin. Default = ""
@@ -109,12 +85,12 @@
         /// <summary>
         /// The orientation of the output document, must be either "Landscape" or "Portrait". Default = "portrait"
         /// </summary>
-        public Orientation? Orientation { get; set; }
+        public string Orientation { get; set; }
 
         /// <summary>
         /// Should the output be printed in color or gray scale, must be either "Color" or "Grayscale". Default = "color"
         /// </summary>
-        public ColorMode? ColorMode { get; set; }
+        public string ColorMode { get; set; }
 
         /// <summary>
         /// Should we use loss less compression when creating the pdf file. Default = true
@@ -184,63 +160,67 @@
         /// <summary>
         /// Size of output paper
         /// </summary>
-        public PaperSize PaperSize { get; set; }
+        public string PaperSize { get; set; }
 
         /// <summary>
         /// The height of the output document
         /// </summary>
-        private string PaperHeight
-        {
-            get {
-                return PaperSize == null ? null : PaperSize.Height;
-            }
-        }
+        public string PaperHeight { get; set; }
+        public string PaperWidth { get; set; }
         
+        // Marings
+        public string MarginTop { get; set; }
+
+        public string MarginBottom { get; set; }
+
+        public string MarginLeft { get; set; }
+
+        public string MarginRight { get; set; }
+
         /// <summary>
-        /// The width of the output document
+        /// The user name to use when loging into a website. Default = ""
         /// </summary>
-        private string PaperWidth
-        {
-            get
-            {
-                return PaperSize == null ? null : PaperSize.Width;
-            }
-        }
+        public string Username { get; set; }
 
-        public MarginSettings Margins { get; set; } = new MarginSettings();
+        /// <summary>
+        /// The password to used when logging into a website. Default = ""
+        /// </summary>
+        public string Password { get; set; }
 
-        private string MarginTop
-        {
-            get
-            {
-                return Margins.GetMarginValue(Margins.Top);
-            }
-        }
+        /// <summary>
+        /// The mount of time in milliseconds to wait after a page has done loading until it is actually printed. E.g. "1200". We will wait this amount of time or until, javascript calls window.print(). Default = 200
+        /// </summary>
+        public int? JSDelay { get; set; }
 
-        private string MarginBottom
-        {
-            get
-            {
-                return Margins.GetMarginValue(Margins.Bottom);
-            }
-        }
+        /// <summary>
+        /// How much should we zoom in on the content. Default = 1.0
+        /// </summary>
+        public double? ZoomFactor { get; set; }
 
-        private string MarginLeft
-        {
-            get
-            {
-                return Margins.GetMarginValue(Margins.Left);
-            }
-        }
+        /// <summary>
+        /// Disallow local and piped files to access other local files. Default = false
+        /// </summary>
+        public bool? BlockLocalFileAccess { get; set; }
 
-        private string MarginRight
-        {
-            get
-            {
-                return Margins.GetMarginValue(Margins.Right);
-            }
-        }
+        /// <summary>
+        /// Stop slow running javascript. Default = true
+        /// </summary>
+        public bool? StopSlowScript { get; set; }
+
+        /// <summary>
+        /// Forward javascript warnings and errors to the warning callback. Default = false
+        /// </summary>
+        public bool? DebugJavascript { get; set; }
+
+        /// <summary>
+        /// How should we handle obejcts that fail to load. Default = Abort
+        /// </summary>
+        public string LoadErrorHandling { get; set; }
+
+        /// <summary>
+        /// String describing what proxy to use when loading the object. Default = ""
+        /// </summary>
+        public string Proxy { get; set; }
 
     }
-    
 }

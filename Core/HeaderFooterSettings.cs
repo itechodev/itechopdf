@@ -1,19 +1,8 @@
-namespace wkpdftoxcorelib.Settings
+namespace wkpdftoxcorelib.Core
 {
-    public class StandardHeaderFooter : HeaderFooter
+    public class HeaderFooterSettings
     {
-        public StandardHeaderFooter()
-        {
-
-        }
-
-        public StandardHeaderFooter(string left, string center, string right)
-        {
-            Left = left;
-            Center = center;
-            Right = right;
-        }
-
+        
         /// <summary>
         /// The font size to use for the footer. Default = 12
         /// </summary>
@@ -38,7 +27,17 @@ namespace wkpdftoxcorelib.Settings
         /// The text to print in the right part of the footer, note that some sequences are replaced in this string, see the wkhtmltopdf manual. Default = ""
         /// </summary>
         public string Right { get; set; }
-   
+        /// <summary>
+        /// Whether a line should be printed above the footer. Default = false
+        /// </summary>
+        public bool? Line { get; set; }
+
+        /// <summary>
+        /// The amount of space to put between the footer and the content, e.g. "1.8". Be aware that if this is too large the footer will be printed outside the pdf document. This can be corrected with the margin.bottom setting. Default = 0.00
+        /// </summary>
+        public double? Spacing { get; set; }
+
+        public string Url { get; set; }
+
     }
-    
 }

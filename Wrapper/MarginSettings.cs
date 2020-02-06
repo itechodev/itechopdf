@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace wkpdftoxcorelib.Settings
+namespace wkpdftoxcorelib.Wrapper
 {
     public class MarginSettings
     {
