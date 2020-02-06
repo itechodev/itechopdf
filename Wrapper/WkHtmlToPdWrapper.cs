@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Web;
 using HtmlAgilityPack;
 using wkpdftoxcorelib.Core;
 
@@ -208,10 +209,13 @@ namespace wkpdftoxcorelib.Wrapper
 
         private string FormatUrl(string url, string baseUrl)
         {
-            // Check for absolute etc.
+            string check = url.Trim().ToLower();
+            if (check.StartsWith("http://") || check.StartsWith("https://") || check.StartsWith("file://") || check.StartsWith("data:"))
+            {
+                // Url is absolute or contains inline data. Leave as is
+                return url;
+            }
             return Path.Join(baseUrl, url);
         }
-
-
     }
 }
