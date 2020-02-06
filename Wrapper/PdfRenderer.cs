@@ -279,7 +279,7 @@ namespace wkpdftoxcorelib.Wrapper
         private string FormatUrl(string url, string baseUrl)
         {
             string check = url.Trim().ToLower();
-            if (check.StartsWith("http://") || check.StartsWith("https://") || check.StartsWith("file://") || check.StartsWith("data:"))
+            if (check.StartsWith("http://") || check.StartsWith("https://") || check.StartsWith("file://") || check.StartsWith("data:") || check.StartsWith("/"))
             {
                 // Url is absolute or contains inline data. Leave as is
                 return url;
