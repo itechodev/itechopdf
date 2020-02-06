@@ -32,14 +32,13 @@ namespace wkpdftoxcorelib.Wrapper
             using (var sw = new StringWriter())
             {
                 htmlDoc.Save(sw);
-                // return HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()));
-                return null;
+                var bytes = WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(LoadSettings, PrintSettings));
+                return new PdfDocument(bytes);
             }
         }
 
-        public void AA()
+        private WkHtmlToPdfSettings ConvertToCoreSettings(LoadSettings loadSettings, PrintSettings printSettings)
         {
-
             // // 25mm header + 10mm spacing + 1mm margin top
             // // Set margins. Header and footers may affect marings
             // if (PrintSettings.Margins.Top.HasValue)
@@ -79,6 +78,54 @@ namespace wkpdftoxcorelib.Wrapper
             // htmlDoc.Save(path);
             // ObjectSetting(objectSettings, prefix + ".htmlUrl", path)
             
+            
+            return new WkHtmlToPdfSettings
+            {
+                BlockLocalFileAccess = loadSettings.BlockLocalFileAccess,
+                DebugJavascript = loadSettings.DebugJavascript,
+                JSDelay = LoadSettings.JSDelay,
+                LoadErrorHandling = LoadSettings.LoadErrorHandling?.ToString(),
+                Password = LoadSettings.Password,
+                Proxy = LoadSettings.Proxy,
+                StopSlowScript = LoadSettings.StopSlowScript,
+                Username = LoadSettings.Username,
+                
+                Collate = printSettings.Collate,
+                ColorMode = printSettings.ColorMode?.ToString(),
+                CookieJar = printSettings.CookieJar,
+                Copies = printSettings.Copies,
+                DefaultEncoding = printSettings.DefaultEncoding,
+                DocumentTitle = printSettings.DocumentTitle,
+                DPI = printSettings.DPI,
+                DumpOutline = printSettings.DumpOutline,
+                EnableIntelligentShrinking = printSettings.EnableIntelligentShrinking,
+                EnableJavascript = printSettings.EnableJavascript,
+                Footer = null,
+                Header = null,
+                ImageDPI = printSettings.ImageDPI,
+                ImageQuality = PrintSettings.ImageQuality,
+                IncludeInOutline = PrintSettings.IncludeInOutline,
+                LoadImages = PrintSettings.LoadImages,
+                MarginBottom = PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Bottom),
+                MarginLeft = PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Left),
+                MarginRight = PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Right),
+                MarginTop = PrintSettings.Margins.GetMarginValue(PrintSettings.Margins.Top),
+                MinimumFontSize = PrintSettings.MinimumFontSize,
+                Orientation = printSettings.Orientation?.ToString(),
+                Outline = printSettings.Outline,
+                OutlineDepth = printSettings.OutlineDepth,
+                PageOffset = printSettings.PageOffset,
+                PagesCount = printSettings.PagesCount,
+                PaperHeight = printSettings.PaperSize.Height,
+                PaperWidth = printSettings.PaperSize.Width,
+                PaperSize = null,
+                PrintBackground = PrintSettings.PrintBackground,
+                PrintMediaType = PrintSettings.PrintMediaType,
+                ProduceForms = PrintSettings.ProduceForms,
+                UseCompression = PrintSettings.UseCompression,
+                UseExternalLinks = PrintSettings.UseExternalLinks,
+                UseLocalLinks = PrintSettings.UseExternalLinks,
+            };
         }
 
         private string CreateTempFile()

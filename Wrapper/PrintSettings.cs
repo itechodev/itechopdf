@@ -184,7 +184,7 @@
         /// <summary>
         /// Size of output paper
         /// </summary>
-        public PaperSize PaperSize { get; set; }
+        public PaperSize PaperSize { get; set; } = PaperKind.A4;
 
         /// <summary>
         /// The height of the output document
