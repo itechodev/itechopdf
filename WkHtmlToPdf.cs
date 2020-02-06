@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using HtmlAgilityPack;
 using wkpdftoxcorelib.Settings;
 
 namespace wkpdftoxcorelib
@@ -75,11 +76,10 @@ namespace wkpdftoxcorelib
             return new PdfDocument(ret);
         }
 
-        private string CreateTempororyFile(string content)
+        private string CreateTempFile()
         {
             // For some reason it should end in html
             var path = Path.GetTempFileName() + ".html";
-            File.WriteAllText(path, content);
             // Keep reference to file can later delete it
             _tempFiles.Add(path);
             return path;
@@ -193,18 +193,22 @@ namespace wkpdftoxcorelib
                 return;
             }
 
+            var htmlDoc = new HtmlDocument();
+
             if (settings is HtmlHeaderFooter html)
-            {
-                var tempfile = CreateTempororyFile(html.Html);
-                ObjectSetting(objectSettings, prefix + ".htmlUrl", tempfile);
-                return;
+            {    
+                htmlDoc.LoadHtml(html.Html);
             }
 
             if (settings is FileHeaderFooter file)
             {
-                ObjectSetting(objectSettings, prefix + ".htmlUrl", file.FilePath);
-                return;
+                htmlDoc.Load(file.FilePath);
             }
+
+            FormatHtml(htmlDoc, Environment.CurrentDirectory);    
+            var path = CreateTempFile();
+            htmlDoc.Save(path);
+            ObjectSetting(objectSettings, prefix + ".htmlUrl", path);
         }
 
 
@@ -296,6 +300,43 @@ namespace wkpdftoxcorelib
                 walk = buffer.Length;
             }
             return System.Text.Encoding.UTF8.GetString(buffer, 0, walk);
+        }
+
+        private void FormatHtml(HtmlDocument htmlDoc, string baseUrl)
+        {
+            // Fixed paths for resources
+            FixedPath(htmlDoc, baseUrl, "//img", "src");
+            
+            // Add Doctype
+            // Add javascript for injection
+        }
+
+        private void FixedPath(HtmlDocument htmlDoc, string baseUrl, string xpath, string attribute)
+        {
+            var nodes = htmlDoc.DocumentNode.SelectNodes(xpath);
+            if (nodes == null || nodes.Count == 0)
+            {
+                return;
+            }
+            foreach (var node in nodes)
+            {
+                var attrValue = node.GetAttributeValue(attribute, null);
+                if (String.IsNullOrEmpty(attrValue))
+                {
+                    continue;
+                }
+                string newValue = FormatUrl(attrValue, baseUrl);
+                if (newValue != attrValue)
+                {
+                    node.SetAttributeValue(attribute, newValue);
+                }
+            }
+        }
+
+        private string FormatUrl(string url, string baseUrl)
+        {
+            // Check for absolute etc.
+            return Path.Join(baseUrl, url);
         }
     }
 }

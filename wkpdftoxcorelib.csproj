@@ -17,6 +17,10 @@
     <None Remove="libwkhtmltox/libwkhtmltox.so" />
   </ItemGroup>
   
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.18" />
+  </ItemGroup>
+  
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
