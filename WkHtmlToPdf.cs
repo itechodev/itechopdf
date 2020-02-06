@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using HtmlAgilityPack;
 using wkpdftoxcorelib.Settings;
 
@@ -25,12 +26,19 @@ namespace wkpdftoxcorelib
 
         public PdfDocument HtmlFileToPdf(string filename)
         {
-            return HtmlToPdf(File.ReadAllBytes(filename));
+            return HtmlToPdf(File.ReadAllText(filename));
         }
 
         public PdfDocument HtmlToPdf(string html)
         {
-            return HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(html));
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
+            FormatHtml(htmlDoc, Environment.CurrentDirectory);    
+            using (var sw = new StringWriter())
+            {
+                htmlDoc.Save(sw);
+                return HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()));
+            }
         }
 
         public PdfDocument HtmlToPdf(byte[] bytes)
