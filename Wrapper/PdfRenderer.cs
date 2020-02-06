@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using HtmlAgilityPack;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.IO;
 using wkpdftoxcorelib.Core;
 
 namespace wkpdftoxcorelib.Wrapper
@@ -47,8 +49,35 @@ namespace wkpdftoxcorelib.Wrapper
                 // Keep track of number count.
             }
             // Merge all PDF's and return one result.
+            return MergePDFBytes(pdfs);
+        }
 
-            return null;
+        public byte[] MergePDFBytes(List<byte[]> pdfs)
+        {
+            PdfSharp.Pdf.PdfDocument outputDocument = new PdfSharp.Pdf.PdfDocument();
+            foreach (var pdfBytes in pdfs)
+            {
+                if (pdfBytes == null || pdfBytes.Length == 0)
+                {
+                    continue;
+                }
+                
+                var pdfDoc = PdfReader.Open(new MemoryStream(pdfBytes), PdfDocumentOpenMode.Import);
+                // Iterate pages
+                int count = pdfDoc.PageCount;
+                for (int idx = 0; idx < count; idx++)
+                {
+                    // Get the page from the external document...
+                    PdfPage page = pdfDoc.Pages[idx];
+                    // ...and add it to the output document.
+                    outputDocument.AddPage(page);
+                }
+            }
+            using (var ms = new MemoryStream())
+            {
+                outputDocument.Save(ms);
+                return ms.ToArray();
+            }
         }
 
         private byte[] HtmlFileToPdf(string filename, LoadSettings loadSettings, PrintSettings printSettings)
@@ -166,7 +195,7 @@ namespace wkpdftoxcorelib.Wrapper
             {
                 return null;
             }
-            
+
             var htmlDoc = new HtmlDocument();
             if (settings is StandardHeaderFooter std)
             {
