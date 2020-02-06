@@ -37,8 +37,6 @@ namespace wkpdftoxcorelib
             var doc = htmltopdf.HtmlFileToPdf("content.html");
             doc?.SaveToFile("output.pdf");
 
-
-        }
         }
     }
 }
