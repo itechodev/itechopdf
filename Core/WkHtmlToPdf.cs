@@ -118,7 +118,7 @@ namespace wkpdftoxcorelib.Core
             HeaderFooter(objectSettings, "footer", settings.Footer);
 
             GlobalSetting(globalSettings, "margin.top", settings.MarginTop);
-            GlobalSetting(globalSettings, "margin.bottom", settings.MarginTop);
+            GlobalSetting(globalSettings, "margin.bottom", settings.MarginBottom);
             GlobalSetting(globalSettings, "margin.left", settings.MarginLeft);
             GlobalSetting(globalSettings, "margin.right", settings.MarginRight);
         }
