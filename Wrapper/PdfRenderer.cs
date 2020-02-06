@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using HtmlAgilityPack;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
@@ -73,8 +74,11 @@ namespace wkpdftoxcorelib.Wrapper
                     outputDocument.AddPage(page);
                 }
             }
+            // 1252 Encoding issue
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using (var ms = new MemoryStream())
             {
+                
                 outputDocument.Save(ms);
                 return ms.ToArray();
             }
