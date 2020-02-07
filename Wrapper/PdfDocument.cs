@@ -49,6 +49,26 @@ namespace wkpdftoxcorelib.Wrapper
             };
         }
 
+        public void AddHtmlFooter(string html, double? height = null, double? spacing = null, bool line = false)
+        {
+            PrintSettings.Footer = new HtmlHeaderFooter(html) 
+            {
+                Height = height,
+                Spacing = spacing,
+                Line = line
+            };
+        }
+        
+        public void AddFileFooter(string filePath, double? height = null, double? spacing = null, bool line = false)
+        {
+            PrintSettings.Footer = new FileHeaderFooter(filePath) 
+            {
+                Height = height,
+                Spacing = spacing,
+                Line = line
+            };
+        }
+
         public void Configure(Action<PrintSettings> print, Action<LoadSettings> load = null)
         {
             print?.Invoke(PrintSettings);

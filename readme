@@ -13,3 +13,10 @@ You can use dynamic header and footer size, but with the following limitations:
 
 
 
+
+Caveats:
+-SVG should have explicit width or height
+-Flex not supported
+-When using auto header heigth there is a small (0.1mm) maring top
+-Header auto doesn't work
+
