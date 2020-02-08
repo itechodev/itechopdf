@@ -1,7 +1,7 @@
 namespace wkpdftoxcorelib.Core
 {
 
-    public class WkHtmlToPdfSettings
+    internal class WkHtmlToPdfSettings
     {
         /// <summary>
         /// Should we print the background. Default = true

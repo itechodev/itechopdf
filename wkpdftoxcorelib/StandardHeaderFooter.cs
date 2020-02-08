@@ -1,4 +1,4 @@
-namespace wkpdftoxcorelib.Wrapper
+namespace wkpdftoxcorelib
 {
     public class StandardHeaderFooter : HeaderFooter
     {

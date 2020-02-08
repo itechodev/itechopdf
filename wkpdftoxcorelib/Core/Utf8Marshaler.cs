@@ -4,7 +4,7 @@ using System.Text;
 
 namespace wkpdftoxcorelib.Core
 {
-    public class Utf8Marshaler : ICustomMarshaler
+    internal class Utf8Marshaler : ICustomMarshaler
     {
         static Utf8Marshaler _staticInstance;
 

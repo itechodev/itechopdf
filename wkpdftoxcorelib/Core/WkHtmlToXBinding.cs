@@ -20,7 +20,7 @@ namespace wkpdftoxcorelib.Core
         LPUTF8Str = 48
     }
 
-    internal unsafe static class WkHtmlToXBinding
+    unsafe static class WkHtmlToXBinding
     {
         const string LIBRARY = "libwkhtmltox";
         const CharSet CHARSET = CharSet.Unicode;

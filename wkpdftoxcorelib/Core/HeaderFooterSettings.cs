@@ -1,6 +1,6 @@
 namespace wkpdftoxcorelib.Core
 {
-    public class HeaderFooterSettings
+    internal class HeaderFooterSettings
     {
         
         /// <summary>

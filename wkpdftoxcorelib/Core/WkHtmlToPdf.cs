@@ -6,7 +6,7 @@ namespace wkpdftoxcorelib.Core
 {
 
     // Elegant wrapper around C bindings to WkHtmlToPdf
-    public static class WkHtmlToPdf
+    internal static class WkHtmlToPdf
     {
         public static string GetVersion()
         {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace wkpdftoxcorelib.Wrapper
+namespace wkpdftoxcorelib
 {
     public class PaperSize
     {

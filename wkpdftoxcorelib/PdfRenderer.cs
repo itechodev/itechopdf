@@ -7,7 +7,7 @@ using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using wkpdftoxcorelib.Core;
 
-namespace wkpdftoxcorelib.Wrapper
+namespace wkpdftoxcorelib
 {
     public class PdfRenderer
     {
