@@ -74,8 +74,6 @@ namespace wkpdftoxcorelib.Wrapper
                     outputDocument.AddPage(page);
                 }
             }
-            // 1252 Encoding issue
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using (var ms = new MemoryStream())
             {
                 
@@ -284,7 +282,7 @@ namespace wkpdftoxcorelib.Wrapper
                 // Url is absolute or contains inline data. Leave as is
                 return url;
             }
-            return Path.Join(baseUrl, url);
+            return Path.Combine(baseUrl, url);
         }
 
     }
