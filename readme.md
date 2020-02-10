@@ -1,13 +1,13 @@
-# wkpdftoxcorelib
-wkpdftoxcorelib is a dotnet corelibrary around the wkhtmltopdf utility to produce PDF files from HTML. You can create multiple pages, cover pages and configurablbe header and footers.
+# wwkhtmltoxcorelib 
+wwkhtmltoxcorelib  is a dotnet corelibrary around the wkhtmltopdf utility to produce PDF files from HTML. You can create multiple pages, cover pages and configurable header and footers.
 
 ## Installation
 Package available on nuget.
 ```
-dotnet add package wkpdftoxcorelib
+dotnet add package wwkhtmltoxcorelib 
 ```
 ```
-PM> Install-Package wkpdftoxcorelib
+PM> Install-Package wwkhtmltoxcorelib 
 ```
 
 ## Example

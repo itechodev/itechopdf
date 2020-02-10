@@ -11,7 +11,7 @@
         <PackageTags>pdf;html;wkhtmltopdf</PackageTags>
         <IncludeBuildOutput>True</IncludeBuildOutput>
         <IncludeContentInPack>True</IncludeContentInPack>
-        <RepositoryUrl>https://github.com/itechodev/wkpdftoxcorelib</RepositoryUrl>
+        <RepositoryUrl>https://github.com/itechodev/wkhtmltoxcorelib</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReleaseNotes></PackageReleaseNotes>
     </PropertyGroup>
