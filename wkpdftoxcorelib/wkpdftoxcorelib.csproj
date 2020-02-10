@@ -17,18 +17,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="libwkhtmltox/libwkhtmltox.dll" />
-        <EmbeddedResource Include="libwkhtmltox/libwkhtmltox.dylib" />
-        <EmbeddedResource Include="libwkhtmltox/libwkhtmltox.so" />
+        <Content Include="libwkhtmltox\*.*"  CopyToOutputDirectory="Always" />
     </ItemGroup>
-
-    <ItemGroup>
-        <None Remove="libwkhtmltox/libwkhtmltox.dll" />
-        <None Remove="libwkhtmltox/libwkhtmltox.dylib" />
-        <None Remove="libwkhtmltox/libwkhtmltox.so" />
-    </ItemGroup>
-
-
+    
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.18" />
         <PackageReference Include="PDFsharp" Version="1.50.5147" />
