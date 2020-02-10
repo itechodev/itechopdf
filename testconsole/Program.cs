@@ -17,17 +17,21 @@ namespace testconsole
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
             var cover = new PdfDocument();
-            // cover.Configure(print => {
-            //     print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
-            //     print.Orientation = Orientation.Landscape;
-            // });
+            cover.Configure(print => {
+                print.DPI = 300;
+                print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
+                print.Orientation = Orientation.Portrait;
+                print.PaperSize = PaperKind.A4;
+            });
             cover.FromFile("res/cover.html");
 
             var content = new PdfDocument();
-            // content.Configure(print => {
-            //     print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
-            //     print.Orientation = Orientation.Portrait;
-            // });
+            content.Configure(print => {
+                print.DPI = 300;
+                print.PaperSize = PaperKind.A4;
+                print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
+                print.Orientation = Orientation.Portrait;
+            });
             content.AddFileHeader("res/header.html", 25, 10);
             content.AddFileFooter("res/footer.html", 25, 10);
             content.FromFile("res/content.html");
