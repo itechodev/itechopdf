@@ -16,6 +16,10 @@
         <PackageReleaseNotes></PackageReleaseNotes>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <NoWarn>NU1701</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <Content Include="libwkhtmltox.dll" Condition=" '$(OS)' == 'Windows_NT' ">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
