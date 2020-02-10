@@ -45,6 +45,7 @@ File.WriteAllBytes("output.pdf", pdf);
 ## HTML Caveats and limitations
 * Flex not supported
 * SVG images should have explicit width and height
+* Using a retina display on OSX will render very small.
 
 ## Why another library?
 I needed a solution to produce rich PDF documents from HTML. By rich I mean: cover pages, multiple pages with potential different sizes and orientations, customizable headers and footers etc. None of the open source libraries could do that easily. There are commercial solutions but the pricetag scared me off, so I wrote my own.
