@@ -22,7 +22,7 @@ namespace wkpdftoxcorelib.Core
 
     unsafe static class WkHtmlToXBinding
     {
-        const string LIBRARY = @"libwkhtmltox\libwkhtmltox"; // liblibwkhtmltox
+        const string LIBRARY = "libwkhtmltox";
         const CharSet CHARSET = CharSet.Unicode;
         const CallingConvention CALLING = CallingConvention.Cdecl;
 
