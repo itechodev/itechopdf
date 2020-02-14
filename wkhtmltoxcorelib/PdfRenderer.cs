@@ -212,14 +212,17 @@ namespace wkpdftoxcorelib
                 };
             }
 
-            if (settings is HtmlHeaderFooter html)
+            if (settings is HeaderFooterSource source)
             {
-                htmlDoc.LoadHtml(html.Html);
-            }
+                if (source.Source is PdfSourceHtml html)
+                {
+                    htmlDoc.LoadHtml(html.Html);
+                }
 
-            if (settings is FileHeaderFooter file)
-            {
-                htmlDoc.Load(file.FilePath);
+                if (source.Source is PdfSourceFile file)
+                {
+                    htmlDoc.Load(file.Path);
+                }
             }
 
             FormatHtml(htmlDoc, Environment.CurrentDirectory);
