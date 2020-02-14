@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using HtmlAgilityPack;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
@@ -39,13 +38,13 @@ namespace wkpdftoxcorelib
             List<byte[]> pdfs = new List<byte[]>();
             foreach (var doc in _documents)
             {
-                if (doc.FileContent != null)
+                if (doc.Source is PdfSourceFile file)
                 {
-                    pdfs.Add(HtmlFileToPdf(doc.FileContent, doc.LoadSettings, doc.PrintSettings));
+                    pdfs.Add(HtmlToPdf(file.Path, doc.LoadSettings, doc.PrintSettings));
                 }
-                else if (doc.HtmlContent != null)
+                else if (doc.Source is PdfSourceHtml html)
                 {
-                    pdfs.Add(HtmlToPdf(doc.HtmlContent, doc.LoadSettings, doc.PrintSettings));
+                    pdfs.Add(HtmlFileToPdf(html.Html, doc.LoadSettings, doc.PrintSettings));
                 }
                 // Keep track of number count.
             }
