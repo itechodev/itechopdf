@@ -212,7 +212,7 @@ namespace wkpdftoxcorelib
                 };
             }
 
-            if (settings is SourceHeaderFooter source)
+            if (settings is HtmlHeaderFooter source)
             {
                 if (source.Source is PdfSourceHtml html)
                 {

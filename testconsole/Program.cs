@@ -18,7 +18,8 @@ namespace testconsole
 
             var cover = new PdfDocument(PdfSource.FromFile("res/cover.html"));
             cover.Configure(print => {
-                print.DPI = 300;
+                print.DPI = 225;
+                print.EnableIntelligentShrinking = false;
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
                 print.Orientation = Orientation.Portrait;
                 print.PaperSize = PaperKind.A4;
@@ -26,13 +27,14 @@ namespace testconsole
             
             var content = new PdfDocument(PdfSource.FromFile("res/content.html"));
             content.Configure(print => {
-                print.DPI = 300;
+                print.DPI = 225;
+                print.EnableIntelligentShrinking = false;
                 print.PaperSize = PaperKind.A4;
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
                 print.Orientation = Orientation.Portrait;
             });
-            content.SetHeader(HeaderFooter.Source(PdfSource.FromFile("res/header.html"), 25, 10));
-            content.SetFooter(HeaderFooter.Source(PdfSource.FromFile("res/footer.html"), 25, 10));
+            content.SetHeader(HeaderFooter.Html(PdfSource.FromFile("res/header.html"), 25, 10));
+            content.SetFooter(HeaderFooter.Html(PdfSource.FromFile("res/footer.html"), 25, 10));
             
             renderer.Add(cover);
             renderer.Add(content);

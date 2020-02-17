@@ -18,9 +18,9 @@ namespace wkpdftoxcorelib
         /// </summary>
         public double? Spacing { get; set; }
 
-        public static SourceHeaderFooter Source(PdfSource source, double height, double? spacing = null, bool? line = null)
+        public static HtmlHeaderFooter Html(PdfSource source, double height, double? spacing = null, bool? line = null)
         {
-            return new SourceHeaderFooter(source)
+            return new HtmlHeaderFooter(source)
             {
                 Height = height,
                 Spacing = spacing,
