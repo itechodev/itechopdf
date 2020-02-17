@@ -40,11 +40,11 @@ namespace wkpdftoxcorelib
             {
                 if (doc.Source is PdfSourceFile file)
                 {
-                    pdfs.Add(HtmlToPdf(file.Path, doc.LoadSettings, doc.PrintSettings));
+                    pdfs.Add(HtmlFileToPdf(file.Path, doc.LoadSettings, doc.PrintSettings));
                 }
                 else if (doc.Source is PdfSourceHtml html)
                 {
-                    pdfs.Add(HtmlFileToPdf(html.Html, doc.LoadSettings, doc.PrintSettings));
+                    pdfs.Add(HtmlToPdf(html.Html, doc.LoadSettings, doc.PrintSettings));
                 }
                 // Keep track of number count.
             }
