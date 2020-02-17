@@ -7,11 +7,13 @@ namespace wkpdftoxcorelib
 
         }
 
-        public StandardHeaderFooter(string left, string center, string right)
+        public StandardHeaderFooter(string left, string center, string right, int? fontSize = null, string fontName = null)
         {
             Left = left;
             Center = center;
             Right = right;
+            FontSize = fontSize;
+            FontName = fontName;
         }
 
         /// <summary>

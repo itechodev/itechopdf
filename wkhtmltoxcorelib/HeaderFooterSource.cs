@@ -1,8 +1,8 @@
 ﻿namespace wkpdftoxcorelib
 {
-    public class HeaderFooterSource :  HeaderFooter
+    public class SourceHeaderFooter :  HeaderFooter
     {
-        public HeaderFooterSource(PdfSource source)
+        public SourceHeaderFooter(PdfSource source)
         {
             Source = source;
         }

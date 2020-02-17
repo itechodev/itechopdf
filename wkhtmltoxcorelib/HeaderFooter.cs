@@ -17,5 +17,20 @@ namespace wkpdftoxcorelib
         /// The amount of space to put between the footer and the content, e.g. "1.8". Be aware that if this is too large the footer will be printed outside the pdf document. This can be corrected with the margin.bottom setting. Default = 0.00
         /// </summary>
         public double? Spacing { get; set; }
+
+        public static SourceHeaderFooter Source(PdfSource source, double height, double? spacing = null, bool? line = null)
+        {
+            return new SourceHeaderFooter(source)
+            {
+                Height = height,
+                Spacing = spacing,
+                Line = line
+            };
+        }
+
+        public static StandardHeaderFooter Standard(string left, string center, string right, int? fontSize = null, string fontName = null)
+        {
+            return new StandardHeaderFooter(left, center, right, fontSize, fontName);
+        }
     }
 }
