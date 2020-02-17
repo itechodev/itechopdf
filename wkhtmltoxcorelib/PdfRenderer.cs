@@ -38,14 +38,8 @@ namespace wkpdftoxcorelib
             List<byte[]> pdfs = new List<byte[]>();
             foreach (var doc in _documents)
             {
-                if (doc.Source is PdfSourceFile file)
-                {
-                    pdfs.Add(HtmlFileToPdf(file.Path, doc.LoadSettings, doc.PrintSettings));
-                }
-                else if (doc.Source is PdfSourceHtml html)
-                {
-                    pdfs.Add(HtmlToPdf(html.Html, html.BaseUrl, doc.LoadSettings, doc.PrintSettings));
-                }
+                HtmlDocument htmlDoc = DocFromSource(doc.Source);
+                pdfs.Add(HtmlDocToPdf(htmlDoc, doc.LoadSettings, doc.PrintSettings));
                 // Keep track of number count.
             }
             // Merge all PDF's and return one result.
@@ -81,23 +75,14 @@ namespace wkpdftoxcorelib
             }
         }
 
-        private byte[] HtmlFileToPdf(string filename, LoadSettings loadSettings, PrintSettings printSettings)
-        {
-            return HtmlToPdf(File.ReadAllText(filename), Path.GetDirectoryName(Path.GetFullPath(filename)), loadSettings, printSettings);
-        }
-
-        private byte[] HtmlToPdf(string html, string baseUrl, LoadSettings loadSettings, PrintSettings printSettings)
+        private byte[] HtmlDocToPdf(HtmlDocument doc, LoadSettings loadSettings, PrintSettings printSettings)
         {
             try
             {
-                var htmlDoc = new HtmlDocument();
-                htmlDoc.LoadHtml(html);
-                htmlDoc = FormatHtml(htmlDoc, baseUrl);
                 using (var sw = new StringWriter())
                 {
-                    htmlDoc.Save(sw);
+                    doc.Save(sw);
                     return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(loadSettings, printSettings));
-
                 }
             }
             finally
@@ -190,6 +175,26 @@ namespace wkpdftoxcorelib
             };
         }
 
+        
+        private HtmlDocument DocFromSource(PdfSource pdfSource)
+        {
+            var htmlDoc = new HtmlDocument();
+            string baseUrl = null;
+            if (pdfSource is PdfSourceHtml html)
+            {
+                baseUrl = html.BaseUrl ?? Environment.CurrentDirectory;
+                htmlDoc.LoadHtml(html.Html);
+            }
+
+            if (pdfSource is PdfSourceFile file)
+            {
+                baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
+                htmlDoc.Load(file.Path);
+            }
+            
+            return FormatHtml(htmlDoc, baseUrl);
+        }
+        
         private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings)
         {
             if (settings == null)
@@ -197,7 +202,6 @@ namespace wkpdftoxcorelib
                 return null;
             }
 
-            var htmlDoc = new HtmlDocument();
             if (settings is StandardHeaderFooter std)
             {
                 return new HeaderFooterSettings
@@ -211,33 +215,22 @@ namespace wkpdftoxcorelib
                     Spacing = std.Spacing
                 };
             }
-
-            string baseUrl = null;
+            
             if (settings is HtmlHeaderFooter source)
             {
-                if (source.Source is PdfSourceHtml html)
-                {
-                    baseUrl = html.BaseUrl ?? Environment.CurrentDirectory;
-                    htmlDoc.LoadHtml(html.Html);
-                }
+                HtmlDocument htmlDoc = DocFromSource(source.Source);
+                var path = CreateTempFile();
+                htmlDoc.Save(path);
 
-                if (source.Source is PdfSourceFile file)
+                return new HeaderFooterSettings
                 {
-                    baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path));
-                    htmlDoc.Load(file.Path);
-                }
+                    Spacing = settings.Spacing,
+                    Line = settings.Line,
+                    Url = path
+                };
             }
 
-            htmlDoc = FormatHtml(htmlDoc, baseUrl);
-            var path = CreateTempFile();
-            htmlDoc.Save(path);
-
-            return new HeaderFooterSettings
-            {
-                Spacing = settings.Spacing,
-                Line = settings.Line,
-                Url = path
-            };
+            throw new Exception($"Unknown settings type {settings.GetType().Name}");
         }
 
         private string CreateTempFile()
