@@ -92,7 +92,7 @@ namespace wkpdftoxcorelib
             {
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(html);
-                FormatHtml(htmlDoc, Environment.CurrentDirectory);
+                htmlDoc = FormatHtml(htmlDoc, Environment.CurrentDirectory);
                 using (var sw = new StringWriter())
                 {
                     htmlDoc.Save(sw);
@@ -225,7 +225,7 @@ namespace wkpdftoxcorelib
                 }
             }
 
-            FormatHtml(htmlDoc, Environment.CurrentDirectory);
+            htmlDoc = FormatHtml(htmlDoc, Environment.CurrentDirectory);
             var path = CreateTempFile();
             htmlDoc.Save(path);
 
@@ -246,12 +246,52 @@ namespace wkpdftoxcorelib
             return path;
         }
 
-        private void FormatHtml(HtmlDocument htmlDoc, string baseUrl)
+
+        private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl)
         {
-            // Fixed paths for resources
-            FixedPath(htmlDoc, baseUrl, "//img", "src");
-            // Add Doctype
-            // Add javascript for injection
+            HtmlNode html = doc.DocumentNode.SelectSingleNode("html");
+            if (html == null)
+            {
+                // html does not exists. <head> and <body> possible inside html
+                // Add everything into html
+                html = doc.CreateElement("html");
+                html.AppendChildren(doc.DocumentNode.ChildNodes);
+            }
+            // head might be inside html
+            HtmlNode head = html.SelectSingleNode("head");
+            if (head == null)
+            {
+                head = doc.CreateElement("head");
+                html.PrependChild(head);
+            }
+            // Add base for resource paths
+            var baseTag =  doc.CreateElement("base");
+            baseTag.SetAttributeValue("href", @"file://" + baseUrl);
+            head.AppendChild(baseTag);
+
+
+            HtmlNode body = html.SelectSingleNode("body");
+            if (body == null)
+            {
+                body = doc.CreateElement("body");
+                // All html.ChildNodes except head
+                HtmlNodeCollection col = new HtmlNodeCollection(body);
+                foreach (var child in html.ChildNodes)
+                {
+                    if (child != head)
+                    {
+                        col.Add(child);
+                    }
+                }
+            }
+            
+            var newDoc = new HtmlDocument();
+            // Ensure doctype
+            HtmlCommentNode doctype = doc.CreateComment("<!DOCTYPE html>");
+            newDoc.DocumentNode.PrependChild(doctype);
+            newDoc.DocumentNode.AppendChild(html);
+            
+            return newDoc;
         }
 
         private void FixedPath(HtmlDocument htmlDoc, string baseUrl, string xpath, string attribute)
