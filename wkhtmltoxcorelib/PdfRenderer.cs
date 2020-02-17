@@ -44,7 +44,7 @@ namespace wkpdftoxcorelib
                 }
                 else if (doc.Source is PdfSourceHtml html)
                 {
-                    pdfs.Add(HtmlToPdf(html.Html, doc.LoadSettings, doc.PrintSettings));
+                    pdfs.Add(HtmlToPdf(html.Html, html.BaseUrl, doc.LoadSettings, doc.PrintSettings));
                 }
                 // Keep track of number count.
             }
@@ -83,16 +83,16 @@ namespace wkpdftoxcorelib
 
         private byte[] HtmlFileToPdf(string filename, LoadSettings loadSettings, PrintSettings printSettings)
         {
-            return HtmlToPdf(File.ReadAllText(filename), loadSettings, printSettings);
+            return HtmlToPdf(File.ReadAllText(filename), Path.GetDirectoryName(Path.GetFullPath(filename)), loadSettings, printSettings);
         }
 
-        private byte[] HtmlToPdf(string html, LoadSettings loadSettings, PrintSettings printSettings)
+        private byte[] HtmlToPdf(string html, string baseUrl, LoadSettings loadSettings, PrintSettings printSettings)
         {
             try
             {
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(html);
-                htmlDoc = FormatHtml(htmlDoc, Environment.CurrentDirectory);
+                htmlDoc = FormatHtml(htmlDoc, baseUrl);
                 using (var sw = new StringWriter())
                 {
                     htmlDoc.Save(sw);
@@ -212,20 +212,23 @@ namespace wkpdftoxcorelib
                 };
             }
 
+            string baseUrl = null;
             if (settings is HtmlHeaderFooter source)
             {
                 if (source.Source is PdfSourceHtml html)
                 {
+                    baseUrl = html.BaseUrl ?? Environment.CurrentDirectory;
                     htmlDoc.LoadHtml(html.Html);
                 }
 
                 if (source.Source is PdfSourceFile file)
                 {
+                    baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path));
                     htmlDoc.Load(file.Path);
                 }
             }
 
-            htmlDoc = FormatHtml(htmlDoc, Environment.CurrentDirectory);
+            htmlDoc = FormatHtml(htmlDoc, baseUrl);
             var path = CreateTempFile();
             htmlDoc.Save(path);
 
