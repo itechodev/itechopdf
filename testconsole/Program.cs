@@ -18,23 +18,17 @@ namespace testconsole
 
             var cover = new PdfDocument(PdfSource.FromFile("res/cover.html"));
             cover.Configure(print => {
-                print.DPI = 225;
-                print.EnableIntelligentShrinking = false;
+                print.DPI = 300;
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
-                print.Orientation = Orientation.Portrait;
-                print.PaperSize = PaperKind.A4;
             });
             
             var content = new PdfDocument(PdfSource.FromFile("res/content.html"));
             content.Configure(print => {
-                print.DPI = 225;
-                print.EnableIntelligentShrinking = false;
-                print.PaperSize = PaperKind.A4;
+                print.DPI = 300;
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
-                print.Orientation = Orientation.Portrait;
             });
-            content.SetHeader(HeaderFooter.Html(PdfSource.FromFile("res/header.html"), 25, 10));
-            content.SetFooter(HeaderFooter.Html(PdfSource.FromFile("res/footer.html"), 25, 10));
+            content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
+            content.SetFooter(PdfSource.FromFile("res/footer.html"), 25, 5);
             
             renderer.Add(cover);
             renderer.Add(content);

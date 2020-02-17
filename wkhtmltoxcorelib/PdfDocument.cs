@@ -28,12 +28,42 @@ namespace wkpdftoxcorelib
             };
         }
 
-        public void SetHeader(HeaderFooter header)
+        public void SetHeader(PdfSource source, double height, double? spacing = null, bool? line = null)
+        {
+            SetHeader(new HtmlHeaderFooter(source)
+            {   
+                Height = height,
+                Spacing = spacing,
+                Line = line
+            });
+        }
+
+        public void SetFooter(PdfSource source, double height, double? spacing = null, bool? line = null)
+        {
+            SetFooter(new HtmlHeaderFooter(source)
+            {   
+                Height = height,
+                Spacing = spacing,
+                Line = line
+            });
+        }
+        
+        public void SetFooter(string left, string center, string right, int? fontSize = null, string fontName = null)
+        {
+            SetFooter(new StandardHeaderFooter(left, center, right, fontSize, fontName));
+        }
+ 
+        public void SetHeader(string left, string center, string right, int? fontSize = null, string fontName = null)
+        {
+            SetHeader(new StandardHeaderFooter(left, center, right, fontSize, fontName));
+        }
+
+        private void SetHeader(HeaderFooter header)
         {
             PrintSettings.Header = header;
         }
 
-        public void SetFooter(HeaderFooter footer)
+        private void SetFooter(HeaderFooter footer)
         {
             PrintSettings.Footer = footer;
         }
