@@ -33,8 +33,7 @@ namespace testconsole
             renderer.Add(cover);
             renderer.Add(content);
 
-            var pdf = renderer.RenderToBytes();
-            File.WriteAllBytes("output.pdf", pdf);
+            renderer.RenderToFile("output.pdf");
         }
     }
 }

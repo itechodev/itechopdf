@@ -46,6 +46,11 @@ namespace wkpdftoxcorelib
             return MergePDFBytes(pdfs);
         }
 
+        public void  RenderToFile(string output)
+        {
+            File.WriteAllBytes(output, RenderToBytes());
+        }
+
         public byte[] MergePDFBytes(List<byte[]> pdfs)
         {
             PdfSharp.Pdf.PdfDocument outputDocument = new PdfSharp.Pdf.PdfDocument();
