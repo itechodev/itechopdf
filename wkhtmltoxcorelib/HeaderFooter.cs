@@ -6,7 +6,7 @@ namespace wkpdftoxcorelib
         /// Explicit height of the header or footer in mm
         /// Set to null (default) for auto height. Limitation: small margin top gap and you cannot set the page's margin top
         /// </summary>
-        public double? Height { get; set; }
+        public double Height { get; set; }
 
         /// <summary>
         /// Whether a line should be printed above the footer. Default = false

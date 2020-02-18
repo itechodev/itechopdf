@@ -4,7 +4,7 @@ namespace wkpdftoxcorelib
 {
     public class MarginSettings
     {
-        public Unit Unit { get; set; }
+        // always in mm as the header and footer sizes are measures in mm
 
         public double? Top { get; set; }
 
@@ -14,23 +14,35 @@ namespace wkpdftoxcorelib
 
         public double? Right { get; set; }
 
-        public MarginSettings(Unit unit = Unit.Millimeters)
+        public MarginSettings()
         {
-            Unit = unit;
         }
 
-        public MarginSettings(double top, double right, double bottom, double left, Unit unit) : this(unit)
+        public MarginSettings(double top, double right, double bottom, double left, Unit unit)
         {
             Set(top, right, bottom, left, unit);
         }
 
         public void Set(double top, double right, double bottom, double left, Unit unit)
         {
-            Top = top;
-            Bottom = bottom;
-            Left = left;
-            Right = right;
-            Unit = unit;
+            Top = ConvertToMM(top, unit);
+            Bottom = ConvertToMM(bottom, unit);
+            Left = ConvertToMM(left, unit);
+            Right = ConvertToMM(right, unit);
+        }
+
+        private double ConvertToMM(double value, Unit unit)
+        {
+            switch (unit)
+            {
+                case Unit.Inches:
+                    return value * 25.4;
+                case Unit.Centimeters:
+                    return value * 10;
+                case Unit.Millimeters:
+                default:
+                    return value;
+            }
         }
 
         public string GetMarginValue(double? value)
@@ -40,21 +52,7 @@ namespace wkpdftoxcorelib
                 return null;
             }
 
-            string strUnit = "in";
-
-            switch (Unit)
-            {
-                case Unit.Inches: strUnit = "in";
-                    break;
-                case Unit.Millimeters: strUnit = "mm";
-                    break;
-                case Unit.Centimeters: strUnit = "cm";
-                    break;
-                default: strUnit = "in";
-                    break;
-            }
-
-            return value.Value.ToString("0.##", CultureInfo.InvariantCulture) + strUnit;
+            return value.Value.ToString("0.##", CultureInfo.InvariantCulture) + "mm";
         }
     }
     

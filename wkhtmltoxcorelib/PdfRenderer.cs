@@ -96,7 +96,6 @@ namespace wkpdftoxcorelib
             }
         }
 
-
         private void CleanUp()
         {
             // Delete all temporiry files created
@@ -115,19 +114,11 @@ namespace wkpdftoxcorelib
 
             if (marginTop.HasValue)
             {
-                if (printSettings.Header != null && printSettings.Header.Height == null)
-                {
-                    throw new Exception("Header height should be explicit when margin top is explicit.");
-                }
                 marginTop = marginTop.Value + (printSettings.Header?.Spacing ?? 0) + (printSettings.Header?.Height ?? 0);
             }
 
             if (marginBottom.HasValue)
             {
-                if (printSettings.Footer != null && printSettings.Footer.Height == null)
-                {
-                    throw new Exception("Footer height should be explicit when margin bottom is explicit.");
-                }
                 marginBottom = marginBottom.Value + (printSettings.Footer?.Spacing ?? 0) + (printSettings.Footer?.Height ?? 0);
             }
 
@@ -294,39 +285,5 @@ namespace wkpdftoxcorelib
             
             return newDoc;
         }
-
-        private void FixedPath(HtmlDocument htmlDoc, string baseUrl, string xpath, string attribute)
-        {
-            var nodes = htmlDoc.DocumentNode.SelectNodes(xpath);
-            if (nodes == null || nodes.Count == 0)
-            {
-                return;
-            }
-            foreach (var node in nodes)
-            {
-                var attrValue = node.GetAttributeValue(attribute, null);
-                if (String.IsNullOrEmpty(attrValue))
-                {
-                    continue;
-                }
-                string newValue = FormatUrl(attrValue, baseUrl);
-                if (newValue != attrValue)
-                {
-                    node.SetAttributeValue(attribute, newValue);
-                }
-            }
-        }
-
-        private string FormatUrl(string url, string baseUrl)
-        {
-            string check = url.Trim().ToLower();
-            if (check.StartsWith("http://") || check.StartsWith("https://") || check.StartsWith("file://") || check.StartsWith("data:") || check.StartsWith("/"))
-            {
-                // Url is absolute or contains inline data. Leave as is
-                return url;
-            }
-            return Path.Combine(baseUrl, url);
-        }
-
     }
 }

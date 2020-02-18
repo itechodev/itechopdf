@@ -124,7 +124,6 @@ namespace wkpdftoxcorelib.Core
 
         private static byte[] _HtmlToPdf(byte[] bytes, WkHtmlToPdfSettings settings)
         {
-            
             var globalSettings = WkHtmlToXBinding.wkhtmltopdf_create_global_settings();
             var objectSettings = WkHtmlToXBinding.wkhtmltopdf_create_object_settings();
 

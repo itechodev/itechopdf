@@ -12,6 +12,8 @@ namespace wkpdftoxcorelib
         public PdfDocument(PdfSource source)
         {
             Source = source;
+            // Default margin to 1 inch
+            PrintSettings.Margins.Set(1, 1, 1, 1, Unit.Inches);
         }
 
         public void AddStandardHeader(string left, string center, string right, double? spacing = null, bool line = true, int? fontSize = null, string fontName = null)
