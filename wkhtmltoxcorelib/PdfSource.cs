@@ -17,9 +17,9 @@ namespace wkpdftoxcorelib
             }
         }
 
-        public static PdfSource FromHtml(string html)
+        public static PdfSource FromHtml(string html, string baseUrl = null)
         {
-            return new PdfSourceHtml(html);
+            return new PdfSourceHtml(html, baseUrl);
         }
     }
 }
