@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using wkpdftoxcorelib;
 
 namespace testconsole
@@ -34,14 +35,27 @@ namespace testconsole
 
             renderer.RenderToFile($"output-{i}.pdf");
         }
+
+        static void FromXml()
+        {
+            var renderer = new PdfRenderer();
+            using (var f = File.Open("res/all.xml", FileMode.Open))
+            {
+                renderer.AddXml(f);
+            }
+            renderer.RenderToFile("all.pdf");
+        }
+
         static void Main(string[] args)
         {
             // No data is available for encoding 1252
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            Parallel.For(0, 2, i => {
-                Create(i);
-            });
+            FromXml();
+            
+            // Parallel.For(0, 2, i => {
+            //     Create(i);
+            // });
         }
     }
 }

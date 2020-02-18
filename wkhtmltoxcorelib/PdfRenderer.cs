@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 using HtmlAgilityPack;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
@@ -21,6 +23,31 @@ namespace wkpdftoxcorelib
         public void Add(PdfDocument doc)
         {
             _documents.Add(doc);
+        }
+
+        public void AddXml(Stream stream)
+        {
+            var ser = new XmlSerializer(typeof(PdfXmlRenderer));
+            var content = (PdfXmlRenderer) ser.Deserialize(stream);
+            
+            foreach (var d in content.Documents)
+            {
+                var doc = new PdfDocument(PdfSource.FromHtml(d.Html.MarkupContent));
+                doc.Configure(print => {
+                    print.DPI = d.Dpi;
+                }, load => {
+
+                });
+                if (d.Header != null)
+                {
+                    doc.SetHeader(PdfSource.FromHtml(d.Header.Html.MarkupContent, ""), d.Header.Height, d.Header.Spacing, d.Header.Line);
+                }
+                if (d.Footer != null)
+                {
+                    doc.SetFooter(PdfSource.FromHtml(d.Footer.Html.MarkupContent, ""), d.Footer.Height, d.Footer.Spacing, d.Footer.Line);
+                }
+                Add(doc);
+            }
         }
 
         public void InsertAt(PdfDocument doc, int index)
