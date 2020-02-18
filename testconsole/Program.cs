@@ -39,7 +39,7 @@ namespace testconsole
         static void FromXml()
         {
             var renderer = new PdfRenderer();
-            using (var f = File.Open("res/all.xml", FileMode.Open))
+            using (var f = File.OpenRead("res/all.xml"))
             {
                 renderer.AddXml(f);
             }

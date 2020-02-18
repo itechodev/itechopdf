@@ -230,7 +230,7 @@ namespace wkpdftoxcorelib
             if (pdfSource is PdfSourceFile file)
             {
                 baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
-                using (var fs = File.Open(file.Path, FileMode.Open))
+                using (var fs = File.OpenRead(file.Path))
                 {
                     htmlDoc.Load(fs);
                 }

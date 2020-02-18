@@ -7,7 +7,7 @@
         <Version>2.0.0-alpha</Version>
         <Authors>Willem Bijker;Jaco van Rensburg</Authors>
         <Company>Itecho</Company>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <PackageTags>pdf;html;wkhtmltopdf</PackageTags>
         <IncludeBuildOutput>True</IncludeBuildOutput>
         <IncludeContentInPack>True</IncludeContentInPack>
@@ -33,12 +33,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="HtmlAgilityPack.NetCore">
-          <Version>1.5.0.1</Version>
-        </PackageReference>
-        <PackageReference Include="Microsoft.AspNetCore.All" />
-        <PackageReference Include="PDFsharp" Version="1.50.5147" />
-        <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.19" PrivateAssets="All" />
+        <PackageReference Include="PDFsharp" Version="1.50.5147"  PrivateAssets="All"/>
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0"  PrivateAssets="All"/>
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
