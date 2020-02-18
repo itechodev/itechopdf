@@ -2,17 +2,15 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using wkpdftoxcorelib;
 
 namespace testconsole
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Create(int i)
         {
-            // No data is available for encoding 1252
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
             var renderer = new PdfRenderer();
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
@@ -22,7 +20,7 @@ namespace testconsole
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
             });
             
-            var content = new PdfDocument(PdfSource.FromFile("res/content.html"));
+            var content = new PdfDocument(PdfSource.FromHtml($"This PDF is created using thread #{i}"));
             content.Configure(print => {
                 print.DPI = 300;
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
@@ -33,7 +31,16 @@ namespace testconsole
             renderer.Add(cover);
             renderer.Add(content);
 
-            renderer.RenderToFile("output.pdf");
+            renderer.RenderToFile($"output-{i}.pdf");
+        }
+        static void Main(string[] args)
+        {
+            // No data is available for encoding 1252
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            Parallel.For(0, 10, i => {
+                Create(i);
+            });
         }
     }
 }

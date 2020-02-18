@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace wkpdftoxcorelib.Core
 {
@@ -8,6 +11,102 @@ namespace wkpdftoxcorelib.Core
     // Elegant wrapper around C bindings to WkHtmlToPdf
     internal static class WkHtmlToPdf
     {
+        // Cannot use simple locking or mutexes. 
+        // wkhtmltopdf doesn't support multithreading. You cannot invoke the library from different threads
+        private static Thread conversionThread;
+
+        // Queue all the tasks for conversions
+
+        private static BlockingCollection<Task> conversions = new BlockingCollection<Task>();
+
+        private static bool kill = false;
+
+        private static readonly object startLock = new object();
+
+        private static void StartThread()
+        {
+            // Start one thread to do all the convesions
+            lock (startLock)
+            {
+                if (conversionThread == null)
+                {
+                    conversionThread = new Thread(Run)
+                    {
+                        IsBackground = true,
+                        Name = "wkhtmltopdf worker thread"
+                    };
+
+                    kill = false;
+                    conversionThread.Start();
+                }
+            }
+        }
+
+        public static T SpawnTask<T>(Func<T> callback)
+        {
+            StartThread();
+
+            Task<T> task = new Task<T>(callback);
+
+            lock (task)
+            {
+                //add task to blocking collection
+                conversions.Add(task);
+
+                //wait for task to be processed by conversion thread 
+                Monitor.Wait(task);
+            }
+
+            //throw exception that happened during conversion
+            if (task.Exception != null)
+            {
+                throw task.Exception;
+            }
+
+            return task.Result;
+        }
+
+        
+        private static void StopThread()
+        {
+            lock (startLock)
+            {
+                if (conversionThread != null)
+                {
+                    kill = true;
+
+                    while (conversionThread.ThreadState == ThreadState.Stopped)
+                    { }
+
+                    conversionThread = null;
+                }
+            }
+        }
+
+        private static void Run()
+        {
+            if (WkHtmlToXBinding.wkhtmltopdf_init(0) != 1)
+            {
+                throw new Exception("Could not initialize WkHtmlToPDF library");
+            }
+
+            while (!kill)
+            {
+                //get next conversion taks from blocking collection
+                Task task = conversions.Take();
+
+                lock (task)
+                {
+                    //run taks on thread that called RunSynchronously method
+                    task.RunSynchronously();
+
+                    //notify caller thread that task is completed
+                    Monitor.Pulse(task);
+                }
+            }
+        }
+
+
         public static string GetVersion()
         {
             return Marshal.PtrToStringAnsi(WkHtmlToXBinding.wkhtmltopdf_version());
@@ -20,10 +119,12 @@ namespace wkpdftoxcorelib.Core
 
         public static byte[] HtmlToPdf(byte[] bytes, WkHtmlToPdfSettings settings)
         {
-            if (WkHtmlToXBinding.wkhtmltopdf_init(0) != 1)
-            {
-                throw new Exception("Could not initialize WkHtmlToPDF library");
-            }
+            return SpawnTask<byte[]>(() => _HtmlToPdf(bytes, settings));
+        }
+
+        private static byte[] _HtmlToPdf(byte[] bytes, WkHtmlToPdfSettings settings)
+        {
+            
             var globalSettings = WkHtmlToXBinding.wkhtmltopdf_create_global_settings();
             var objectSettings = WkHtmlToXBinding.wkhtmltopdf_create_object_settings();
 
