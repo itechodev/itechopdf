@@ -230,7 +230,10 @@ namespace wkpdftoxcorelib
             if (pdfSource is PdfSourceFile file)
             {
                 baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
-                htmlDoc.Load(file.Path);
+                using (var fs = File.Open(file.Path, FileMode.Open))
+                {
+                    htmlDoc.Load(fs);
+                }
             }
             
             return FormatHtml(htmlDoc, baseUrl);
@@ -261,7 +264,10 @@ namespace wkpdftoxcorelib
             {
                 HtmlDocument htmlDoc = DocFromSource(source.Source);
                 var path = CreateTempFile();
-                htmlDoc.Save(path);
+                using (var sw = File.Create(path))
+                {
+                    htmlDoc.Save(sw);
+                }
 
                 return new HeaderFooterSettings
                 {
