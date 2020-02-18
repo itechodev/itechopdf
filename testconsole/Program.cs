@@ -36,23 +36,12 @@ namespace testconsole
             renderer.RenderToFile($"output-{i}.pdf");
         }
 
-        static void FromXml()
-        {
-            var renderer = new PdfRenderer();
-            using (var f = File.OpenRead("res/all.xml"))
-            {
-                renderer.AddXml(f);
-            }
-            renderer.RenderToFile("all.pdf");
-        }
-
+      
         static void Main(string[] args)
         {
             // No data is available for encoding 1252
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            FromXml();
-            
+      
             Parallel.For(0, 2, i => {
                 Create(i);
             });

@@ -25,49 +25,6 @@ namespace wkpdftoxcorelib
             _documents.Add(doc);
         }
 
-        public void AddXml(string xml, string defaultBaseUrl = null)
-        {
-            var ser = new XmlSerializer(typeof(PdfXmlRenderer));
-            using (var ms = new StringReader(xml))
-            {
-                 var content = (PdfXmlRenderer) ser.Deserialize(ms);
-                 AddXmlRenderer(content, defaultBaseUrl);
-            }
-        }
-
-        public void AddXml(Stream stream, string defaultBaseUrl = null)
-        {
-            var ser = new XmlSerializer(typeof(PdfXmlRenderer));
-            var content = (PdfXmlRenderer) ser.Deserialize(stream);
-            AddXmlRenderer(content, defaultBaseUrl);
-        }
-
-        private void AddXmlRenderer(PdfXmlRenderer content, string defaultBaseUrl)
-        {
-            if (content == null)
-            {
-                return;
-            }
-            foreach (var d in content.Documents)
-            {
-                var doc = new PdfDocument(PdfSource.FromHtml(d.Html.MarkupContent, defaultBaseUrl));
-                doc.Configure(print => {
-                    print.DPI = d.Dpi;
-                }, load => {
-
-                });
-                if (d.Header != null)
-                {
-                    doc.SetHeader(PdfSource.FromHtml(d.Header.Html.MarkupContent, defaultBaseUrl), d.Header.Height, d.Header.Spacing, d.Header.Line);
-                }
-                if (d.Footer != null)
-                {
-                    doc.SetFooter(PdfSource.FromHtml(d.Footer.Html.MarkupContent, defaultBaseUrl), d.Footer.Height, d.Footer.Spacing, d.Footer.Line);
-                }
-                Add(doc);
-            }
-        }
-
         public void InsertAt(PdfDocument doc, int index)
         {
             _documents.Insert(index, doc);

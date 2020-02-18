@@ -14,6 +14,7 @@ namespace wkpdftoxcorelib
             Source = source;
             // Default margin to 1 inch
             PrintSettings.Margins.Set(1, 1, 1, 1, Unit.Inches);
+            PrintSettings.PrintBackground = true;
         }
 
         public void AddStandardHeader(string left, string center, string right, double? spacing = null, bool line = true, int? fontSize = null, string fontName = null)
