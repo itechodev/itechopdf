@@ -25,32 +25,32 @@ namespace wkpdftoxcorelib
             _documents.Add(doc);
         }
 
-        public void AddXml(string xml)
+        public void AddXml(string xml, string defaultBaseUrl = null)
         {
             var ser = new XmlSerializer(typeof(PdfXmlRenderer));
             using (var ms = new StringReader(xml))
             {
                  var content = (PdfXmlRenderer) ser.Deserialize(ms);
-                 AddXmlRenderer(content);
+                 AddXmlRenderer(content, defaultBaseUrl);
             }
         }
 
-        public void AddXml(Stream stream)
+        public void AddXml(Stream stream, string defaultBaseUrl = null)
         {
             var ser = new XmlSerializer(typeof(PdfXmlRenderer));
             var content = (PdfXmlRenderer) ser.Deserialize(stream);
-            AddXmlRenderer(content);
+            AddXmlRenderer(content, defaultBaseUrl);
         }
 
-        private void AddXmlRenderer(PdfXmlRenderer content)
+        private void AddXmlRenderer(PdfXmlRenderer content, string defaultBaseUrl)
         {
             if (content == null)
             {
                 return;
-            }         
+            }
             foreach (var d in content.Documents)
             {
-                var doc = new PdfDocument(PdfSource.FromHtml(d.Html.MarkupContent));
+                var doc = new PdfDocument(PdfSource.FromHtml(d.Html.MarkupContent, defaultBaseUrl));
                 doc.Configure(print => {
                     print.DPI = d.Dpi;
                 }, load => {
@@ -58,11 +58,11 @@ namespace wkpdftoxcorelib
                 });
                 if (d.Header != null)
                 {
-                    doc.SetHeader(PdfSource.FromHtml(d.Header.Html.MarkupContent, ""), d.Header.Height, d.Header.Spacing, d.Header.Line);
+                    doc.SetHeader(PdfSource.FromHtml(d.Header.Html.MarkupContent, defaultBaseUrl), d.Header.Height, d.Header.Spacing, d.Header.Line);
                 }
                 if (d.Footer != null)
                 {
-                    doc.SetFooter(PdfSource.FromHtml(d.Footer.Html.MarkupContent, ""), d.Footer.Height, d.Footer.Spacing, d.Footer.Line);
+                    doc.SetFooter(PdfSource.FromHtml(d.Footer.Html.MarkupContent, defaultBaseUrl), d.Footer.Height, d.Footer.Spacing, d.Footer.Line);
                 }
                 Add(doc);
             }
@@ -292,6 +292,12 @@ namespace wkpdftoxcorelib
 
         private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl)
         {
+            // make sure baeUrl is always ending with directory seperator
+            if (!baseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                baseUrl += Path.DirectorySeparatorChar;
+            }
+
             HtmlNode html = doc.DocumentNode.SelectSingleNode("html");
             if (html == null)
             {
@@ -310,7 +316,7 @@ namespace wkpdftoxcorelib
             // Add base for resource paths
             var baseTag =  doc.CreateElement("base");
             baseTag.SetAttributeValue("href", @"file://" + baseUrl);
-            head.AppendChild(baseTag);
+            head.PrependChild(baseTag);
 
 
             HtmlNode body = html.SelectSingleNode("body");
