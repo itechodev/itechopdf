@@ -1,6 +1,10 @@
 # wkhtmltoxcorelib 
 wkhtmltoxcorelib  is a dotnet corelibrary around the wkhtmltopdf utility to produce PDF files from HTML. You can create multiple pages, cover pages and configurable header and footers using a simple API.
 
+## Features
+ * Create multiple pages with different configurations. This allows you to create cover pages etc.
+ * Full support for html-based headers and footers.
+
 ## Installation
 Package available on nuget.
 ```
@@ -45,6 +49,7 @@ File.WriteAllBytes("output.pdf", bytes);
 * Flex not supported
 * SVG images should have explicit width and height
 * Using a retina display on OSX will render very small. This is because wkhtmltox uses your screen dimensions to create the PDF. Current solution is to play around with the DPI.
+* Performance. The underlying Wkhtmltopdf does not support multihreading.
 
 ## Why another library?
 I needed a solution to produce rich PDF documents from HTML. By rich I mean: cover pages, multiple pages with potential different sizes and orientations, customizable headers and footers etc. None of the open source libraries could do that easily. There are commercial solutions but the pricetag scared me off, so I wrote my own.
