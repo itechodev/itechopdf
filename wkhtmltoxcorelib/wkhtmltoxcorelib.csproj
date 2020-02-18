@@ -33,9 +33,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="HtmlAgilityPack" Version="1.11.19" PrivateAssets="All" />
-        <PackageReference Include="PDFsharp" Version="1.50.5147"  PrivateAssets="All"/>
-        <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0"  PrivateAssets="All"/>
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.19" PrivateAssets="Compile;ContentFiles;Build;Native;Analyzers" />
+        <PackageReference Include="PDFsharp" Version="1.50.5147" PrivateAssets="Compile;ContentFiles;Build;Native;Analyzers" />
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0"/>
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
