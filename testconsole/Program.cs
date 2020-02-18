@@ -21,9 +21,10 @@ namespace testconsole
             });
             
             var content = new PdfDocument(PdfSource.FromHtml($"This PDF is created using thread #{i}"));
-            content.Configure(print => {
-                print.DPI = 300;
+            content.Configure(print => 
+            {
                 print.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
+                print.DPI = 300;
             });
             content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
             content.SetFooter(PdfSource.FromFile("res/footer.html"), 25, 5);
@@ -38,7 +39,7 @@ namespace testconsole
             // No data is available for encoding 1252
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            Parallel.For(0, 10, i => {
+            Parallel.For(0, 2, i => {
                 Create(i);
             });
         }
