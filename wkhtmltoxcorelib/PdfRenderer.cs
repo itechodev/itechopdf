@@ -25,11 +25,29 @@ namespace wkpdftoxcorelib
             _documents.Add(doc);
         }
 
+        public void AddXml(string xml)
+        {
+            var ser = new XmlSerializer(typeof(PdfXmlRenderer));
+            using (var ms = new StringReader(xml))
+            {
+                 var content = (PdfXmlRenderer) ser.Deserialize(ms);
+                 AddXmlRenderer(content);
+            }
+        }
+
         public void AddXml(Stream stream)
         {
             var ser = new XmlSerializer(typeof(PdfXmlRenderer));
             var content = (PdfXmlRenderer) ser.Deserialize(stream);
-            
+            AddXmlRenderer(content);
+        }
+
+        private void AddXmlRenderer(PdfXmlRenderer content)
+        {
+            if (content == null)
+            {
+                return;
+            }         
             foreach (var d in content.Documents)
             {
                 var doc = new PdfDocument(PdfSource.FromHtml(d.Html.MarkupContent));

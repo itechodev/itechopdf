@@ -1,8 +1,31 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿<pdf-renderer>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+    <pdf-document dpi="300" orientation="Landscape" size="a4" margin="0 0 0 0">
+        <pdf-html>
+            <html>
+                <body>
+                    <div>This is the <b>cover</b> page. Quite cool sir. </div>
+                </body>
+            </html>
+        </pdf-html>
+    </pdf-document>
+
+    <pdf-document dpi="300" orientation="Portrait" size="a4" margin="5 5 5 5">
+        <pdf-header line="false" spacing="5" height="25">
+            <pdf-html>
+            The actual header sir.
+            </pdf-html>
+        </pdf-header>
+
+        <pdf-footer line="true">
+            <pdf-html>Footer</pdf-html>
+        </pdf-footer>
+
+        <pdf-html>
+            <div>This is the content page</div>
+            <div style="background-color: orange; width: 2cm; height: 4cm">Orange block sir</div>
+        </pdf-html>
+    
+    </pdf-document>
+
+</pdf-renderer>

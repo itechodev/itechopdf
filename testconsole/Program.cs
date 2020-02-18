@@ -53,9 +53,9 @@ namespace testconsole
 
             FromXml();
             
-            // Parallel.For(0, 2, i => {
-            //     Create(i);
-            // });
+            Parallel.For(0, 2, i => {
+                Create(i);
+            });
         }
     }
 }
