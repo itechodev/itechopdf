@@ -4,7 +4,7 @@
         <Title>ItechoPdf</Title>
         <PackageDescription>PDF creation library around WkHtmlToPdf. Creates rich PDF's from HTML, CSS and javascript. Include cover pages, header and footers with a simple API. </PackageDescription>
         <Copyright>GPL</Copyright>
-        <Version>v.1.0.0-alpha</Version>
+        <Version>1.0.1-alpha</Version>
         <Authors>Willem Bijker;Jaco van Rensburg</Authors>
         <Company>Itecho</Company>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -14,6 +14,7 @@
         <RepositoryUrl>https://github.com/itechodev/itechopdf</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReleaseNotes>Name change from wkhtmltoxcorelib</PackageReleaseNotes>
+        <PackageIconUrl>icon.png</PackageIconUrl>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,6 +22,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="icon.png" Pack="True" />
+
         <Content Include="libwkhtmltox.dll" Condition=" '$(OS)' == 'Windows_NT' ">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>

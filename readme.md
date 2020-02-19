@@ -49,6 +49,7 @@ File.WriteAllBytes("output.pdf", bytes);
 * Flex not supported
 * SVG images should have explicit width and height
 * Using a retina display on OSX will render very small. This is because wkhtmltox uses your screen dimensions to create the PDF. Current solution is to play around with the DPI.
+* CSS transforms should be prefixed with -webkit-.
 * Performance. The underlying Wkhtmltopdf does not support multihreading.
 
 ## Why another library?
