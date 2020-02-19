@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace wkpdftoxcorelib.Core
+namespace ItechoPdf.Core
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void VoidCallback(IntPtr converter);

@@ -1,6 +1,6 @@
 using System;
 
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
 
     public class PdfDocument

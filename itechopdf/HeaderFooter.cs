@@ -1,4 +1,4 @@
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
     public abstract class HeaderFooter
     {

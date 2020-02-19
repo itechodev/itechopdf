@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
 using HtmlAgilityPack;
+using ItechoPdf.Core;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
-using wkpdftoxcorelib.Core;
 
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
     public class PdfRenderer
     {

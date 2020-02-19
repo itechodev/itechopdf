@@ -1,4 +1,4 @@
-namespace wkpdftoxcorelib.Core
+namespace ItechoPdf.Core
 {
     internal class HeaderFooterSettings
     {

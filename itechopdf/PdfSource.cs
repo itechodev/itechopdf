@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
     public abstract class PdfSource
     {

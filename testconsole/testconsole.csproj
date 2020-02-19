@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\wkhtmltoxcorelib\wkhtmltoxcorelib.csproj" />
+    <ProjectReference Include="..\itechopdf\itechopdf.csproj" />
   </ItemGroup>
 
   <ItemGroup>

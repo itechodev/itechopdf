@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace wkpdftoxcorelib.Core
+namespace ItechoPdf.Core
 {
     internal class Utf8Marshaler : ICustomMarshaler
     {

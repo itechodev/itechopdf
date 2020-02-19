@@ -1,19 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <PackageId>wkhtmltoxcorelib</PackageId>
-        <Title>wkhtmltoxcore</Title>
-        <PackageDescription>PDF creation library using WkHtmlToX and PdfSharp. Creates rich PDF's from HTML, CSS and javascript. Include cover pages, header and footers with a simple API. </PackageDescription>
+        <PackageId>itechopdf</PackageId>
+        <Title>ItechoPdf</Title>
+        <PackageDescription>PDF creation library around WkHtmlToPdf. Creates rich PDF's from HTML, CSS and javascript. Include cover pages, header and footers with a simple API. </PackageDescription>
         <Copyright>GPL</Copyright>
-        <Version>2.0.0-beta</Version>
+        <Version>v.1.0.0-alpha</Version>
         <Authors>Willem Bijker;Jaco van Rensburg</Authors>
         <Company>Itecho</Company>
         <TargetFramework>netstandard2.0</TargetFramework>
         <PackageTags>pdf;html;wkhtmltopdf</PackageTags>
         <IncludeBuildOutput>True</IncludeBuildOutput>
         <IncludeContentInPack>True</IncludeContentInPack>
-        <RepositoryUrl>https://github.com/itechodev/wkhtmltoxcorelib</RepositoryUrl>
+        <RepositoryUrl>https://github.com/itechodev/itechopdf</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageReleaseNotes>PdfRenderer is now thread safe. Fixed error on margin unit.</PackageReleaseNotes>
+        <PackageReleaseNotes>Name change from wkhtmltoxcorelib</PackageReleaseNotes>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

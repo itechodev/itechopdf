@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace wkpdftoxcorelib.Core
+namespace ItechoPdf.Core
 {
 
     // Elegant wrapper around C bindings to WkHtmlToPdf

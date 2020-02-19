@@ -1,4 +1,4 @@
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
     /// <summary>
     /// Enumaration of paper kinds from  http://msdn.microsoft.com/en-us/library/system.drawing.printing.paperkind.aspx

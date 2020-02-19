@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
     public class PaperSize
     {

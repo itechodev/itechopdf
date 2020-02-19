@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace wkpdftoxcorelib
+namespace ItechoPdf
 {
     public class MarginSettings
     {
