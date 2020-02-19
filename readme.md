@@ -1,5 +1,5 @@
-# wkhtmltoxcorelib 
-wkhtmltoxcorelib  is a dotnet corelibrary around the wkhtmltopdf utility to produce PDF files from HTML. You can create multiple pages, cover pages and configurable header and footers using a simple API.
+# Itechopdf 
+Itechopdf  is a dotnet corelibrary around the wkhtmltopdf utility to produce PDF files from HTML. You can create multiple pages, cover pages and configurable header and footers using a simple API.
 
 ## Features
  * Create multiple pages with different configurations. This allows you to create cover pages etc.
@@ -8,14 +8,14 @@ wkhtmltoxcorelib  is a dotnet corelibrary around the wkhtmltopdf utility to prod
 ## Installation
 Package available on nuget.
 ```
-dotnet add package wkhtmltoxcorelib 
+dotnet add package itechopdf 
 ```
 ```
-PM> Install-Package wkhtmltoxcorelib 
+PM> Install-Package itechopdf 
 ```
 
 ## Usage
-wkhtmltoxcorelib is built around three entities: **PdfRenderer**, **PdfDocument** and **PdfSource**.
+Itechopdf is built around three entities: **PdfRenderer**, **PdfDocument** and **PdfSource**.
 
 **PdfSource** specify where the html source comes from. Either from a file or from a html string. Use the static constructors to instantiate the objects:
 ```csharp
