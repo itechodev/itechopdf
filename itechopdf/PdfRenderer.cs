@@ -59,7 +59,7 @@ namespace ItechoPdf
             return MergePDFBytes(pdfs);
         }
 
-        public void  RenderToFile(string output)
+        public void RenderToFile(string output)
         {
             File.WriteAllBytes(output, RenderToBytes());
         }

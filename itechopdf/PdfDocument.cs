@@ -1,7 +1,33 @@
 using System;
+using System.Collections.Generic;
 
 namespace ItechoPdf
 {
+    public enum ResourcePlacement
+    {
+        Head,
+        EndOfDocument
+    }
+
+    public enum ResourceType
+    {
+        StyleSheet,
+        Javascript
+    }
+
+    public class PdfResource
+    {
+        public PdfResource(PdfSource source, ResourcePlacement placement, ResourceType type)
+        {
+            Source = source;
+            Placement = placement;
+            Type = type;
+        }
+
+        public PdfSource Source { get; set; }
+        public ResourcePlacement Placement { get; set; }
+        public ResourceType Type { get; set; }
+    }
 
     public class PdfDocument
     {
@@ -10,6 +36,7 @@ namespace ItechoPdf
 
         public HeaderFooter Header { get; private set; }
         public HeaderFooter Footer { get; private set; }
+        public List<PdfResource> Resources { get; }
 
         public PdfDocument(PdfSource source, PdfSettings settings = null)
         {
@@ -17,6 +44,16 @@ namespace ItechoPdf
             Settings = settings ?? new PdfSettings();
         }
 
+        public void AddCSS(PdfSource content, ResourcePlacement placement = ResourcePlacement.Head)
+        {
+            Resources.Add(new PdfResource(content, placement, ResourceType.StyleSheet));
+        }
+
+        public void AddJavascript(PdfSource content, ResourcePlacement placement = ResourcePlacement.EndOfDocument)
+        {
+            Resources.Add(new PdfResource(content, placement, ResourceType.Javascript));
+        }
+        
         public void AddStandardHeader(string left, string center, string right, double? spacing = null, bool line = true, int? fontSize = null, string fontName = null)
         {
             Header = new StandardHeaderFooter
