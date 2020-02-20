@@ -23,6 +23,14 @@ namespace ItechoPdf
             Set(top, right, bottom, left, unit);
         }
 
+        public MarginSettings(MarginSettings margins)
+        {
+            Top = margins.Top;
+            Bottom = margins.Bottom;
+            Left = margins.Left;
+            Right = margins.Right;
+        }
+
         public void Set(double top, double right, double bottom, double left, Unit unit)
         {
             Top = ConvertToMM(top, unit);

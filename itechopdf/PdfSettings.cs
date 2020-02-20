@@ -1,5 +1,13 @@
-﻿namespace ItechoPdf
+namespace ItechoPdf
 {
+    public enum ContentErrorHandling
+    {
+        Abort,
+        Skip,
+        Ignore
+    }
+    
+    
     public enum ColorMode
     {
         Color,
@@ -18,15 +26,108 @@
         Millimeters,
         Centimeters
     }
-    
+
     public enum SettingsType
     {
         Global,
         Object,
     }
- 
-    public class PrintSettings
+
+
+    // Combined load and print- settings
+    public class PdfSettings
     {
+        public PdfSettings() 
+        {
+            // Default margin to 1 inch
+            Margins.Set(1, 1, 1, 1, Unit.Inches);
+            PrintBackground = true;
+        }
+
+        public PdfSettings(PdfSettings settings)
+        {
+            Username = settings.Username;
+            Password = settings.Password;
+            JSDelay = settings.JSDelay;
+            ZoomFactor = settings.ZoomFactor;
+            BlockLocalFileAccess = settings.BlockLocalFileAccess;
+            StopSlowScript = settings.StopSlowScript;
+            DebugJavascript = settings.DebugJavascript;
+            LoadErrorHandling = settings.LoadErrorHandling;
+            Proxy = settings.Proxy;
+            PrintBackground = settings.PrintBackground;
+            LoadImages = settings.LoadImages;
+            EnableJavascript = settings.EnableJavascript;
+            EnableIntelligentShrinking = settings.EnableIntelligentShrinking;
+            MinimumFontSize = settings.MinimumFontSize;
+            PrintMediaType = settings.PrintMediaType;
+            DefaultEncoding = settings.DefaultEncoding;
+            UseExternalLinks = settings.UseExternalLinks;
+            UseLocalLinks = settings.UseLocalLinks;
+            ProduceForms = settings.ProduceForms;
+            IncludeInOutline = settings.IncludeInOutline;
+            PagesCount = settings.PagesCount;
+            Orientation = settings.Orientation;
+            ColorMode = settings.ColorMode;
+            UseCompression = settings.UseCompression;
+            DPI = settings.DPI;
+            PageOffset = settings.PageOffset;
+            Copies = settings.Copies;
+            Collate = settings.Collate;
+            OutlineDepth = settings.OutlineDepth;
+            DumpOutline = settings.DumpOutline;
+            DocumentTitle = settings.DocumentTitle;
+            ImageDPI = settings.ImageDPI;
+            CookieJar = settings.CookieJar;
+            PaperSize = settings.PaperSize;
+            Margins = new MarginSettings(settings.Margins);
+        }
+
+        /// <summary>
+        /// The user name to use when loging into a website. Default = ""
+        /// </summary>
+        public string Username { get; set; }
+
+        /// <summary>
+        /// The password to used when logging into a website. Default = ""
+        /// </summary>
+        public string Password { get; set; }
+
+        /// <summary>
+        /// The mount of time in milliseconds to wait after a page has done loading until it is actually printed. E.g. "1200". We will wait this amount of time or until, javascript calls window.print(). Default = 200
+        /// </summary>
+        public int? JSDelay { get; set; }
+
+        /// <summary>
+        /// How much should we zoom in on the content. Default = 1.0
+        /// </summary>
+        public double? ZoomFactor { get; set; }
+
+        /// <summary>
+        /// Disallow local and piped files to access other local files. Default = false
+        /// </summary>
+        public bool? BlockLocalFileAccess { get; set; }
+
+        /// <summary>
+        /// Stop slow running javascript. Default = true
+        /// </summary>
+        public bool? StopSlowScript { get; set; }
+
+        /// <summary>
+        /// Forward javascript warnings and errors to the warning callback. Default = false
+        /// </summary>
+        public bool? DebugJavascript { get; set; }
+
+        /// <summary>
+        /// How should we handle obejcts that fail to load. Default = Abort
+        /// </summary>
+        public ContentErrorHandling? LoadErrorHandling { get; set; }
+
+        /// <summary>
+        /// String describing what proxy to use when loading the object. Default = ""
+        /// </summary>
+        public string Proxy { get; set; }
+
         /// <summary>
         /// Should we print the background. Default = true
         /// </summary>
@@ -63,9 +164,6 @@
         /// </summary>
         public string DefaultEncoding { get; set; }
 
-        public HeaderFooter Header { get; set; }
-        public HeaderFooter Footer { get; set; }
-
         /// <summary>
         /// The URL or path of the web page to convert, if "-" input is read from stdin. Default = ""
         /// </summary>
@@ -95,7 +193,7 @@
         /// Should we count the pages of this document, in the counter used for TOC, headers and footers. Default = false
         /// </summary>
         public bool? PagesCount { get; set; }
-        
+
         // /// <summary>
         // /// Url or path to a user specified style sheet. Default = ""
         // /// </summary>
@@ -186,28 +284,7 @@
         /// </summary>
         public PaperSize PaperSize { get; set; } = PaperKind.A4;
 
-        /// <summary>
-        /// The height of the output document
-        /// </summary>
-        private string PaperHeight
-        {
-            get {
-                return PaperSize == null ? null : PaperSize.Height;
-            }
-        }
-        
-        /// <summary>
-        /// The width of the output document
-        /// </summary>
-        private string PaperWidth
-        {
-            get
-            {
-                return PaperSize == null ? null : PaperSize.Width;
-            }
-        }
-
         public MarginSettings Margins { get; set; } = new MarginSettings();
     }
-    
+
 }

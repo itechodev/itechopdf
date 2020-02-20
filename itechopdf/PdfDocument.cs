@@ -5,21 +5,21 @@ namespace ItechoPdf
 
     public class PdfDocument
     {
-        public LoadSettings LoadSettings { get; set; } = new LoadSettings();
-        public PrintSettings PrintSettings { get; set; } = new PrintSettings();
         public PdfSource Source { get; }
+        public PdfSettings Settings { get; private set; } = new PdfSettings();
 
-        public PdfDocument(PdfSource source)
+        public HeaderFooter Header { get; private set; }
+        public HeaderFooter Footer { get; private set; }
+
+        public PdfDocument(PdfSource source, PdfSettings settings = null)
         {
             Source = source;
-            // Default margin to 1 inch
-            PrintSettings.Margins.Set(1, 1, 1, 1, Unit.Inches);
-            PrintSettings.PrintBackground = true;
+            Settings = settings ?? new PdfSettings();
         }
 
         public void AddStandardHeader(string left, string center, string right, double? spacing = null, bool line = true, int? fontSize = null, string fontName = null)
         {
-            PrintSettings.Header = new StandardHeaderFooter
+            Header = new StandardHeaderFooter
             {
                 Center = center,
                 FontName = fontName,
@@ -63,18 +63,17 @@ namespace ItechoPdf
 
         private void SetHeader(HeaderFooter header)
         {
-            PrintSettings.Header = header;
+            Header = header;
         }
 
         private void SetFooter(HeaderFooter footer)
         {
-            PrintSettings.Footer = footer;
+            Footer = footer;
         }
     
-        public void Configure(Action<PrintSettings> print, Action<LoadSettings> load = null)
+        public void Configure(Action<PdfSettings> settings)
         {
-            print?.Invoke(PrintSettings);
-            load?.Invoke(LoadSettings);
+            settings?.Invoke(Settings);
         }
     }
 }

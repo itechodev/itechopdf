@@ -12,6 +12,19 @@ namespace ItechoPdf
     {
         private List<PdfDocument> _documents { get; set; } = new List<PdfDocument>();
         private List<string> _tempFiles = new List<string>();
+        public PdfSettings Settings { get; set; } = new PdfSettings();
+
+        public PdfRenderer(Action<PdfSettings> config = null)
+        {
+            config?.Invoke(Settings);
+        }
+
+        public PdfDocument AddDocument(PdfSource source)
+        {
+            var doc = new PdfDocument(source, new PdfSettings(Settings));
+            Add(doc);
+            return doc;
+        }
 
         public string GetVersion()
         {
@@ -39,7 +52,7 @@ namespace ItechoPdf
             foreach (var doc in _documents)
             {
                 HtmlDocument htmlDoc = DocFromSource(doc.Source);
-                pdfs.Add(HtmlDocToPdf(htmlDoc, doc.LoadSettings, doc.PrintSettings));
+                pdfs.Add(HtmlDocToPdf(htmlDoc, doc));
                 // Keep track of number count.
             }
             // Merge all PDF's and return one result.
@@ -80,14 +93,14 @@ namespace ItechoPdf
             }
         }
 
-        private byte[] HtmlDocToPdf(HtmlDocument doc, LoadSettings loadSettings, PrintSettings printSettings)
+        private byte[] HtmlDocToPdf(HtmlDocument doc, PdfDocument document)
         {
             try
             {
                 using (var sw = new StringWriter())
                 {
                     doc.Save(sw);
-                    return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(loadSettings, printSettings));
+                    return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(document));
                 }
             }
             finally
@@ -105,69 +118,71 @@ namespace ItechoPdf
             }
         }
 
-        private WkHtmlToPdfSettings ConvertToCoreSettings(LoadSettings loadSettings, PrintSettings printSettings)
+        private WkHtmlToPdfSettings ConvertToCoreSettings(PdfDocument document)
         {
+            var settings = document.Settings;
+
             // 25mm header + 10mm spacing + 1mm margin top
             // Set margins. Header and footers may affect marings
-            double? marginTop = printSettings.Margins.Top;
-            double? marginBottom = printSettings.Margins.Bottom;
+            double? marginTop = settings.Margins.Top;
+            double? marginBottom = settings.Margins.Bottom;
 
             if (marginTop.HasValue)
             {
-                marginTop = marginTop.Value + (printSettings.Header?.Spacing ?? 0) + (printSettings.Header?.Height ?? 0);
+                marginTop = marginTop.Value + (document.Header?.Spacing ?? 0) + (document.Header?.Height ?? 0);
             }
 
             if (marginBottom.HasValue)
             {
-                marginBottom = marginBottom.Value + (printSettings.Footer?.Spacing ?? 0) + (printSettings.Footer?.Height ?? 0);
+                marginBottom = marginBottom.Value + (document.Footer?.Spacing ?? 0) + (document.Footer?.Height ?? 0);
             }
 
             return new WkHtmlToPdfSettings
             {
-                BlockLocalFileAccess = loadSettings.BlockLocalFileAccess,
-                DebugJavascript = loadSettings.DebugJavascript,
-                JSDelay = loadSettings.JSDelay,
-                LoadErrorHandling = loadSettings.LoadErrorHandling?.ToString(),
-                Password = loadSettings.Password,
-                Proxy = loadSettings.Proxy,
-                StopSlowScript = loadSettings.StopSlowScript,
-                Username = loadSettings.Username,
+                BlockLocalFileAccess = settings.BlockLocalFileAccess,
+                DebugJavascript = settings.DebugJavascript,
+                JSDelay = settings.JSDelay,
+                LoadErrorHandling = settings.LoadErrorHandling?.ToString(),
+                Password = settings.Password,
+                Proxy = settings.Proxy,
+                StopSlowScript = settings.StopSlowScript,
+                Username = settings.Username,
 
-                Collate = printSettings.Collate,
-                ColorMode = printSettings.ColorMode?.ToString(),
-                CookieJar = printSettings.CookieJar,
-                Copies = printSettings.Copies,
-                DefaultEncoding = printSettings.DefaultEncoding,
-                DocumentTitle = printSettings.DocumentTitle,
-                DPI = printSettings.DPI,
-                DumpOutline = printSettings.DumpOutline,
-                EnableIntelligentShrinking = printSettings.EnableIntelligentShrinking,
-                EnableJavascript = printSettings.EnableJavascript,
-                Footer = BuildHeaderFooter(printSettings.Footer),
-                Header = BuildHeaderFooter(printSettings.Header),
-                ImageDPI = printSettings.ImageDPI,
-                ImageQuality = printSettings.ImageQuality,
-                IncludeInOutline = printSettings.IncludeInOutline,
-                LoadImages = printSettings.LoadImages,
-                MarginLeft = printSettings.Margins.GetMarginValue(printSettings.Margins.Left),
-                MarginRight = printSettings.Margins.GetMarginValue(printSettings.Margins.Right),
-                MarginBottom = printSettings.Margins.GetMarginValue(marginBottom),
-                MarginTop = printSettings.Margins.GetMarginValue(marginTop),
-                MinimumFontSize = printSettings.MinimumFontSize,
-                Orientation = printSettings.Orientation?.ToString(),
-                Outline = printSettings.Outline,
-                OutlineDepth = printSettings.OutlineDepth,
-                PageOffset = printSettings.PageOffset,
-                PagesCount = printSettings.PagesCount,
-                PaperHeight = printSettings.PaperSize.Height,
-                PaperWidth = printSettings.PaperSize.Width,
+                Collate = settings.Collate,
+                ColorMode = settings.ColorMode?.ToString(),
+                CookieJar = settings.CookieJar,
+                Copies = settings.Copies,
+                DefaultEncoding = settings.DefaultEncoding,
+                DocumentTitle = settings.DocumentTitle,
+                DPI = settings.DPI,
+                DumpOutline = settings.DumpOutline,
+                EnableIntelligentShrinking = settings.EnableIntelligentShrinking,
+                EnableJavascript = settings.EnableJavascript,
+                Footer = BuildHeaderFooter(document.Footer),
+                Header = BuildHeaderFooter(document.Header),
+                ImageDPI = settings.ImageDPI,
+                ImageQuality = settings.ImageQuality,
+                IncludeInOutline = settings.IncludeInOutline,
+                LoadImages = settings.LoadImages,
+                MarginLeft = settings.Margins.GetMarginValue(settings.Margins.Left),
+                MarginRight = settings.Margins.GetMarginValue(settings.Margins.Right),
+                MarginBottom = settings.Margins.GetMarginValue(marginBottom),
+                MarginTop = settings.Margins.GetMarginValue(marginTop),
+                MinimumFontSize = settings.MinimumFontSize,
+                Orientation = settings.Orientation?.ToString(),
+                Outline = settings.Outline,
+                OutlineDepth = settings.OutlineDepth,
+                PageOffset = settings.PageOffset,
+                PagesCount = settings.PagesCount,
+                PaperHeight = settings.PaperSize.Height,
+                PaperWidth = settings.PaperSize.Width,
                 PaperSize = null,
-                PrintBackground = printSettings.PrintBackground,
-                PrintMediaType = printSettings.PrintMediaType,
-                ProduceForms = printSettings.ProduceForms,
-                UseCompression = printSettings.UseCompression,
-                UseExternalLinks = printSettings.UseExternalLinks,
-                UseLocalLinks = printSettings.UseExternalLinks,
+                PrintBackground = settings.PrintBackground,
+                PrintMediaType = settings.PrintMediaType,
+                ProduceForms = settings.ProduceForms,
+                UseCompression = settings.UseCompression,
+                UseExternalLinks = settings.UseExternalLinks,
+                UseLocalLinks = settings.UseExternalLinks,
             };
         }
 
