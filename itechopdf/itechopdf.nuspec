@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>itechopdf</id>
+    <version>1.0.3-alpha</version>
+    <title>ItechoPdf</title>
+    <authors>Willem Bijker;Jaco van Rensburg</authors>
+    <owners>Willem Bijker;Jaco van Rensburg</owners>
+    <projectUrl>https://github.com/itechodev/itechopdf</projectUrl>
+    <iconUrl>icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>PDF creation library around WkHtmlToPdf. Creates rich PDF's from HTML, CSS and javascript. Include cover pages, header and footers with a simple API.</description>
+    <releaseNotes>Fixed packaging of native libraries</releaseNotes>
+    <copyright>Copyright 2020</copyright>
+    <tags>pdf html wkhtmltopdf</tags>
+  </metadata>
+</package>
