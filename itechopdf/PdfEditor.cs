@@ -33,38 +33,70 @@ namespace ItechoPdf
 
                 Document document = file.Document;
                 FindLinks(document);
+                file.Save("other.pdf", SerializationModeEnum.Standard);
             }
         }
 
         private void FindLinks(Document document)
         {
+            PageStamper stamper = new PageStamper(); // NOTE: Page stamper is used to draw contents on existing pages.
+            
             // 2. Link extraction from the document pages.
             TextExtractor extractor = new TextExtractor();
             extractor.AreaTolerance = 2; // 2 pt tolerance on area boundary detection.
+
             foreach (Page page in document.Pages)
             {
+                stamper.Page = page;
+                PrimitiveComposer composer = stamper.Foreground;
+
+                composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0));
+                composer.DrawRectangle(new RectangleF(0, 0, 100, 100));
+                // composer.DrawRectangle(new RectangleF(112.12f, 686.17f, 100, 100));
+                composer.Stroke();
+
+
                 IDictionary<RectangleF?, IList<ITextString>> textStrings = null;
 
                 // Get the page annotations!
                 PageAnnotations annotations = page.Annotations;
+
                 if (!annotations.Exists())
                 {
                     Console.WriteLine("No annotations here.");
                     continue;
                 }
+                
+                // page.Annotations.Remove(annotations[0]);
 
                 // Iterating through the page annotations looking for links...
                 foreach (Annotation annotation in annotations)
                 {
-                    if (annotation is Link)
+                    if (annotation is Link link)
                     {
                         if (textStrings == null)
                         {
                             textStrings = extractor.Extract(page);
                         }
-
-                        Link link = (Link)annotation;
+                        
                         RectangleF linkBox = link.Box;
+
+                        composer.BeginLocalState();
+                        composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1));
+                        // One mayor flaw in wkhtmltopdf
+                        // The actual link of Anchors (annotations) is not where the text is
+                        // Seems that is ignores margins. Fix: move the link box down
+                        // https://github.com/wkhtmltopdf/wkhtmltopdf/issues/1692
+
+                        // Size	72 PPI	96 PPI	150 PPI	300 PPI
+                        // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
+                        // Now convert 5mm to pixles
+                        float moveDown = (25 + 5) * 2.83333333f;
+
+                        var bb = new RectangleF(link.Box.X, link.Box.Y + moveDown, link.Box.Width, linkBox.Height);
+                        composer.DrawRectangle(bb);
+                        composer.Stroke();
+                        composer.End();
 
                         // Text.
                         /*
@@ -75,9 +107,25 @@ namespace ItechoPdf
                         StringBuilder linkTextBuilder = new StringBuilder();
                         foreach (ITextString linkTextString in extractor.Filter(textStrings, linkBox))
                         {
+                            if (linkTextString.TextChars?.Count > 0)
+                            {
+                                var style = linkTextString.TextChars[0].Style;
+                                
+                                // style.FillColor
+                                // style.FillColorSpace
+                                // style.Font
+                                // style.FontSize
+                                // style.RenderMode
+                                // style.StrokeColor
+                                // style.StrokeColorSpace
+                            }
                             linkTextBuilder.Append(linkTextString.Text);
+                            
+                            // linkTextString.TextChars.Remove(linkTextString.TextChars[0]);
                         }
+                         
                         Console.WriteLine("Link '" + linkTextBuilder + "' ");
+                        
 
                         // Position.
                         Console.WriteLine(
@@ -97,8 +145,10 @@ namespace ItechoPdf
                                 Console.WriteLine($"URI is {go.URI.ToString()}");
                             }
                         }
+
                     }
                 }
+                stamper.Flush();
             }
         }
 
