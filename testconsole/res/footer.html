@@ -5,11 +5,23 @@
             margin: 0;
             padding: 0;
         }
+        a:empty {
+            display: block;
+            position: absolute; /* see #4404 */
+        }
+        /* a {
+            color: inherit;
+            text-decoration: inherit; */
+        /* }         */
     </style>
 </head>
 <body>
-    <div style="background-color: rgb(255, 174, 0); height: 25mm">
-        ItechoPdf header
+    <div style="background-color: rgb(255, 174, 0)">
+
+        <a href="http://www.google.com">Go to google</a>
+
+        <span>ItechoPdf header</span>
+        <span>Page <a href="#page">5</a> of <a href="#total">6</a></span>
     </div>
 </body>
 </html>

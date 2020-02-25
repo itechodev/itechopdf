@@ -18,11 +18,12 @@ namespace testconsole
             
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
-            var cover = renderer.AddDocument(PdfSource.FromFile("res/cover.html"));
-            var content = renderer.AddDocument(PdfSource.FromHtml($"This PDF is created using thread #{i}"));
+            // var cover = renderer.AddDocument(PdfSource.FromFile("res/cover.html"));
+            var content = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
+            // (@"PDF. <a href=\"http://www.google.com\">Go to google</a>"));
             
             content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
-            content.SetFooter(PdfSource.FromFile("res/footer.html"), 25, 5);
+            content.SetFooter(PdfSource.FromFile("res/footer.html"), 50, 5);
             
             renderer.RenderToFile($"output-{i}.pdf");
         }
@@ -32,10 +33,14 @@ namespace testconsole
             // Console.WindowWidth;
             // No data is available for encoding 1252
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            Create(0);
+            
+            var editor = new  PdfEditor();
+            editor.Stuff("output-0.pdf");
       
-            Parallel.For(0, 2, i => {
-                Create(i);
-            });
+            // Parallel.For(0, 2, i => {
+            // });
         }
     }
 }
