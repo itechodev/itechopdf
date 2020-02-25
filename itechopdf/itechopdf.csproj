@@ -23,23 +23,32 @@
     <ItemGroup>
         <None Include="icon.png" Pack="True" />
 
-        <Content Include="libwkhtmltox.dll" Condition=" '$(OS)' == 'Windows_NT' ">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="libwkhtmltox.so" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="libwkhtmltox.dylib" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.19" PrivateAssets="Compile;ContentFiles;Build;Native;Analyzers" />
         <PackageReference Include="PDFsharp" Version="1.50.5147" PrivateAssets="Compile;ContentFiles;Build;Native;Analyzers" />
-        <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0"/>
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="libwkhtmltox.so">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <IncludeInPackage>true</IncludeInPackage>
+      </None>
+      <None Update="libwkhtmltox.so">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <IncludeInPackage>true</IncludeInPackage>
+      </None>
+      <None Update="libwkhtmltox.dylib">
+        <IncludeInPackage>true</IncludeInPackage>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="libwkhtmltox.dll">
+        <IncludeInPackage>true</IncludeInPackage>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
