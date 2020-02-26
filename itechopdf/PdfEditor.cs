@@ -22,6 +22,16 @@ using org.pdfclown.documents.interaction.actions;
 
 namespace ItechoPdf
 {
+    public class VariableReplace
+    {
+        // Extracted from the anchor's hash (annotation in PDF). #totalPages
+        public string Name { get; set; }
+        // The AABB for the replacement text
+        public RectangleF Rect { get; set; }
+
+        // All styling associated with the text inside the anchor
+        public int FontSize { get; set; }
+    }
 
     public class PdfEditor
     {
@@ -39,52 +49,36 @@ namespace ItechoPdf
 
         private void FindLinks(Document document)
         {
-            PageStamper stamper = new PageStamper(); // NOTE: Page stamper is used to draw contents on existing pages.
-            
-            // 2. Link extraction from the document pages.
-            TextExtractor extractor = new TextExtractor();
-            extractor.AreaTolerance = 2; // 2 pt tolerance on area boundary detection.
+            PageStamper stamper = new PageStamper(); 
 
             foreach (Page page in document.Pages)
             {
                 stamper.Page = page;
                 PrimitiveComposer composer = stamper.Foreground;
 
-                composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0));
-                composer.DrawRectangle(new RectangleF(0, 0, 100, 100));
-                // composer.DrawRectangle(new RectangleF(112.12f, 686.17f, 100, 100));
-                composer.Stroke();
-
-
-                
                 // Get the page annotations!
                 PageAnnotations annotations = page.Annotations;
 
                 if (!annotations.Exists())
                 {
-                    Console.WriteLine("No annotations here.");
                     continue;
                 }
-                
-                // page.Annotations.Remove(annotations[0]);
 
-                // Extract all text from page. Need this is match text to anchor region
-                IDictionary<RectangleF?, IList<ITextString>> textStrings = extractor.Extract(page);
-                
                 List<Annotation> delete = new List<Annotation>();
                 // Iterating through the page annotations looking for links...
                 foreach (Annotation annotation in annotations)
                 {
                     if (annotation is Link link)
                     {
-                        delete.Add(annotation);   
-                        Console.Write("    Target: ");
                         if (link.Target is actions::Action action)
                         {
                             if (action is GoToURI go)
                             {
-                                Console.WriteLine($"URI is {go.URI.ToString()}");
-                                GetAndDeleteText(link, extractor, annotation, textStrings);
+                                string name = go.URI.Fragment?.Length > 1 ? go.URI.Fragment.Substring(1) : null;
+                                if (name == "page" || name == "total")
+                                {
+                                    delete.Add(annotation);
+                                }
                             }
                             else
                             {
@@ -96,22 +90,18 @@ namespace ItechoPdf
 
                 foreach (var d in delete)
                 {
+                    Extract(new ContentScanner(page), composer, FixAnchorBox(d.Box));
                     page.Annotations.Remove(d);
                 }
 
+                
                 
                 stamper.Flush();
             }
         }
 
-        private void GetAndDeleteText(Link link, TextExtractor extractor, Annotation annotation, IDictionary<RectangleF?, IList<ITextString>> textStrings)
+        private RectangleF FixAnchorBox(RectangleF box)
         {
-            // Delete the actual annotation. This is only the clickable action not the text
-            RectangleF linkBox = link.Box;
-
-            // composer.BeginLocalState();
-            // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1));
-            
             // One mayor flaw in wkhtmltopdf
             // The actual link of Anchors (annotations) is not where the text is
             // Seems that is ignores margins. Fix: move the link box down
@@ -122,8 +112,74 @@ namespace ItechoPdf
             // Now convert 5mm to pixles
             // Footer height + spacing
             float moveDown = (25 + 5) * 2.83333333f;
-            linkBox.Y += moveDown;
+            return new RectangleF
+            {
+                Height = box.Height,
+                Width = box.Width,
+                X = box.X,
+                Y = box.Y + moveDown
+            };
+        }
 
+        private void Extract(ContentScanner level, PrimitiveComposer composer, RectangleF rect)
+        {
+            if (level == null)
+            {
+                return;
+            }
+
+            while (level.MoveNext())
+            {
+                ContentObject content = level.Current;
+                if (content is Text)
+                {
+                    ContentScanner.TextWrapper text = (ContentScanner.TextWrapper)level.CurrentWrapper;
+                    
+                    foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
+                    {
+                        if (rect.IntersectsWith(textString.Box.Value))
+                        {
+                            RectangleF textStringBox = textString.Box.Value;
+                            Console.WriteLine(
+                            "Text ["
+                                + "x:" + Math.Round(textStringBox.X) + ","
+                                + "y:" + Math.Round(textStringBox.Y) + ","
+                                + "w:" + Math.Round(textStringBox.Width) + ","
+                                + "h:" + Math.Round(textStringBox.Height)
+                                + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text
+                            );
+                            // foreach (TextChar textChar in textString.TextChars)
+                            // {
+                            //     if (textChar.Value == '5' || textChar.Value == '6')
+                            //     {
+                                    
+                            //     }
+                            //     // composer.DrawRectangle(textChar.Box);
+                            //     // composer.Stroke();
+                            // }
+                            level.Remove();
+                            level.Contents.Flush();
+
+                        }
+                    }
+                }
+                else if (content is ContainerObject)
+                {
+                    // Scan the inner level
+                    Extract(level.ChildLevel, composer, rect);
+                }
+            }
+        }
+
+        private void GetAndDeleteText(Link link, TextExtractor extractor, Annotation annotation, IDictionary<RectangleF?, IList<ITextString>> textStrings)
+        {
+            // Delete the actual annotation. This is only the clickable action not the text
+            RectangleF linkBox = link.Box;
+
+            // composer.BeginLocalState();
+            // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1));
+
+            
             // var bb = new RectangleF(link.Box.X, link.Box.Y + moveDown, link.Box.Width, linkBox.Height);
             // composer.DrawRectangle(bb);
             // composer.Stroke();
@@ -141,7 +197,7 @@ namespace ItechoPdf
                 if (linkTextString.TextChars?.Count > 0)
                 {
                     var style = linkTextString.TextChars[0].Style;
-                    
+
                     // style.FillColor
                     // style.FillColorSpace
                     // style.Font
@@ -151,12 +207,12 @@ namespace ItechoPdf
                     // style.StrokeColorSpace
                 }
                 linkTextBuilder.Append(linkTextString.Text);
-                
+
                 // linkTextString.TextChars.Remove(linkTextString.TextChars[0]);
             }
-                
+
             Console.WriteLine("Link '" + linkTextBuilder + "' ");
-            
+
 
             // Position.
             Console.WriteLine(
