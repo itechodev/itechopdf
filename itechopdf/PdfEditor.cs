@@ -56,8 +56,7 @@ namespace ItechoPdf
                 composer.Stroke();
 
 
-                IDictionary<RectangleF?, IList<ITextString>> textStrings = null;
-
+                
                 // Get the page annotations!
                 PageAnnotations annotations = page.Annotations;
 
@@ -69,90 +68,106 @@ namespace ItechoPdf
                 
                 // page.Annotations.Remove(annotations[0]);
 
+                // Extract all text from page. Need this is match text to anchor region
+                IDictionary<RectangleF?, IList<ITextString>> textStrings = extractor.Extract(page);
+                
+                List<Annotation> delete = new List<Annotation>();
                 // Iterating through the page annotations looking for links...
                 foreach (Annotation annotation in annotations)
                 {
                     if (annotation is Link link)
                     {
-                        if (textStrings == null)
-                        {
-                            textStrings = extractor.Extract(page);
-                        }
-                        
-                        RectangleF linkBox = link.Box;
-
-                        composer.BeginLocalState();
-                        composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1));
-                        // One mayor flaw in wkhtmltopdf
-                        // The actual link of Anchors (annotations) is not where the text is
-                        // Seems that is ignores margins. Fix: move the link box down
-                        // https://github.com/wkhtmltopdf/wkhtmltopdf/issues/1692
-
-                        // Size	72 PPI	96 PPI	150 PPI	300 PPI
-                        // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
-                        // Now convert 5mm to pixles
-                        float moveDown = (25 + 5) * 2.83333333f;
-
-                        var bb = new RectangleF(link.Box.X, link.Box.Y + moveDown, link.Box.Width, linkBox.Height);
-                        composer.DrawRectangle(bb);
-                        composer.Stroke();
-                        composer.End();
-
-                        // Text.
-                        /*
-                          Extracting text superimposed by the link...
-                          NOTE: As links have no strong relation to page text but a weak location correspondence,
-                          we have to filter extracted text by link area.
-                        */
-                        StringBuilder linkTextBuilder = new StringBuilder();
-                        foreach (ITextString linkTextString in extractor.Filter(textStrings, linkBox))
-                        {
-                            if (linkTextString.TextChars?.Count > 0)
-                            {
-                                var style = linkTextString.TextChars[0].Style;
-                                
-                                // style.FillColor
-                                // style.FillColorSpace
-                                // style.Font
-                                // style.FontSize
-                                // style.RenderMode
-                                // style.StrokeColor
-                                // style.StrokeColorSpace
-                            }
-                            linkTextBuilder.Append(linkTextString.Text);
-                            
-                            // linkTextString.TextChars.Remove(linkTextString.TextChars[0]);
-                        }
-                         
-                        Console.WriteLine("Link '" + linkTextBuilder + "' ");
-                        
-
-                        // Position.
-                        Console.WriteLine(
-                          "    Position: "
-                            + "x:" + Math.Round(linkBox.X) + ","
-                            + "y:" + Math.Round(linkBox.Y) + ","
-                            + "w:" + Math.Round(linkBox.Width) + ","
-                            + "h:" + Math.Round(linkBox.Height)
-                            );
-
+                        delete.Add(annotation);   
                         Console.Write("    Target: ");
-                        PdfObjectWrapper target = link.Target;
                         if (link.Target is actions::Action action)
                         {
                             if (action is GoToURI go)
                             {
                                 Console.WriteLine($"URI is {go.URI.ToString()}");
+                                GetAndDeleteText(link, extractor, annotation, textStrings);
+                            }
+                            else
+                            {
+                                continue;
                             }
                         }
-
                     }
                 }
+
+                foreach (var d in delete)
+                {
+                    page.Annotations.Remove(d);
+                }
+
+                
                 stamper.Flush();
             }
         }
 
+        private void GetAndDeleteText(Link link, TextExtractor extractor, Annotation annotation, IDictionary<RectangleF?, IList<ITextString>> textStrings)
+        {
+            // Delete the actual annotation. This is only the clickable action not the text
+            RectangleF linkBox = link.Box;
 
+            // composer.BeginLocalState();
+            // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1));
+            
+            // One mayor flaw in wkhtmltopdf
+            // The actual link of Anchors (annotations) is not where the text is
+            // Seems that is ignores margins. Fix: move the link box down
+            // https://github.com/wkhtmltopdf/wkhtmltopdf/issues/1692
+
+            // Size	72 PPI	96 PPI	150 PPI	300 PPI
+            // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
+            // Now convert 5mm to pixles
+            // Footer height + spacing
+            float moveDown = (25 + 5) * 2.83333333f;
+            linkBox.Y += moveDown;
+
+            // var bb = new RectangleF(link.Box.X, link.Box.Y + moveDown, link.Box.Width, linkBox.Height);
+            // composer.DrawRectangle(bb);
+            // composer.Stroke();
+            // composer.End();
+
+            // Text.
+            /*
+                Extracting text superimposed by the link...
+                NOTE: As links have no strong relation to page text but a weak location correspondence,
+                we have to filter extracted text by link area.
+            */
+            StringBuilder linkTextBuilder = new StringBuilder();
+            foreach (ITextString linkTextString in extractor.Filter(textStrings, linkBox))
+            {
+                if (linkTextString.TextChars?.Count > 0)
+                {
+                    var style = linkTextString.TextChars[0].Style;
+                    
+                    // style.FillColor
+                    // style.FillColorSpace
+                    // style.Font
+                    // style.FontSize
+                    // style.RenderMode
+                    // style.StrokeColor
+                    // style.StrokeColorSpace
+                }
+                linkTextBuilder.Append(linkTextString.Text);
+                
+                // linkTextString.TextChars.Remove(linkTextString.TextChars[0]);
+            }
+                
+            Console.WriteLine("Link '" + linkTextBuilder + "' ");
+            
+
+            // Position.
+            Console.WriteLine(
+                "    Position: "
+                + "x:" + Math.Round(linkBox.X) + ","
+                + "y:" + Math.Round(linkBox.Y) + ","
+                + "w:" + Math.Round(linkBox.Width) + ","
+                + "h:" + Math.Round(linkBox.Height)
+                );
+
+        }
     }
 
 }
