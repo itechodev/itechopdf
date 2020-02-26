@@ -19,6 +19,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using org.pdfclown.documents.interaction.actions;
+using org.pdfclown.documents.contents.fonts;
 
 namespace ItechoPdf
 {
@@ -90,7 +91,14 @@ namespace ItechoPdf
 
                 foreach (var d in delete)
                 {
-                    Extract(new ContentScanner(page), composer, FixAnchorBox(d.Box));
+                    var fixedBox = FixAnchorBox(d.Box);
+                    Extract(new ContentScanner(page), composer, fixedBox);
+
+                    composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
+                    composer.DrawRectangle(fixedBox);
+                    composer.Stroke();
+                               
+
                     page.Annotations.Remove(d);
                 }
 
@@ -119,6 +127,15 @@ namespace ItechoPdf
             };
         }
 
+        private bool RectContains(RectangleF outer, RectangleF inner, float tollerance = 0.1f)
+        {
+            return 
+                inner.X >= outer.X - tollerance &&
+                inner.Y >= outer.Y - tollerance &&
+                inner.X + inner.Width <= outer.X + outer.Width + tollerance &&
+                inner.Y + inner.Height <= outer.Y + outer.Height + tollerance;
+        }
+
         private void Extract(ContentScanner level, PrimitiveComposer composer, RectangleF rect)
         {
             if (level == null)
@@ -135,22 +152,30 @@ namespace ItechoPdf
                     
                     foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
                     {
-                        if (rect.IntersectsWith(textString.Box.Value))
+                        var source = textString.Box.Value;
+                        RectangleF textStringBox = textString.Box.Value;
+                        // Console.WriteLine(
+                        // "Text ["
+                        //     + "x:" + Math.Round(textStringBox.X) + ","
+                        //     + "y:" + Math.Round(textStringBox.Y) + ","
+                        //     + "w:" + Math.Round(textStringBox.Width) + ","
+                        //     + "h:" + Math.Round(textStringBox.Height)
+                        //     + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text
+                        // );
+
+                        // Rect contain with some tollerance
+                        // Anchor and text within may differ up to 0.01 units
+                        if (RectContains(rect, source))
                         {
-                            RectangleF textStringBox = textString.Box.Value;
-                            Console.WriteLine(
-                            "Text ["
-                                + "x:" + Math.Round(textStringBox.X) + ","
-                                + "y:" + Math.Round(textStringBox.Y) + ","
-                                + "w:" + Math.Round(textStringBox.Width) + ","
-                                + "h:" + Math.Round(textStringBox.Height)
-                                + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text
-                            );
+                            Console.WriteLine("Real hit:" + textString.Text);
+                        
                             foreach (TextChar textChar in textString.TextChars)
                             {
-                                // composer.DrawRectangle(textChar.Box);
-                                // composer.Stroke();
-
+                                if (textChar.Box.Contains(rect))
+                                {
+                                    Console.WriteLine("Real hit", textChar.Value);
+                                }
+                                
                                 composer.SetFont(textChar.Style.Font, 16);
                                 composer.SetFillColor(textChar.Style.FillColor);
 
@@ -160,11 +185,12 @@ namespace ItechoPdf
                                     X = textChar.Box.X + (textChar.Box.Width / 2),
                                     Y = textChar.Box.Y + (textChar.Box.Height / 2)
                                 };
-                                composer.ShowText("a", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                                // var bytes = textChar.Style.Font.Encode("9");
+                                composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
                             }
+                        
                             level.Remove();
                             level.Contents.Flush();
-
                         }
                     }
                 }
@@ -176,59 +202,5 @@ namespace ItechoPdf
             }
         }
 
-        private void GetAndDeleteText(Link link, TextExtractor extractor, Annotation annotation, IDictionary<RectangleF?, IList<ITextString>> textStrings)
-        {
-            // Delete the actual annotation. This is only the clickable action not the text
-            RectangleF linkBox = link.Box;
-
-            // composer.BeginLocalState();
-            // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1));
-
-            
-            // var bb = new RectangleF(link.Box.X, link.Box.Y + moveDown, link.Box.Width, linkBox.Height);
-            // composer.DrawRectangle(bb);
-            // composer.Stroke();
-            // composer.End();
-
-            // Text.
-            /*
-                Extracting text superimposed by the link...
-                NOTE: As links have no strong relation to page text but a weak location correspondence,
-                we have to filter extracted text by link area.
-            */
-            StringBuilder linkTextBuilder = new StringBuilder();
-            foreach (ITextString linkTextString in extractor.Filter(textStrings, linkBox))
-            {
-                if (linkTextString.TextChars?.Count > 0)
-                {
-                    var style = linkTextString.TextChars[0].Style;
-
-                    // style.FillColor
-                    // style.FillColorSpace
-                    // style.Font
-                    // style.FontSize
-                    // style.RenderMode
-                    // style.StrokeColor
-                    // style.StrokeColorSpace
-                }
-                linkTextBuilder.Append(linkTextString.Text);
-
-                // linkTextString.TextChars.Remove(linkTextString.TextChars[0]);
-            }
-
-            Console.WriteLine("Link '" + linkTextBuilder + "' ");
-
-
-            // Position.
-            Console.WriteLine(
-                "    Position: "
-                + "x:" + Math.Round(linkBox.X) + ","
-                + "y:" + Math.Round(linkBox.Y) + ","
-                + "w:" + Math.Round(linkBox.Width) + ","
-                + "h:" + Math.Round(linkBox.Height)
-                );
-
-        }
     }
-
 }
