@@ -176,8 +176,12 @@ namespace ItechoPdf
                                     Console.WriteLine("Real hit", textChar.Value);
                                 }
                                 
-                                composer.SetFont(textChar.Style.Font, 16);
+                                composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
                                 composer.SetFillColor(textChar.Style.FillColor);
+                                composer.SetStrokeColor(textChar.Style.StrokeColor);
+                                composer.SetTextRenderMode(textChar.Style.RenderMode);
+                                
+                                // textChar.Style.StrokeColorSpace
 
                                 // textChar.Style.Font.Encode("9");
                                 PointF center = new PointF
@@ -202,5 +206,13 @@ namespace ItechoPdf
             }
         }
 
+        private double FontSizeToPt(double fontSize)
+        {
+            // Getting font size from textString sometimes negative
+            fontSize = Math.Abs(fontSize);
+            // It is measured in some unit where 50 units = 1rem = 12pt = 16px
+            // Now just convert to pt by 50/12 = 4.166666
+            return fontSize / 4.166666666;
+        }
     }
 }
