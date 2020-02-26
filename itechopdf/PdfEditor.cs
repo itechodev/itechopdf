@@ -94,8 +94,6 @@ namespace ItechoPdf
                     page.Annotations.Remove(d);
                 }
 
-                
-                
                 stamper.Flush();
             }
         }
@@ -148,15 +146,22 @@ namespace ItechoPdf
                                 + "h:" + Math.Round(textStringBox.Height)
                                 + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text
                             );
-                            // foreach (TextChar textChar in textString.TextChars)
-                            // {
-                            //     if (textChar.Value == '5' || textChar.Value == '6')
-                            //     {
-                                    
-                            //     }
-                            //     // composer.DrawRectangle(textChar.Box);
-                            //     // composer.Stroke();
-                            // }
+                            foreach (TextChar textChar in textString.TextChars)
+                            {
+                                // composer.DrawRectangle(textChar.Box);
+                                // composer.Stroke();
+
+                                composer.SetFont(textChar.Style.Font, 16);
+                                composer.SetFillColor(textChar.Style.FillColor);
+
+                                // textChar.Style.Font.Encode("9");
+                                PointF center = new PointF
+                                {
+                                    X = textChar.Box.X + (textChar.Box.Width / 2),
+                                    Y = textChar.Box.Y + (textChar.Box.Height / 2)
+                                };
+                                composer.ShowText("a", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                            }
                             level.Remove();
                             level.Contents.Flush();
 
