@@ -17,10 +17,10 @@ using System.IO;
 
 namespace ItechoPdf
 {
-    public class PdfEditor
+    public static class PdfEditor
     {
 
-        public MemoryStream ReplaceAnnotations(Stream stream, List<VariableReplace> replace, double footerHeightAndSpacing)
+        public static MemoryStream ReplaceAnnotations(Stream stream, List<VariableReplace> replace, double footerHeightAndSpacing)
         {
             using (files::File file = new files::File(new org.pdfclown.bytes.Stream(stream)))
             {
@@ -32,7 +32,7 @@ namespace ItechoPdf
             }
         }
 
-        private List<(Annotation, VariableReplace)> FindLinks(Page page, List<VariableReplace> replace)
+        private static List<(Annotation, VariableReplace)> FindLinks(Page page, List<VariableReplace> replace)
         {
             List<(Annotation, VariableReplace)> ret = new List<(Annotation, VariableReplace)>();
             PageAnnotations annotations = page.Annotations;
@@ -65,7 +65,7 @@ namespace ItechoPdf
             return ret;
         }
 
-        private void ProcessDocument(Document document, List<VariableReplace> replace, double footerHeightAndSpacing)
+        private static void ProcessDocument(Document document, List<VariableReplace> replace, double footerHeightAndSpacing)
         {
             PageStamper stamper = new PageStamper();
             foreach (Page page in document.Pages)
@@ -91,7 +91,7 @@ namespace ItechoPdf
             }
         }
 
-        private RectangleF FixAnchorBox(RectangleF box, double footerHeightAndSpacing)
+        private static RectangleF FixAnchorBox(RectangleF box, double footerHeightAndSpacing)
         {
             // One mayor flaw in wkhtmltopdf
             // The actual link of Anchors (annotations) is not where the text is
@@ -112,7 +112,7 @@ namespace ItechoPdf
             };
         }
 
-        private bool RectContains(RectangleF outer, RectangleF? inner, float tollerance = 0.1f)
+        private static bool RectContains(RectangleF outer, RectangleF? inner, float tollerance = 0.1f)
         {
             if (inner == null)
             {
@@ -125,7 +125,7 @@ namespace ItechoPdf
                 inner.Value.Y + inner.Value.Height <= outer.Y + outer.Height + tollerance;
         }
 
-        private void Extract(ContentScanner level, PrimitiveComposer composer, List<ReplaceRect> replaceList)
+        private static void Extract(ContentScanner level, PrimitiveComposer composer, List<ReplaceRect> replaceList)
         {
             if (level == null)
             {
@@ -188,7 +188,7 @@ namespace ItechoPdf
             }
         }
 
-        private double FontSizeToPt(double fontSize)
+        private static double FontSizeToPt(double fontSize)
         {
             // Getting font size from textString sometimes negative
             fontSize = Math.Abs(fontSize);

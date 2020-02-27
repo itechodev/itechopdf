@@ -44,10 +44,9 @@ namespace testconsole
                 new VariableReplace("total", "2")
             };
             
-            var editor = new PdfEditor();
             using (var ms = new MemoryStream(bytes))
             {
-                var output = editor.ReplaceAnnotations(ms, replace, 25 + 5);
+                var output = PdfEditor.ReplaceAnnotations(ms, replace, 25 + 5);
                 File.WriteAllBytes("output.pdf", output.ToArray());
             }
       
