@@ -82,6 +82,8 @@ namespace ItechoPdf
                     edit.ReplacePage(docpage, replace);
                     var a = edit.Save();
                     File.WriteAllBytes("merged.pdf", a);
+                    
+                    page++;
                 }
             }
             
