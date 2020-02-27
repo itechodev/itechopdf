@@ -149,7 +149,8 @@ namespace ItechoPdf
                 foreach (var d in delete)
                 {
                     var fixedBox = FixAnchorBox(d.Box);
-                    Extract(new ContentScanner(page), composer, fixedBox);
+                    bool drawn = false;
+                    Extract(new ContentScanner(page), composer, fixedBox, ref drawn);
 
                     // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
                     // composer.DrawRectangle(fixedBox);
@@ -196,7 +197,7 @@ namespace ItechoPdf
                 inner.Value.Y + inner.Value.Height <= outer.Y + outer.Height + tollerance;
         }
 
-        private void Extract(ContentScanner level, PrimitiveComposer composer, RectangleF rect)
+        private void Extract(ContentScanner level, PrimitiveComposer composer, RectangleF rect, ref bool alreadyDraw)
         {
             
             if (level == null)
@@ -223,19 +224,29 @@ namespace ItechoPdf
                         if (textChar != null)
                         {
                             Console.WriteLine($"Real hit: {first.Text} ({wrapper.TextStrings.Count})");
-                            composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
-                            composer.SetFillColor(textChar.Style.FillColor);
-                            composer.SetStrokeColor(textChar.Style.StrokeColor);
-                            composer.SetTextRenderMode(textChar.Style.RenderMode);
-
-                            // textChar.Style.Font.Encode("9");
-                            PointF center = new PointF
+                            // only draw on the first hit
+                            if (!alreadyDraw) 
                             {
-                                X = textChar.Box.X + (textChar.Box.Width / 2),
-                                Y = textChar.Box.Y + (textChar.Box.Height / 2)
-                            };
-                            // var bytes = textChar.Style.Font.Encode("9");
-                            // composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                                Console.WriteLine("First hit - need to draw");
+                                composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
+                                composer.SetFillColor(textChar.Style.FillColor);
+                                composer.SetStrokeColor(textChar.Style.StrokeColor);
+                                composer.SetTextRenderMode(textChar.Style.RenderMode);
+
+                                // textChar.Style.Font.Encode("9");
+                                PointF center = new PointF
+                                {
+                                    X = textChar.Box.X + (textChar.Box.Width / 2),
+                                    Y = textChar.Box.Y + (textChar.Box.Height / 2)
+                                };
+                                // var bytes = textChar.Style.Font.Encode("9");
+                                composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                                alreadyDraw = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Not the first hit - only remove");
+                            }
 
                             // Remote text from document
                             level.Remove();
@@ -246,7 +257,7 @@ namespace ItechoPdf
                 else if (content is ContainerObject)
                 {
                     // Scan the inner level
-                    Extract(level.ChildLevel, composer, rect);
+                    Extract(level.ChildLevel, composer, rect, ref alreadyDraw);
                 }
             }
         }
