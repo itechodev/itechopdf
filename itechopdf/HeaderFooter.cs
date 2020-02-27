@@ -4,7 +4,6 @@ namespace ItechoPdf
     {
         /// <summary>
         /// Explicit height of the header or footer in mm
-        /// Set to null (default) for auto height. Limitation: small margin top gap and you cannot set the page's margin top
         /// </summary>
         public double Height { get; set; }
 

@@ -13,20 +13,22 @@ using System.Collections.Generic;
 using System.Drawing;
 using org.pdfclown.documents.interaction.actions;
 using System.Linq;
+using System.IO;
 
 namespace ItechoPdf
 {
-
     public class PdfEditor
     {
 
-        public void Stuff(string filePath)
+        public MemoryStream ReplaceAnnotations(Stream stream, List<VariableReplace> replace, double footerHeightAndSpacing)
         {
-            using (files::File file = new files::File(filePath))
+            using (files::File file = new files::File(new org.pdfclown.bytes.Stream(stream)))
             {
                 Document document = file.Document;
-                ProcessDocument(document);
-                file.Save("other.pdf", SerializationModeEnum.Standard);
+                ProcessDocument(document, replace, footerHeightAndSpacing);
+                var ms = new MemoryStream();
+                file.Save(new org.pdfclown.bytes.Stream(ms), SerializationModeEnum.Standard);
+                return ms;
             }
         }
 
@@ -63,10 +65,8 @@ namespace ItechoPdf
             return ret;
         }
 
-        private void ProcessDocument(Document document)
+        private void ProcessDocument(Document document, List<VariableReplace> replace, double footerHeightAndSpacing)
         {
-            var replace = new List<VariableReplace> { new VariableReplace("page", "1"), new VariableReplace("total", "2")};
-
             PageStamper stamper = new PageStamper();
             foreach (Page page in document.Pages)
             {
@@ -79,7 +79,7 @@ namespace ItechoPdf
                 foreach (var d in links)
                 {
                     var (annotation, replacement) = d;                    
-                    replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box), replacement));
+                    replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box, footerHeightAndSpacing), replacement));
                     // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
                     // composer.DrawRectangle(fixedBox);
                     // composer.Stroke();           
@@ -91,7 +91,7 @@ namespace ItechoPdf
             }
         }
 
-        private RectangleF FixAnchorBox(RectangleF box)
+        private RectangleF FixAnchorBox(RectangleF box, double footerHeightAndSpacing)
         {
             // One mayor flaw in wkhtmltopdf
             // The actual link of Anchors (annotations) is not where the text is
@@ -102,7 +102,7 @@ namespace ItechoPdf
             // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
             // Now convert 5mm to pixles
             // Footer height + spacing
-            float moveDown = (25 + 5) * 2.83333333f;
+            float moveDown = (float)footerHeightAndSpacing * 2.83333333f;
             return new RectangleF
             {
                 Height = box.Height,
