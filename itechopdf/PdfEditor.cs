@@ -193,9 +193,10 @@ namespace ItechoPdf
                                         Y = textChar.Box.Y + (textChar.Box.Height / 2)
                                     };
                                     // var bytes = textChar.Style.Font.Encode("9");
-                                    composer.ShowText(replace.Replacement.Replace, center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                                    composer.ShowText(replace.Replacement.Replace, center, ToXAlignmentEnum(replace.Replacement.Align), YAlignmentEnum.Middle, 0);
                                     replace.AlreadyStamp = true;
                                 }
+
 
                                 // Remote text from document
                                 level.Remove();
@@ -209,6 +210,20 @@ namespace ItechoPdf
                     // Scan the inner level
                     Extract(level.ChildLevel, composer, replaceList);
                 }
+            }
+        }
+
+        private static XAlignmentEnum ToXAlignmentEnum(VariableAlign align)
+        {
+            switch (align)
+            {
+                case VariableAlign.Left:
+                    return XAlignmentEnum.Left;
+                case VariableAlign.Center:
+                    return XAlignmentEnum.Center;
+                default:
+                case VariableAlign.Right:
+                    return XAlignmentEnum.Right;
             }
         }
 

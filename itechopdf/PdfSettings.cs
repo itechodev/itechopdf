@@ -81,6 +81,10 @@ namespace ItechoPdf
             CookieJar = settings.CookieJar;
             PaperSize = settings.PaperSize;
             Margins = new MarginSettings(settings.Margins);
+            Page = settings.Page;
+            Pages = settings.Pages;
+            DocumentPage = settings.DocumentPage;
+            DocumentPages = settings.DocumentPages;
         }
 
         /// <summary>
@@ -285,6 +289,27 @@ namespace ItechoPdf
         public PaperSize PaperSize { get; set; } = PaperKind.A4;
 
         public MarginSettings Margins { get; set; } = new MarginSettings();
+
+
+        /// <summary>
+        /// The {{page}} variables anchor alignment and maximum digits to make room for.
+        /// </summary>
+        public VariableStyle Page { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        
+        /// <summary>
+        /// The {{pages}} variables anchor alignment and maximum digits to make room for.
+        /// </summary>
+        public VariableStyle Pages { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        
+        /// <summary>
+        /// The {{documentpage}} variables anchor alignment and maximum digits to make room for.
+        /// </summary>
+        public VariableStyle DocumentPage { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        
+        /// <summary>
+        /// The {{documentpages}} variables anchor alignment and maximum digits to make room for.
+        /// </summary>
+        public VariableStyle DocumentPages { get; set; } = new VariableStyle(VariableAlign.Right, 2);
     }
 
 }

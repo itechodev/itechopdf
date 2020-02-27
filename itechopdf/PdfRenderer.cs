@@ -48,7 +48,7 @@ namespace ItechoPdf
 
         public byte[] RenderToBytes()
         {
-            List<PdfEditor> editors = new List<PdfEditor>();
+            List<(PdfEditor, PdfDocument)> editors = new List<(PdfEditor, PdfDocument)>();
 
             int totalPages = 0;
             foreach (var doc in _documents)
@@ -61,7 +61,7 @@ namespace ItechoPdf
                 editor.ReadFromBytes(bytes);
                 totalPages += editor.Pages;
 
-                editors.Add(editor);
+                editors.Add((editor, doc));
             }
 
             var merged = new org.pdfclown.files.File();
@@ -71,16 +71,17 @@ namespace ItechoPdf
             List<byte[]> pdfs = new List<byte[]>();
             
             int page = 0;
-            foreach (var edit in editors)
+            foreach (var (edit, doc) in editors)
             {
+                
                 for (int docpage = 0; docpage < edit.Pages; docpage++)
                 {
                     var replace = new List<VariableReplace>
                     {
-                        new VariableReplace("documentpage", (docpage + 1).ToString()),
-                        new VariableReplace("documentpages", edit.Pages.ToString()),
-                        new VariableReplace("page", (page + 1).ToString()),
-                        new VariableReplace("pages", totalPages.ToString()),
+                        new VariableReplace("documentpage", (docpage + 1).ToString(), doc.Settings.DocumentPage.Align),
+                        new VariableReplace("documentpages", edit.Pages.ToString(), doc.Settings.DocumentPages.Align),
+                        new VariableReplace("page", (page + 1).ToString(), doc.Settings.Page.Align),
+                        new VariableReplace("pages", totalPages.ToString(), doc.Settings.Pages.Align),
                     };
                     edit.ReplacePage(docpage, replace);
                     page++;
