@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
+using org.pdfclown.files;
+using org.pdfclown.tools;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
@@ -64,6 +66,9 @@ namespace ItechoPdf
                 editors.Add(editor);
             }
 
+            var merged = new org.pdfclown.files.File();
+            var manager = new PageManager(merged.Document);
+            
             // Now replace all variables
             List<byte[]> pdfs = new List<byte[]>();
             
@@ -82,46 +87,23 @@ namespace ItechoPdf
                     edit.ReplacePage(docpage, replace);
                     page++;
                 }
-                var postReplace = edit.Save();
-                pdfs.Add(postReplace);
+                
+                foreach (var p in edit.GetPages())
+                {
+                    manager.Add(p.Document);
+                }
             }
-            
-            // Merge all PDF's and return one result.
-            return MergePDFBytes(pdfs);
+
+            using (var ms = new MemoryStream())
+            {
+                merged.Save(new org.pdfclown.bytes.Stream(ms), SerializationModeEnum.Standard);
+                return ms.ToArray();
+            }
         }
 
         public void RenderToFile(string output)
         {
-            File.WriteAllBytes(output, RenderToBytes());
-        }
-
-        public byte[] MergePDFBytes(List<byte[]> pdfs)
-        {
-            PdfSharp.Pdf.PdfDocument outputDocument = new PdfSharp.Pdf.PdfDocument();
-            foreach (var pdfBytes in pdfs)
-            {
-                if (pdfBytes == null || pdfBytes.Length == 0)
-                {
-                    continue;
-                }
-                
-                var pdfDoc = PdfReader.Open(new MemoryStream(pdfBytes), PdfDocumentOpenMode.Import);
-                // Iterate pages
-                int count = pdfDoc.PageCount;
-                for (int idx = 0; idx < count; idx++)
-                {
-                    // Get the page from the external document...
-                    PdfPage page = pdfDoc.Pages[idx];
-                    // ...and add it to the output document.
-                    outputDocument.AddPage(page);
-                }
-            }
-            using (var ms = new MemoryStream())
-            {
-                
-                outputDocument.Save(ms);
-                return ms.ToArray();
-            }
+            System.IO.File.WriteAllBytes(output, RenderToBytes());
         }
 
         private byte[] HtmlDocToPdf(HtmlDocument doc, PdfDocument document)
@@ -145,7 +127,7 @@ namespace ItechoPdf
             // Delete all temporiry files created
             foreach (var tempFile in _tempFiles)
             {
-                File.Delete(tempFile);
+                System.IO.File.Delete(tempFile);
             }
         }
 
@@ -231,7 +213,7 @@ namespace ItechoPdf
             if (source is PdfSourceFile file)
             {
                 baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
-                using (var fs = File.OpenRead(file.Path))
+                using (var fs = System.IO.File.OpenRead(file.Path))
                 {
                     htmlDoc.Load(fs);
                 }
@@ -265,7 +247,7 @@ namespace ItechoPdf
             {
                 HtmlDocument htmlDoc = DocFromSource(source.Source, null, true);
                 var path = CreateTempFile();
-                using (var sw = File.Create(path))
+                using (var sw = System.IO.File.Create(path))
                 {
                     htmlDoc.Save(sw);
                 }

@@ -27,6 +27,11 @@ namespace ItechoPdf
 
         }
 
+        public Pages GetPages()
+        {
+            return _file?.Document.Pages;
+        }
+
         public void ReadFromBytes(byte[] bytes)
         {
             _file = new files::File(new org.pdfclown.bytes.Buffer(bytes));
@@ -105,6 +110,7 @@ namespace ItechoPdf
 
             Extract(new ContentScanner(page), composer, replacementList);
             stamper.Flush();
+            page.Contents.Flush();
         }
 
         private RectangleF FixAnchorBox(RectangleF box)
