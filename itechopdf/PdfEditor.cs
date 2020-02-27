@@ -20,6 +20,8 @@ using System.IO;
 using System.Text;
 using org.pdfclown.documents.interaction.actions;
 using org.pdfclown.documents.contents.fonts;
+using static org.pdfclown.documents.contents.ContentScanner;
+using System.Linq;
 
 namespace ItechoPdf
 {
@@ -48,13 +50,68 @@ namespace ItechoPdf
             }
         }
 
+        private void TransversePage(Page page)
+        {
+            // Get the page contents
+            Contents contents = page.Contents;
+            // Remove text content from page
+            removeText(contents);
+            // Update the page contents
+            contents.Flush();
+        }
+
+        private void removeText(IList<ContentObject> objects)
+        {
+            for (int index = 0, length = objects.Count; index < length; index++)
+            {
+                ContentObject obj = objects[index];
+                if (obj is Text)
+                {
+                    // obj.Scan(new Gr)
+                    Console.WriteLine(obj);
+                    //  ContentObject content = level.Current;
+                    // if (content is Text)
+                    // {
+                    //     ContentScanner.TextWrapper text = (ContentScanner.TextWrapper)level.CurrentWrapper;
+                    //     foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
+                    //     {
+                            
+                    // ContentScanner.TextWrapper text = (ContentScanner.TextWrapper) obj;
+                    // foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
+                    // {
+                    //     var source = textString.Box.Value;
+                    //     RectangleF textStringBox = textString.Box.Value;
+
+                    //     Console.WriteLine(
+                    //     "Text ["
+                    //         + "x:" + Math.Round(textStringBox.X) + ","
+                    //         + "y:" + Math.Round(textStringBox.Y) + ","
+                    //         + "w:" + Math.Round(textStringBox.Width) + ","
+                    //         + "h:" + Math.Round(textStringBox.Height)
+                    //         + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text + $" ({textString.Text.Length})"
+                    //     );
+
+                    // objects.RemoveAt(index);
+                    // index--; 
+                    // length--;
+                }
+                else if (obj is ContainerObject container)
+                { 
+                    removeText(container.Objects);
+                }
+            }
+        }
+
         private void FindLinks(Document document)
         {
-            PageStamper stamper = new PageStamper(); 
+            PageStamper stamper = new PageStamper();
 
             foreach (Page page in document.Pages)
             {
                 stamper.Page = page;
+
+                // TransversePage(page);
+
                 PrimitiveComposer composer = stamper.Foreground;
 
                 // Get the page annotations!
@@ -94,10 +151,9 @@ namespace ItechoPdf
                     var fixedBox = FixAnchorBox(d.Box);
                     Extract(new ContentScanner(page), composer, fixedBox);
 
-                    composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
-                    composer.DrawRectangle(fixedBox);
-                    composer.Stroke();
-                               
+                    // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
+                    // composer.DrawRectangle(fixedBox);
+                    // composer.Stroke();           
 
                     page.Annotations.Remove(d);
                 }
@@ -127,17 +183,22 @@ namespace ItechoPdf
             };
         }
 
-        private bool RectContains(RectangleF outer, RectangleF inner, float tollerance = 0.1f)
+        private bool RectContains(RectangleF outer, RectangleF? inner, float tollerance = 0.1f)
         {
-            return 
-                inner.X >= outer.X - tollerance &&
-                inner.Y >= outer.Y - tollerance &&
-                inner.X + inner.Width <= outer.X + outer.Width + tollerance &&
-                inner.Y + inner.Height <= outer.Y + outer.Height + tollerance;
+            if (inner == null)
+            {
+                return false;
+            }
+            return
+                inner.Value.X >= outer.X - tollerance &&
+                inner.Value.Y >= outer.Y - tollerance &&
+                inner.Value.X + inner.Value.Width <= outer.X + outer.Width + tollerance &&
+                inner.Value.Y + inner.Value.Height <= outer.Y + outer.Height + tollerance;
         }
 
         private void Extract(ContentScanner level, PrimitiveComposer composer, RectangleF rect)
         {
+            
             if (level == null)
             {
                 return;
@@ -146,53 +207,37 @@ namespace ItechoPdf
             while (level.MoveNext())
             {
                 ContentObject content = level.Current;
+
                 if (content is Text)
                 {
-                    ContentScanner.TextWrapper text = (ContentScanner.TextWrapper)level.CurrentWrapper;
+                    // level.CurrentWrapper
+                    ContentScanner.TextWrapper wrapper = (ContentScanner.TextWrapper)level.CurrentWrapper;
                     
-                    foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
+                    // Don't quite understand how the ContentScanner scans content
+                    // I cannot delete individual TextStringWrapper elements. 
+                    // Search for the first match, extract styling and delete the whole text
+                    var first = wrapper.TextStrings.Find(t => RectContains(rect, t.Box));
+                    if (first != null)
                     {
-                        var source = textString.Box.Value;
-                        RectangleF textStringBox = textString.Box.Value;
-                        // Console.WriteLine(
-                        // "Text ["
-                        //     + "x:" + Math.Round(textStringBox.X) + ","
-                        //     + "y:" + Math.Round(textStringBox.Y) + ","
-                        //     + "w:" + Math.Round(textStringBox.Width) + ","
-                        //     + "h:" + Math.Round(textStringBox.Height)
-                        //     + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text
-                        // );
-
-                        // Rect contain with some tollerance
-                        // Anchor and text within may differ up to 0.01 units
-                        if (RectContains(rect, source))
+                        var textChar = first.TextChars.FirstOrDefault();
+                        if (textChar != null)
                         {
-                            Console.WriteLine("Real hit:" + textString.Text);
-                        
-                            foreach (TextChar textChar in textString.TextChars)
-                            {
-                                if (textChar.Box.Contains(rect))
-                                {
-                                    Console.WriteLine("Real hit", textChar.Value);
-                                }
-                                
-                                composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
-                                composer.SetFillColor(textChar.Style.FillColor);
-                                composer.SetStrokeColor(textChar.Style.StrokeColor);
-                                composer.SetTextRenderMode(textChar.Style.RenderMode);
-                                
-                                // textChar.Style.StrokeColorSpace
+                            Console.WriteLine($"Real hit: {first.Text} ({wrapper.TextStrings.Count})");
+                            composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
+                            composer.SetFillColor(textChar.Style.FillColor);
+                            composer.SetStrokeColor(textChar.Style.StrokeColor);
+                            composer.SetTextRenderMode(textChar.Style.RenderMode);
 
-                                // textChar.Style.Font.Encode("9");
-                                PointF center = new PointF
-                                {
-                                    X = textChar.Box.X + (textChar.Box.Width / 2),
-                                    Y = textChar.Box.Y + (textChar.Box.Height / 2)
-                                };
-                                // var bytes = textChar.Style.Font.Encode("9");
-                                composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
-                            }
-                        
+                            // textChar.Style.Font.Encode("9");
+                            PointF center = new PointF
+                            {
+                                X = textChar.Box.X + (textChar.Box.Width / 2),
+                                Y = textChar.Box.Y + (textChar.Box.Height / 2)
+                            };
+                            // var bytes = textChar.Style.Font.Encode("9");
+                            // composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+
+                            // Remote text from document
                             level.Remove();
                             level.Contents.Flush();
                         }
