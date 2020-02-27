@@ -1,26 +1,17 @@
-using org.pdfclown.bytes;
 using org.pdfclown.documents;
-using org.pdfclown.documents.files;
 using org.pdfclown.documents.contents;
 using actions = org.pdfclown.documents.interaction.actions;
 using org.pdfclown.documents.interaction.annotations;
-using org.pdfclown.documents.interaction.navigation.document;
 using files = org.pdfclown.files;
-using org.pdfclown.objects;
 using org.pdfclown.tools;
 using org.pdfclown.documents.contents.composition;
-using org.pdfclown.documents.contents.colorSpaces;
 using org.pdfclown.documents.contents.objects;
 using org.pdfclown.files;
 
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Text;
 using org.pdfclown.documents.interaction.actions;
-using org.pdfclown.documents.contents.fonts;
-using static org.pdfclown.documents.contents.ContentScanner;
 using System.Linq;
 
 namespace ItechoPdf
@@ -33,60 +24,59 @@ namespace ItechoPdf
         {
             using (files::File file = new files::File(filePath))
             {
-
                 Document document = file.Document;
-                FindLinks(document);
+                ProcessDocument(document);
                 file.Save("other.pdf", SerializationModeEnum.Standard);
             }
         }
 
-        private void FindLinks(Document document)
+        private List<(Annotation, VariableReplace)> FindLinks(Page page, List<VariableReplace> replace)
         {
-            var replace = new List<VariableReplace> { new VariableReplace("page", "1"), new VariableReplace("total", "2")};
+            List<(Annotation, VariableReplace)> ret = new List<(Annotation, VariableReplace)>();
+            PageAnnotations annotations = page.Annotations;
 
-            PageStamper stamper = new PageStamper();
-
-            foreach (Page page in document.Pages)
+            if (!annotations.Exists())
             {
-                stamper.Page = page;
+                return ret;
+            }
 
-                // TransversePage(page);
-
-                PrimitiveComposer composer = stamper.Foreground;
-
-                // Get the page annotations!
-                PageAnnotations annotations = page.Annotations;
-
-                if (!annotations.Exists())
+            // Iterating through the page annotations looking for links...
+            foreach (Annotation annotation in annotations)
+            {
+                if (annotation is Link link)
                 {
-                    continue;
-                }
-
-                List<(Annotation, VariableReplace)> delete = new List<(Annotation, VariableReplace)>();
-                // Iterating through the page annotations looking for links...
-                foreach (Annotation annotation in annotations)
-                {
-                    if (annotation is Link link)
+                    if (link.Target is actions::Action action)
                     {
-                        if (link.Target is actions::Action action)
+                        if (action is GoToURI go)
                         {
-                            if (action is GoToURI go)
-                            {
-                                string name = go.URI.Fragment?.Length > 1 ? go.URI.Fragment.Substring(1) : null;
+                            string name = go.URI.Fragment?.Length > 1 ? go.URI.Fragment.Substring(1) : null;
 
-                                var replacement = replace.Find(r => r.Name == name);
-                                if (replacement != null)
-                                {
-                                    delete.Add((annotation, replacement));
-                                }
+                            var replacement = replace.Find(r => r.Name == name);
+                            if (replacement != null)
+                            {
+                                ret.Add((annotation, replacement));
                             }
                         }
                     }
                 }
+            }
+            return ret;
+        }
 
+        private void ProcessDocument(Document document)
+        {
+            var replace = new List<VariableReplace> { new VariableReplace("page", "1"), new VariableReplace("total", "2")};
+
+            PageStamper stamper = new PageStamper();
+            foreach (Page page in document.Pages)
+            {
+                stamper.Page = page;
+                PrimitiveComposer composer = stamper.Foreground;
+
+                var links = FindLinks(page, replace);
                 var replacementList = new List<ReplaceRect>();
 
-                foreach (var d in delete)
+                foreach (var d in links)
                 {
                     var (annotation, replacement) = d;                    
                     replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box), replacement));
