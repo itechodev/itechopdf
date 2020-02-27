@@ -25,16 +25,6 @@ using System.Linq;
 
 namespace ItechoPdf
 {
-    public class VariableReplace
-    {
-        // Extracted from the anchor's hash (annotation in PDF). #totalPages
-        public string Name { get; set; }
-        // The AABB for the replacement text
-        public RectangleF Rect { get; set; }
-
-        // All styling associated with the text inside the anchor
-        public int FontSize { get; set; }
-    }
 
     public class PdfEditor
     {
@@ -50,60 +40,10 @@ namespace ItechoPdf
             }
         }
 
-        private void TransversePage(Page page)
-        {
-            // Get the page contents
-            Contents contents = page.Contents;
-            // Remove text content from page
-            removeText(contents);
-            // Update the page contents
-            contents.Flush();
-        }
-
-        private void removeText(IList<ContentObject> objects)
-        {
-            for (int index = 0, length = objects.Count; index < length; index++)
-            {
-                ContentObject obj = objects[index];
-                if (obj is Text)
-                {
-                    // obj.Scan(new Gr)
-                    Console.WriteLine(obj);
-                    //  ContentObject content = level.Current;
-                    // if (content is Text)
-                    // {
-                    //     ContentScanner.TextWrapper text = (ContentScanner.TextWrapper)level.CurrentWrapper;
-                    //     foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
-                    //     {
-                            
-                    // ContentScanner.TextWrapper text = (ContentScanner.TextWrapper) obj;
-                    // foreach (ContentScanner.TextStringWrapper textString in text.TextStrings)
-                    // {
-                    //     var source = textString.Box.Value;
-                    //     RectangleF textStringBox = textString.Box.Value;
-
-                    //     Console.WriteLine(
-                    //     "Text ["
-                    //         + "x:" + Math.Round(textStringBox.X) + ","
-                    //         + "y:" + Math.Round(textStringBox.Y) + ","
-                    //         + "w:" + Math.Round(textStringBox.Width) + ","
-                    //         + "h:" + Math.Round(textStringBox.Height)
-                    //         + "] [font size:" + Math.Round(textString.Style.FontSize) + "]: " + textString.Text + $" ({textString.Text.Length})"
-                    //     );
-
-                    // objects.RemoveAt(index);
-                    // index--; 
-                    // length--;
-                }
-                else if (obj is ContainerObject container)
-                { 
-                    removeText(container.Objects);
-                }
-            }
-        }
-
         private void FindLinks(Document document)
         {
+            var replace = new List<VariableReplace> { new VariableReplace("page", "1"), new VariableReplace("total", "2")};
+
             PageStamper stamper = new PageStamper();
 
             foreach (Page page in document.Pages)
@@ -122,7 +62,7 @@ namespace ItechoPdf
                     continue;
                 }
 
-                List<Annotation> delete = new List<Annotation>();
+                List<(Annotation, VariableReplace)> delete = new List<(Annotation, VariableReplace)>();
                 // Iterating through the page annotations looking for links...
                 foreach (Annotation annotation in annotations)
                 {
@@ -133,32 +73,30 @@ namespace ItechoPdf
                             if (action is GoToURI go)
                             {
                                 string name = go.URI.Fragment?.Length > 1 ? go.URI.Fragment.Substring(1) : null;
-                                if (name == "page" || name == "total")
+
+                                var replacement = replace.Find(r => r.Name == name);
+                                if (replacement != null)
                                 {
-                                    delete.Add(annotation);
+                                    delete.Add((annotation, replacement));
                                 }
-                            }
-                            else
-                            {
-                                continue;
                             }
                         }
                     }
                 }
 
+                var replacementList = new List<ReplaceRect>();
+
                 foreach (var d in delete)
                 {
-                    var fixedBox = FixAnchorBox(d.Box);
-                    bool drawn = false;
-                    Extract(new ContentScanner(page), composer, fixedBox, ref drawn);
-
+                    var (annotation, replacement) = d;                    
+                    replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box), replacement));
                     // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
                     // composer.DrawRectangle(fixedBox);
                     // composer.Stroke();           
-
-                    page.Annotations.Remove(d);
+                    page.Annotations.Remove(annotation);
                 }
 
+                Extract(new ContentScanner(page), composer, replacementList);
                 stamper.Flush();
             }
         }
@@ -197,9 +135,8 @@ namespace ItechoPdf
                 inner.Value.Y + inner.Value.Height <= outer.Y + outer.Height + tollerance;
         }
 
-        private void Extract(ContentScanner level, PrimitiveComposer composer, RectangleF rect, ref bool alreadyDraw)
+        private void Extract(ContentScanner level, PrimitiveComposer composer, List<ReplaceRect> replaceList)
         {
-            
             if (level == null)
             {
                 return;
@@ -214,50 +151,49 @@ namespace ItechoPdf
                     // level.CurrentWrapper
                     ContentScanner.TextWrapper wrapper = (ContentScanner.TextWrapper)level.CurrentWrapper;
                     
-                    // Don't quite understand how the ContentScanner scans content
-                    // I cannot delete individual TextStringWrapper elements. 
-                    // Search for the first match, extract styling and delete the whole text
-                    var first = wrapper.TextStrings.Find(t => RectContains(rect, t.Box));
-                    if (first != null)
+                    foreach (var replace in replaceList)
                     {
-                        var textChar = first.TextChars.FirstOrDefault();
-                        if (textChar != null)
+                        // Don't quite understand how the ContentScanner scans content
+                        // I cannot delete individual TextStringWrapper elements. 
+                        // Search for the first match, extract styling and delete the whole text
+                        var first = wrapper.TextStrings.Find(t => RectContains(replace.Rect, t.Box));
+                        if (first != null)
                         {
-                            Console.WriteLine($"Real hit: {first.Text} ({wrapper.TextStrings.Count})");
-                            // only draw on the first hit
-                            if (!alreadyDraw) 
+                            var textChar = first.TextChars.FirstOrDefault();
+                            if (textChar != null)
                             {
-                                Console.WriteLine("First hit - need to draw");
-                                composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
-                                composer.SetFillColor(textChar.Style.FillColor);
-                                composer.SetStrokeColor(textChar.Style.StrokeColor);
-                                composer.SetTextRenderMode(textChar.Style.RenderMode);
-
-                                // textChar.Style.Font.Encode("9");
-                                PointF center = new PointF
+                                // Console.WriteLine($"Real hit: {first.Text} ({wrapper.TextStrings.Count})");
+                                // only draw on the first hit
+                                if (!replace.AlreadyStamp) 
                                 {
-                                    X = textChar.Box.X + (textChar.Box.Width / 2),
-                                    Y = textChar.Box.Y + (textChar.Box.Height / 2)
-                                };
-                                // var bytes = textChar.Style.Font.Encode("9");
-                                composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
-                                alreadyDraw = true;
-                            }
-                            else
-                            {
-                                Console.WriteLine("Not the first hit - only remove");
-                            }
+                                    // Console.WriteLine("First hit - need to draw");
+                                    composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
+                                    composer.SetFillColor(textChar.Style.FillColor);
+                                    composer.SetStrokeColor(textChar.Style.StrokeColor);
+                                    composer.SetTextRenderMode(textChar.Style.RenderMode);
 
-                            // Remote text from document
-                            level.Remove();
-                            level.Contents.Flush();
+                                    // textChar.Style.Font.Encode("9");
+                                    PointF center = new PointF
+                                    {
+                                        X = textChar.Box.X + (textChar.Box.Width / 2),
+                                        Y = textChar.Box.Y + (textChar.Box.Height / 2)
+                                    };
+                                    // var bytes = textChar.Style.Font.Encode("9");
+                                    composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                                    replace.AlreadyStamp = true;
+                                }
+
+                                // Remote text from document
+                                level.Remove();
+                                level.Contents.Flush();
+                            }
                         }
                     }
                 }
                 else if (content is ContainerObject)
                 {
                     // Scan the inner level
-                    Extract(level.ChildLevel, composer, rect, ref alreadyDraw);
+                    Extract(level.ChildLevel, composer, replaceList);
                 }
             }
         }
