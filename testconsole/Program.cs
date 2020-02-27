@@ -37,22 +37,8 @@ namespace testconsole
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             var bytes = Create(0);
-            File.WriteAllBytes("original.pdf", bytes);
+            File.WriteAllBytes("output.pdf", bytes);
 
-            var replace = new List<VariableReplace> 
-            { 
-                new VariableReplace("documentpage", "1"), 
-                new VariableReplace("documentpages", "2"),
-                new VariableReplace("page", "4"),
-                new VariableReplace("pages", "6")
-            };
-            
-            using (var ms = new MemoryStream(bytes))
-            {
-                var output = PdfEditor.ReplaceAnnotations(ms, replace, 25 + 5);
-                File.WriteAllBytes("replaced.pdf", output.ToArray());
-            }
-      
             // Parallel.For(0, 2, i => {
             // });
         }

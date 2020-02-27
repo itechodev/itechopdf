@@ -49,12 +49,42 @@ namespace ItechoPdf
         public byte[] RenderToBytes()
         {
             List<byte[]> pdfs = new List<byte[]>();
+            List<PdfEditor> editors = new List<PdfEditor>();
+
+            int totalPages = 0;
             foreach (var doc in _documents)
             {
                 HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false);
-                pdfs.Add(HtmlDocToPdf(htmlDoc, doc));
-                // Keep track of number count.
+                var bytes = HtmlDocToPdf(htmlDoc, doc);
+
+                var editor = new PdfEditor();
+                editor.HeightAndSpacing = doc.Header?.Height + doc.Header?.Spacing ?? 0;
+                editor.ReadFromBytes(bytes);
+                totalPages += editor.Pages;
+
+                editors.Add(editor);
+                pdfs.Add(bytes);
             }
+
+            // Now replace all varialbes
+            int page = 0;
+            foreach (var edit in editors)
+            {
+                for (int docpage = 0; docpage < edit.Pages; docpage++)
+                {
+                    var replace = new List<VariableReplace>
+                    {
+                        new VariableReplace("documentpage", (docpage + 1).ToString()),
+                        new VariableReplace("documentpages", edit.Pages.ToString()),
+                        new VariableReplace("page", (page + 1).ToString()),
+                        new VariableReplace("pages", totalPages.ToString()),
+                    };
+                    edit.ReplacePage(docpage, replace);
+                    var a = edit.Save();
+                    File.WriteAllBytes("merged.pdf", a);
+                }
+            }
+            
             // Merge all PDF's and return one result.
             return MergePDFBytes(pdfs);
         }

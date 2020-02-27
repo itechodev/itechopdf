@@ -14,25 +14,38 @@ using System.Drawing;
 using org.pdfclown.documents.interaction.actions;
 using System.Linq;
 using System.IO;
+using org.pdfclown.documents.contents.colorSpaces;
 
 namespace ItechoPdf
 {
-    public static class PdfEditor
+    public class PdfEditor : IDisposable
     {
+        private files.File _file;
 
-        public static MemoryStream ReplaceAnnotations(Stream stream, List<VariableReplace> replace, double footerHeightAndSpacing)
+        public PdfEditor()
         {
-            using (files::File file = new files::File(new org.pdfclown.bytes.Stream(stream)))
+
+        }
+
+        public void ReadFromBytes(byte[] bytes)
+        {
+            _file = new files::File(new org.pdfclown.bytes.Buffer(bytes));
+        }
+
+        public int Pages => _file?.Document.Pages.Count ?? 0;
+        public double HeightAndSpacing { get; set; }
+
+        public byte[] Save()
+        {
+            using (var ms = new MemoryStream())
             {
-                Document document = file.Document;
-                ProcessDocument(document, replace, footerHeightAndSpacing);
-                var ms = new MemoryStream();
-                file.Save(new org.pdfclown.bytes.Stream(ms), SerializationModeEnum.Standard);
-                return ms;
+                _file.Save(new org.pdfclown.bytes.Stream(ms), SerializationModeEnum.Standard);
+                return ms.ToArray();
             }
         }
 
-        private static List<(Annotation, VariableReplace)> FindLinks(Page page, List<VariableReplace> replace)
+
+        private List<(Annotation, VariableReplace)> FindLinks(Page page, List<VariableReplace> replace)
         {
             List<(Annotation, VariableReplace)> ret = new List<(Annotation, VariableReplace)>();
             PageAnnotations annotations = page.Annotations;
@@ -65,33 +78,36 @@ namespace ItechoPdf
             return ret;
         }
 
-        private static void ProcessDocument(Document document, List<VariableReplace> replace, double footerHeightAndSpacing)
+        public void ReplacePage(int pageNumber, List<VariableReplace> replace)
         {
             PageStamper stamper = new PageStamper();
-            foreach (Page page in document.Pages)
+            // Make sure in range
+            pageNumber = Math.Max(Math.Min(Pages - 1, pageNumber), 0);
+            var page = _file.Document.Pages[pageNumber];
+            
+            stamper.Page = page;
+            PrimitiveComposer composer = stamper.Foreground;
+
+            var links = FindLinks(page, replace);
+            var replacementList = new List<ReplaceRect>();
+
+            foreach (var d in links)
             {
-                stamper.Page = page;
-                PrimitiveComposer composer = stamper.Foreground;
+                var (annotation, replacement) = d;                    
+                replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box), replacement));
+                
+                // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
+                // composer.DrawRectangle(FixAnchorBox(annotation.Box));
+                // composer.Stroke();           
 
-                var links = FindLinks(page, replace);
-                var replacementList = new List<ReplaceRect>();
-
-                foreach (var d in links)
-                {
-                    var (annotation, replacement) = d;                    
-                    replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box, footerHeightAndSpacing), replacement));
-                    // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 0 ));
-                    // composer.DrawRectangle(fixedBox);
-                    // composer.Stroke();           
-                    page.Annotations.Remove(annotation);
-                }
-
-                Extract(new ContentScanner(page), composer, replacementList);
-                stamper.Flush();
+                page.Annotations.Remove(annotation);
             }
+
+            Extract(new ContentScanner(page), composer, replacementList);
+            stamper.Flush();
         }
 
-        private static RectangleF FixAnchorBox(RectangleF box, double footerHeightAndSpacing)
+        private RectangleF FixAnchorBox(RectangleF box)
         {
             // One mayor flaw in wkhtmltopdf
             // The actual link of Anchors (annotations) is not where the text is
@@ -102,7 +118,7 @@ namespace ItechoPdf
             // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
             // Now convert 5mm to pixles
             // Footer height + spacing
-            float moveDown = (float)footerHeightAndSpacing * 2.83333333f;
+            float moveDown = (float)HeightAndSpacing * 2.83333333f;
             return new RectangleF
             {
                 Height = box.Height,
@@ -195,6 +211,11 @@ namespace ItechoPdf
             // It is measured in some unit where 50 units = 1rem = 12pt = 16px
             // Now just convert to pt by 50/12 = 4.166666
             return fontSize / 4.166666666;
+        }
+
+        public void Dispose()
+        {
+            _file?.Dispose();
         }
     }
 }
