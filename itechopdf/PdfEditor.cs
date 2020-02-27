@@ -169,7 +169,7 @@ namespace ItechoPdf
                                         Y = textChar.Box.Y + (textChar.Box.Height / 2)
                                     };
                                     // var bytes = textChar.Style.Font.Encode("9");
-                                    composer.ShowText("9", center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
+                                    composer.ShowText(replace.Replacement.Replace, center, XAlignmentEnum.Center, YAlignmentEnum.Middle, 0);
                                     replace.AlreadyStamp = true;
                                 }
 

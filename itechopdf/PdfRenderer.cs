@@ -51,7 +51,7 @@ namespace ItechoPdf
             List<byte[]> pdfs = new List<byte[]>();
             foreach (var doc in _documents)
             {
-                HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources);
+                HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false);
                 pdfs.Add(HtmlDocToPdf(htmlDoc, doc));
                 // Keep track of number count.
             }
@@ -187,7 +187,7 @@ namespace ItechoPdf
         }
 
         
-        private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources)
+        private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace)
         {
             var htmlDoc = new HtmlDocument();
             string baseUrl = null;
@@ -206,7 +206,7 @@ namespace ItechoPdf
                 }
             }
             
-            return FormatHtml(htmlDoc, baseUrl, resources);
+            return FormatHtml(htmlDoc, baseUrl, resources, replace);
         }
         
         private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings)
@@ -232,7 +232,7 @@ namespace ItechoPdf
             
             if (settings is HtmlHeaderFooter source)
             {
-                HtmlDocument htmlDoc = DocFromSource(source.Source, null);
+                HtmlDocument htmlDoc = DocFromSource(source.Source, null, true);
                 var path = CreateTempFile();
                 using (var sw = File.Create(path))
                 {
@@ -260,7 +260,7 @@ namespace ItechoPdf
         }
 
 
-        private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl, List<PdfResource> resources)
+        private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl, List<PdfResource> resources, bool replaceVariables)
         {
             // make sure baeUrl is always ending with directory seperator
             if (!baseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
@@ -312,7 +312,28 @@ namespace ItechoPdf
 
             AddResources(head, body, resources);
 
+            // Replace variables
+            if (replaceVariables)
+            {
+                string inner = body.InnerHtml;
+                inner = inner.Replace("{{documentpage}}", CreateReplacementAnchor(doc, "documentpage"));
+                inner = inner.Replace("{{documentpages}}", CreateReplacementAnchor(doc, "documentpages"));
+                inner = inner.Replace("{{page}}", CreateReplacementAnchor(doc, "page"));
+                inner = inner.Replace("{{pages}}", CreateReplacementAnchor(doc, "pages"));
+                
+                body.InnerHtml = inner;
+            }
+
             return newDoc;
+        }
+
+        public string CreateReplacementAnchor(HtmlDocument doc, string fragment)
+        {
+            var a = doc.CreateElement("a");
+            a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
+            a.SetAttributeValue("href", "#" + fragment);
+            a.InnerHtml = "1";
+            return a.OuterHtml;
         }
 
         private void AddResources(HtmlNode head, HtmlNode body, List<PdfResource> resources)
