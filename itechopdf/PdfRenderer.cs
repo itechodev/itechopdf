@@ -5,8 +5,6 @@ using HtmlAgilityPack;
 using ItechoPdf.Core;
 using org.pdfclown.files;
 using org.pdfclown.tools;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
 
 namespace ItechoPdf
 {

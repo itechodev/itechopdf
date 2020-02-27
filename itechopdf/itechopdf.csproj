@@ -22,7 +22,6 @@
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.19" PrivateAssets="Compile;ContentFiles;Build;Native;Analyzers" />
         <PackageReference Include="PDFClown" Version="0.1.2" />
-        <PackageReference Include="PDFsharp" Version="1.50.5147" PrivateAssets="Compile;ContentFiles;Build;Native;Analyzers" />
         <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
         <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
     </ItemGroup>
