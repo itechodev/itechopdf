@@ -33,6 +33,12 @@ namespace ItechoPdf
         Object,
     }
 
+    public enum VariableAlign
+    {
+        Left,
+        Center, 
+        Right,
+    }
 
     // Combined load and print- settings
     public class PdfSettings
@@ -85,6 +91,7 @@ namespace ItechoPdf
             Pages = settings.Pages;
             DocumentPage = settings.DocumentPage;
             DocumentPages = settings.DocumentPages;
+            VariableDigits = settings.VariableDigits;
         }
 
         /// <summary>
@@ -292,24 +299,30 @@ namespace ItechoPdf
 
 
         /// <summary>
-        /// The {{page}} variables anchor alignment and maximum digits to make room for.
+        /// The {{page}} variables anchor alignment
         /// </summary>
-        public VariableStyle Page { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        public VariableAlign Page { get; set; } = VariableAlign.Right;
         
         /// <summary>
-        /// The {{pages}} variables anchor alignment and maximum digits to make room for.
+        /// The {{pages}} variables anchor alignment
         /// </summary>
-        public VariableStyle Pages { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        public VariableAlign Pages { get; set; } = VariableAlign.Right;
         
         /// <summary>
-        /// The {{documentpage}} variables anchor alignment and maximum digits to make room for.
+        /// The {{documentpage}} variables anchor alignment
         /// </summary>
-        public VariableStyle DocumentPage { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        public VariableAlign DocumentPage { get; set; } = VariableAlign.Right;
         
         /// <summary>
-        /// The {{documentpages}} variables anchor alignment and maximum digits to make room for.
+        /// The {{documentpages}} variables anchor alignment
         /// </summary>
-        public VariableStyle DocumentPages { get; set; } = new VariableStyle(VariableAlign.Right, 2);
+        public VariableAlign DocumentPages { get; set; } = VariableAlign.Right;
+        
+        /// <summary>
+        /// The maximum number of digits the variables should cater for in terms of spacing. Default 2
+        /// .eg 2 digits will ensure there always room for two digits. 0-99 wil fit in.
+        /// In case of less digits used than occupied the align function will suffice
+        /// </summary>
+        public int VariableDigits { get; set; } = 2;
     }
-
 }

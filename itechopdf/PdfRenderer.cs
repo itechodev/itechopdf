@@ -53,7 +53,7 @@ namespace ItechoPdf
             int totalPages = 0;
             foreach (var doc in _documents)
             {
-                HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false);
+                HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false, doc.Settings);
                 var bytes = HtmlDocToPdf(htmlDoc, doc);
 
                 var editor = new PdfEditor();
@@ -78,10 +78,10 @@ namespace ItechoPdf
                 {
                     var replace = new List<VariableReplace>
                     {
-                        new VariableReplace("documentpage", (docpage + 1).ToString(), doc.Settings.DocumentPage.Align),
-                        new VariableReplace("documentpages", edit.Pages.ToString(), doc.Settings.DocumentPages.Align),
-                        new VariableReplace("page", (page + 1).ToString(), doc.Settings.Page.Align),
-                        new VariableReplace("pages", totalPages.ToString(), doc.Settings.Pages.Align),
+                        new VariableReplace("documentpage", (docpage + 1).ToString(), doc.Settings.DocumentPage),
+                        new VariableReplace("documentpages", edit.Pages.ToString(), doc.Settings.DocumentPages),
+                        new VariableReplace("page", (page + 1).ToString(), doc.Settings.Page),
+                        new VariableReplace("pages", totalPages.ToString(), doc.Settings.Pages),
                     };
                     edit.ReplacePage(docpage, replace);
                     page++;
@@ -167,8 +167,8 @@ namespace ItechoPdf
                 DumpOutline = settings.DumpOutline,
                 EnableIntelligentShrinking = settings.EnableIntelligentShrinking,
                 EnableJavascript = settings.EnableJavascript,
-                Footer = BuildHeaderFooter(document.Footer),
-                Header = BuildHeaderFooter(document.Header),
+                Footer = BuildHeaderFooter(document.Footer, document.Settings),
+                Header = BuildHeaderFooter(document.Header, document.Settings),
                 ImageDPI = settings.ImageDPI,
                 ImageQuality = settings.ImageQuality,
                 IncludeInOutline = settings.IncludeInOutline,
@@ -196,7 +196,7 @@ namespace ItechoPdf
         }
 
         
-        private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace)
+        private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace, PdfSettings settings)
         {
             var htmlDoc = new HtmlDocument();
             string baseUrl = null;
@@ -215,10 +215,10 @@ namespace ItechoPdf
                 }
             }
             
-            return FormatHtml(htmlDoc, baseUrl, resources, replace);
+            return FormatHtml(htmlDoc, baseUrl, resources, replace, settings);
         }
         
-        private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings)
+        private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings, PdfSettings pdf)
         {
             if (settings == null)
             {
@@ -241,7 +241,7 @@ namespace ItechoPdf
             
             if (settings is HtmlHeaderFooter source)
             {
-                HtmlDocument htmlDoc = DocFromSource(source.Source, null, true);
+                HtmlDocument htmlDoc = DocFromSource(source.Source, null, true, pdf);
                 var path = CreateTempFile();
                 using (var sw = System.IO.File.Create(path))
                 {
@@ -269,7 +269,7 @@ namespace ItechoPdf
         }
 
 
-        private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl, List<PdfResource> resources, bool replaceVariables)
+        private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl, List<PdfResource> resources, bool replaceVariables, PdfSettings settings)
         {
             // make sure baeUrl is always ending with directory seperator
             if (!baseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
@@ -325,10 +325,11 @@ namespace ItechoPdf
             if (replaceVariables)
             {
                 string inner = body.InnerHtml;
-                inner = inner.Replace("{{documentpage}}", CreateReplacementAnchor(doc, "documentpage"));
-                inner = inner.Replace("{{documentpages}}", CreateReplacementAnchor(doc, "documentpages"));
-                inner = inner.Replace("{{page}}", CreateReplacementAnchor(doc, "page"));
-                inner = inner.Replace("{{pages}}", CreateReplacementAnchor(doc, "pages"));
+                int digits = settings.VariableDigits;
+                inner = inner.Replace("{{documentpage}}", CreateReplacementAnchor(doc, "documentpage", digits));
+                inner = inner.Replace("{{documentpages}}", CreateReplacementAnchor(doc, "documentpages", digits));
+                inner = inner.Replace("{{page}}", CreateReplacementAnchor(doc, "page", digits));
+                inner = inner.Replace("{{pages}}", CreateReplacementAnchor(doc, "pages", digits));
                 
                 body.InnerHtml = inner;
             }
@@ -336,12 +337,12 @@ namespace ItechoPdf
             return newDoc;
         }
 
-        public string CreateReplacementAnchor(HtmlDocument doc, string fragment)
+        public string CreateReplacementAnchor(HtmlDocument doc, string fragment, int digits)
         {
             var a = doc.CreateElement("a");
             a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
             a.SetAttributeValue("href", "#" + fragment);
-            a.InnerHtml = "1";
+            a.InnerHtml = new String('5', digits);
             return a.OuterHtml;
         }
 
