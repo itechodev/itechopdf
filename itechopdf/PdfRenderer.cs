@@ -86,10 +86,7 @@ namespace ItechoPdf
                     page++;
                 }
                 
-                foreach (var p in edit.GetPages())
-                {
-                    manager.Add(p.Document);
-                }
+                manager.Add(edit.GetDocument);
             }
 
             using (var ms = new MemoryStream())

@@ -32,6 +32,8 @@ namespace ItechoPdf
             return _file?.Document.Pages;
         }
 
+        public Document GetDocument => _file.Document;
+
         public void ReadFromBytes(byte[] bytes)
         {
             _file = new files::File(new org.pdfclown.bytes.Buffer(bytes));
