@@ -350,8 +350,28 @@ namespace ItechoPdf
             a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
             // Skip all data in the anchor's href
             a.SetAttributeValue("href", $"/var?align={align}&name={name}");
-            a.InnerHtml = new String('5', digits);
+            a.AppendChild(doc.CreateTextNode(new String('5', digits)));
+
+            // Need to include the full set of digits glyphs into the PDF for restamping
+            a.AppendChild(CreateDigit(doc, 0));
+            a.AppendChild(CreateDigit(doc, 1));
+            a.AppendChild(CreateDigit(doc, 2));
+            a.AppendChild(CreateDigit(doc, 3));
+            a.AppendChild(CreateDigit(doc, 4));
+            a.AppendChild(CreateDigit(doc, 5));
+            a.AppendChild(CreateDigit(doc, 6));
+            a.AppendChild(CreateDigit(doc, 7));
+            a.AppendChild(CreateDigit(doc, 8));
+            a.AppendChild(CreateDigit(doc, 9));
             return a;
+        }
+
+        private HtmlNode CreateDigit(HtmlDocument doc, int digit)
+        {
+            var abs = doc.CreateElement("div");
+            abs.SetAttributeValue("style", "position: absolute; top: 0px; left: 0px;");
+            abs.InnerHtml = digit.ToString();
+            return abs;
         }
 
         private void AddResources(HtmlNode head, HtmlNode body, List<PdfResource> resources)
