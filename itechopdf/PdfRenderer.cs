@@ -225,20 +225,6 @@ namespace ItechoPdf
                 return null;
             }
 
-            if (settings is StandardHeaderFooter std)
-            {
-                return new HeaderFooterSettings
-                {
-                    Center = std.Center,
-                    FontName = std.FontName,
-                    FontSize = std.FontSize,
-                    Left = std.Left,
-                    Line = std.Line,
-                    Right = std.Right,
-                    Spacing = std.Spacing
-                };
-            }
-            
             if (settings is HtmlHeaderFooter source)
             {
                 HtmlDocument htmlDoc = DocFromSource(source.Source, null, true, pdf);
@@ -353,6 +339,7 @@ namespace ItechoPdf
             a.AppendChild(doc.CreateTextNode(new String('5', digits)));
 
             // Need to include the full set of digits glyphs into the PDF for restamping
+            // Cannot declare it globally as the font used in paging may be different 
             a.AppendChild(CreateDigit(doc, 0));
             a.AppendChild(CreateDigit(doc, 1));
             a.AppendChild(CreateDigit(doc, 2));

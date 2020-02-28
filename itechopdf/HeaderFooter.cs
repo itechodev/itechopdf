@@ -26,10 +26,5 @@ namespace ItechoPdf
                 Line = line
             };
         }
-
-        public static StandardHeaderFooter Standard(string left, string center, string right, int? fontSize = null, string fontName = null)
-        {
-            return new StandardHeaderFooter(left, center, right, fontSize, fontName);
-        }
     }
 }

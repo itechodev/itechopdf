@@ -54,20 +54,6 @@ namespace ItechoPdf
             Resources.Add(new PdfResource(content, placement, ResourceType.Javascript));
         }
         
-        public void AddStandardHeader(string left, string center, string right, double? spacing = null, bool line = true, int? fontSize = null, string fontName = null)
-        {
-            Header = new StandardHeaderFooter
-            {
-                Center = center,
-                FontName = fontName,
-                FontSize = fontSize,
-                Left = left,
-                Line = line,
-                Right = right,
-                Spacing = spacing
-            };
-        }
-
         public void SetHeader(PdfSource source, double height, double? spacing = null, bool? line = null)
         {
             SetHeader(new HtmlHeaderFooter(source)
@@ -88,16 +74,6 @@ namespace ItechoPdf
             });
         }
         
-        public void SetFooter(string left, string center, string right, int? fontSize = null, string fontName = null)
-        {
-            SetFooter(new StandardHeaderFooter(left, center, right, fontSize, fontName));
-        }
- 
-        public void SetHeader(string left, string center, string right, int? fontSize = null, string fontName = null)
-        {
-            SetHeader(new StandardHeaderFooter(left, center, right, fontSize, fontName));
-        }
-
         private void SetHeader(HeaderFooter header)
         {
             Header = header;
