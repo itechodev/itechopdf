@@ -8,14 +8,19 @@
     </style>
 </head>
 <body>
-    <div style="background-color: rgb(255, 174, 0)">
-
-        <a href="http://www.google.com">Go to google</a>
-        
-        <span>ItechoPdf header</span>
-        <div>Document Page <var name="documentpage" text-align="right">4</var> of <var name="documentpages" text-align="left">10</var></span></div>
-        <div>Page <var name="page" text-align="right">4</var> of <var name="pages" text-align="left">40</var></span></div>
-        
+    <div style="float:left; padding: 0.5rem; text-align: center;">
+        <div style="font-size: 0.8rem;">document</div>
+        <div style="font-size: 1rem; font-weight: bold;">
+            <var name="documentpage" text-align="right">4</var> | <var name="documentpages" text-align="left">10</var>
+        </div>
     </div>
+
+    <div style="float:right; padding: 0.5rem; text-align: center;">
+        <div style="font-size: 0.8rem;">page</div>
+        <div style="font-size: 1rem; font-weight: bold;">
+            <var name="page" text-align="right">4</var> | <var name="pages" text-align="left">10</var>
+        </div>
+    </div>
+    <div style="clear: both;"></div>
 </body>
 </html>

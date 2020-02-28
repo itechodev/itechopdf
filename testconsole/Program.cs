@@ -24,10 +24,10 @@ namespace testconsole
             var content = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
             
             content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
-            content.SetFooter(PdfSource.FromFile("res/footer.html"), 50, 5);
+            content.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
 
             var content2 = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
-            content2.SetFooter(PdfSource.FromFile("res/footer2.html"), 50, 5);
+            content2.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
 
             return renderer.RenderToBytes();
         }
