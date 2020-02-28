@@ -344,12 +344,12 @@ namespace ItechoPdf
             return newDoc;
         }
 
-        public HtmlNode CreateReplacementAnchor(HtmlDocument doc, string fragment, string align, int digits)
+        public HtmlNode CreateReplacementAnchor(HtmlDocument doc, string name, string align, int digits)
         {
             var a = doc.CreateElement("a");
             a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
             // Skip all data in the anchor's href
-            a.SetAttributeValue("href", $"?align={align}#{fragment})");
+            a.SetAttributeValue("href", $"/var?align={align}&name={name}");
             a.InnerHtml = new String('5', digits);
             return a;
         }

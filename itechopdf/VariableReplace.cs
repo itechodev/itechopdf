@@ -10,6 +10,5 @@ namespace ItechoPdf
 
         public string Name { get; set; }
         public string Replace { get; set; }
-        public VariableAlign Align { get; set; }
     }
 }

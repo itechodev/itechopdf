@@ -15,9 +15,12 @@ using org.pdfclown.documents.interaction.actions;
 using System.Linq;
 using System.IO;
 using org.pdfclown.documents.contents.colorSpaces;
+using System.Web;
 
 namespace ItechoPdf
 {
+    
+
     public class PdfEditor : IDisposable
     {
         private files.File _file;
@@ -41,7 +44,7 @@ namespace ItechoPdf
 
         public int Pages => _file?.Document.Pages.Count ?? 0;
         public double HeightAndSpacing { get; set; }
-
+        
         public byte[] Save()
         {
             using (var ms = new MemoryStream())
@@ -52,9 +55,9 @@ namespace ItechoPdf
         }
 
 
-        private List<(Annotation, VariableReplace)> FindLinks(Page page, List<VariableReplace> replace)
+        private List<ReplaceRect> FindLinks(Page page, List<VariableReplace> replace)
         {
-            List<(Annotation, VariableReplace)> ret = new List<(Annotation, VariableReplace)>();
+            var ret = new List<ReplaceRect>();
             PageAnnotations annotations = page.Annotations;
 
             if (!annotations.Exists())
@@ -71,12 +74,18 @@ namespace ItechoPdf
                     {
                         if (action is GoToURI go)
                         {
-                            string name = go.URI.Fragment?.Length > 1 ? go.URI.Fragment.Substring(1) : null;
-
-                            var replacement = replace.Find(r => r.Name == name);
-                            if (replacement != null)
+                            if (go.URI.AbsolutePath == "/var")
                             {
-                                ret.Add((annotation, replacement));
+                                var namevalue = HttpUtility.ParseQueryString(go.URI.Query.Substring(1));
+                                var align = namevalue.GetValues("align")?.FirstOrDefault();
+                                var name = namevalue.GetValues("name")?.FirstOrDefault();
+                                
+                                var replacement = replace.Find(r => r.Name == name);
+                                if (replacement != null)
+                                {
+                                    var ins = new ReplaceRect(FixAnchorBox(annotation.Box), replacement, ToXAlignmentEnum(align), annotation);
+                                    ret.Add(ins);
+                                }
                             }
                         }
                     }
@@ -96,21 +105,17 @@ namespace ItechoPdf
             PrimitiveComposer composer = stamper.Foreground;
 
             var links = FindLinks(page, replace);
-            var replacementList = new List<ReplaceRect>();
-
+            
             foreach (var d in links)
             {
-                var (annotation, replacement) = d;                    
-                replacementList.Add(new ReplaceRect(false, FixAnchorBox(annotation.Box), replacement));
-                
-                // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
-                // composer.DrawRectangle(FixAnchorBox(annotation.Box));
-                // composer.Stroke();           
+                composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
+                composer.DrawRectangle(d.Rect);
+                composer.Stroke();
 
-                page.Annotations.Remove(annotation);
+                page.Annotations.Remove(d.Annotation);
             }
 
-            Extract(new ContentScanner(page), composer, replacementList);
+            Extract(new ContentScanner(page), composer, links);
             stamper.Flush();
             page.Contents.Flush();
         }
@@ -193,10 +198,9 @@ namespace ItechoPdf
                                         Y = textChar.Box.Y + (textChar.Box.Height / 2)
                                     };
                                     // var bytes = textChar.Style.Font.Encode("9");
-                                    composer.ShowText(replace.Replacement.Replace, center, ToXAlignmentEnum(replace.Replacement.Align), YAlignmentEnum.Middle, 0);
+                                    composer.ShowText(replace.Replacement.Replace, center, replace.XAlignment, YAlignmentEnum.Middle, 0);
                                     replace.AlreadyStamp = true;
                                 }
-
 
                                 // Remote text from document
                                 level.Remove();
@@ -213,16 +217,16 @@ namespace ItechoPdf
             }
         }
 
-        private static XAlignmentEnum ToXAlignmentEnum(VariableAlign align)
+        private static XAlignmentEnum ToXAlignmentEnum(string align)
         {
-            switch (align)
+            switch (align.ToLower().Trim())
             {
-                case VariableAlign.Left:
+                case "left":
                     return XAlignmentEnum.Left;
-                case VariableAlign.Center:
+                case "center":
                     return XAlignmentEnum.Center;
                 default:
-                case VariableAlign.Right:
+                case "right":
                     return XAlignmentEnum.Right;
             }
         }
