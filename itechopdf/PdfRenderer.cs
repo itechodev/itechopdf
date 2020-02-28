@@ -322,28 +322,36 @@ namespace ItechoPdf
             AddResources(head, body, resources);
 
             // Replace variables
-            if (replaceVariables)
+            if (!replaceVariables)
             {
-                string inner = body.InnerHtml;
-                int digits = settings.VariableDigits;
-                inner = inner.Replace("{{documentpage}}", CreateReplacementAnchor(doc, "documentpage", digits));
-                inner = inner.Replace("{{documentpages}}", CreateReplacementAnchor(doc, "documentpages", digits));
-                inner = inner.Replace("{{page}}", CreateReplacementAnchor(doc, "page", digits));
-                inner = inner.Replace("{{pages}}", CreateReplacementAnchor(doc, "pages", digits));
-                
-                body.InnerHtml = inner;
+                return newDoc;
             }
 
+            var varNodes = body.SelectNodes("//var");
+            if (varNodes == null)
+            {
+                return newDoc;
+            }
+            foreach (var n in varNodes)
+            {
+                Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
+                var align = n.GetAttributeValue("text-align", "right");
+                var name = n.GetAttributeValue("name", "");
+
+                var replace = CreateReplacementAnchor(doc, name, align, digits);
+                n.ParentNode.ReplaceChild(replace, n);
+            }
             return newDoc;
         }
 
-        public string CreateReplacementAnchor(HtmlDocument doc, string fragment, int digits)
+        public HtmlNode CreateReplacementAnchor(HtmlDocument doc, string fragment, string align, int digits)
         {
             var a = doc.CreateElement("a");
             a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
-            a.SetAttributeValue("href", "#" + fragment);
+            // Skip all data in the anchor's href
+            a.SetAttributeValue("href", $"?align={align}#{fragment})");
             a.InnerHtml = new String('5', digits);
-            return a.OuterHtml;
+            return a;
         }
 
         private void AddResources(HtmlNode head, HtmlNode body, List<PdfResource> resources)
