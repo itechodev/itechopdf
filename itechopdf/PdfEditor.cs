@@ -108,10 +108,9 @@ namespace ItechoPdf
             
             foreach (var d in links)
             {
-                composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
-                composer.DrawRectangle(d.Rect);
-                composer.Stroke();
-
+                // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
+                // composer.DrawRectangle(d.Rect);
+                // composer.Stroke();
                 page.Annotations.Remove(d.Annotation);
             }
 
@@ -191,14 +190,24 @@ namespace ItechoPdf
                                     composer.SetStrokeColor(textChar.Style.StrokeColor);
                                     composer.SetTextRenderMode(textChar.Style.RenderMode);
 
-                                    // textChar.Style.Font.Encode("9");
-                                    PointF center = new PointF
+                                    PointF refPoint;
+                                    switch (replace.XAlignment)
                                     {
-                                        X = textChar.Box.X + (textChar.Box.Width / 2),
-                                        Y = textChar.Box.Y + (textChar.Box.Height / 2)
-                                    };
+                                        case XAlignmentEnum.Left:
+                                            refPoint = replace.Rect.Location;
+                                            break;
+                                        case XAlignmentEnum.Center:
+                                        case XAlignmentEnum.Justify:
+                                            refPoint = new PointF(replace.Rect.X + (replace.Rect.Width / 2), replace.Rect.Y);
+                                            break;
+                                        case XAlignmentEnum.Right:
+                                        default:
+                                            refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
+                                            break;
+                                    }
+                                    // textChar.Style.Font.Encode("9");                                    
                                     // var bytes = textChar.Style.Font.Encode("9");
-                                    composer.ShowText(replace.Replacement.Replace, center, replace.XAlignment, YAlignmentEnum.Middle, 0);
+                                    composer.ShowText(replace.Replacement.Replace, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
                                     replace.AlreadyStamp = true;
                                 }
 
