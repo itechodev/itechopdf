@@ -1,0 +1,16 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <ItemGroup>
+  <None Include="$(MSBuildThisFileDirectory)libwkhtmltox.dll">
+     <Link>libwkhtmltox.dll</Link>
+     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+  <None Include="$(MSBuildThisFileDirectory)libwkhtmltox.dylib">
+     <Link>libwkhtmltox.dylib</Link>
+     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+  <None Include="$(MSBuildThisFileDirectory)libwkhtmltox.so">
+     <Link>libwkhtmltox.so</Link>
+     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+ </ItemGroup>
+</Project>
