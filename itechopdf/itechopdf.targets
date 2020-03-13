@@ -1,5 +1,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
  <ItemGroup>
+ <!-- <None Include="$(MSBuildThisFileDirectory)itechopdf.dll">
+     <Link>itechopdf.dll</Link>
+     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None> -->
+
   <None Include="$(MSBuildThisFileDirectory)libwkhtmltox.dll">
      <Link>libwkhtmltox.dll</Link>
      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
