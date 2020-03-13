@@ -57,7 +57,7 @@ namespace ItechoPdf
                 var bytes = HtmlDocToPdf(htmlDoc, doc);
 
                 var editor = new PdfEditor();
-                editor.HeightAndSpacing = doc.Header?.Height + doc.Header?.Spacing ?? 0;
+                editor.HeightAndSpacing = doc.Header?.Height + doc.Header?.Spacing + doc.Footer?.Spacing ??  0;
                 editor.ReadFromBytes(bytes);
                 totalPages += editor.Pages;
 
