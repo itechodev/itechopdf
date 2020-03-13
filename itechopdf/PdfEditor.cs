@@ -97,10 +97,7 @@ namespace ItechoPdf
         public void ReplacePage(int pageNumber, List<VariableReplace> replace)
         {
             PageStamper stamper = new PageStamper();
-            // Make sure in range
-            pageNumber = Math.Max(Math.Min(Pages - 1, pageNumber), 0);
             var page = _file.Document.Pages[pageNumber];
-            
             stamper.Page = page;
             PrimitiveComposer composer = stamper.Foreground;
 
@@ -109,8 +106,10 @@ namespace ItechoPdf
             foreach (var d in links)
             {
                 // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
+                // composer.SetLineWidth(0.5);
                 // composer.DrawRectangle(d.Rect);
                 // composer.Stroke();
+                // Console.WriteLine($"Rect found: {d.Rect.Left},{d.Rect.Top}  {d.Rect.Right},{d.Rect.Bottom}  {d.Rect.Width} x {d.Rect.Height}");
                 page.Annotations.Remove(d.Annotation);
             }
 
@@ -129,7 +128,7 @@ namespace ItechoPdf
             // Size	72 PPI	96 PPI	150 PPI	300 PPI
             // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
             // Now convert 5mm to pixles
-            // Footer height + spacing
+            // Footer height + spacing header + spacing footer
             float moveDown = (float)HeightAndSpacing * 2.83333333f;
             return new RectangleF
             {
@@ -140,17 +139,23 @@ namespace ItechoPdf
             };
         }
 
-        private static bool RectContains(RectangleF outer, RectangleF? inner, float tollerance = 0.1f)
+        private static bool RectWithin(float x, float y, RectangleF check)
         {
-            if (inner == null)
-            {
-                return false;
-            }
-            return
-                inner.Value.X >= outer.X - tollerance &&
-                inner.Value.Y >= outer.Y - tollerance &&
-                inner.Value.X + inner.Value.Width <= outer.X + outer.Width + tollerance &&
-                inner.Value.Y + inner.Value.Height <= outer.Y + outer.Height + tollerance;
+            return 
+                x > check.Left && 
+                x < check.Right && 
+                y > check.Top && 
+                y < check.Bottom;
+        }
+
+        private static bool RectContains(RectangleF a, RectangleF b)
+        {
+            return 
+                RectWithin(a.X, a.Y, b) ||
+                RectWithin(a.X + a.Width, a.Y, b) ||
+                RectWithin(a.X + a.Width, a.Y + a.Height, b) ||
+                RectWithin(a.X, a.Y + a.Height, b);
+
         }
 
         private static void Extract(ContentScanner level, PrimitiveComposer composer, List<ReplaceRect> replaceList)
@@ -165,57 +170,58 @@ namespace ItechoPdf
                 ContentObject content = level.Current;
 
                 if (content is Text)
-                {
+                {                    
                     // level.CurrentWrapper
                     ContentScanner.TextWrapper wrapper = (ContentScanner.TextWrapper)level.CurrentWrapper;
+
+                    // composer.SetStrokeColor(new DeviceRGBColor(0.2, 0.2, 0.2));
+                    // composer.SetLineWidth(0.2);
+                    // composer.DrawRectangle(wrapper.Box.Value);
+                    // composer.Stroke();
                     
                     foreach (var replace in replaceList)
                     {
-                        // Don't quite understand how the ContentScanner scans content
-                        // I cannot delete individual TextStringWrapper elements. 
-                        // Search for the first match, extract styling and delete the whole text
-                        var first = wrapper.TextStrings.Find(t => RectContains(replace.Rect, t.Box));
-                        if (first != null)
+                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && (ts.TextChars.All(c => Char.IsDigit(c.Value)) && RectContains(ts.Box.Value, replace.Rect)));
+                        if (!hit)
                         {
-                            var textChar = first.TextChars.FirstOrDefault();
-                            if (textChar != null)
-                            {
-                                // Console.WriteLine($"Real hit: {first.Text} ({wrapper.TextStrings.Count})");
-                                // only draw on the first hit
-                                if (!replace.AlreadyStamp) 
-                                {
-                                    // Console.WriteLine("First hit - need to draw");
-                                    composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
-                                    composer.SetFillColor(textChar.Style.FillColor);
-                                    composer.SetStrokeColor(textChar.Style.StrokeColor);
-                                    composer.SetTextRenderMode(textChar.Style.RenderMode);
-
-                                    PointF refPoint;
-                                    switch (replace.XAlignment)
-                                    {
-                                        case XAlignmentEnum.Left:
-                                            refPoint = replace.Rect.Location;
-                                            break;
-                                        case XAlignmentEnum.Center:
-                                        case XAlignmentEnum.Justify:
-                                            refPoint = new PointF(replace.Rect.X + (replace.Rect.Width / 2), replace.Rect.Y);
-                                            break;
-                                        case XAlignmentEnum.Right:
-                                        default:
-                                            refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
-                                            break;
-                                    }
-                                    // textChar.Style.Font.Encode("9");                                    
-                                    // var bytes = textChar.Style.Font.Encode("9");
-                                    composer.ShowText(replace.Replacement.Replace, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
-                                    replace.AlreadyStamp = true;
-                                }
-
-                                // Remote text from document
-                                level.Remove();
-                                level.Contents.Flush();
-                            }
+                            continue;
                         }
+
+                        // only draw on the first hit
+                        if (!replace.AlreadyStamp) 
+                        {
+                            // Take the first match and extract styling 
+                            var textChar = wrapper.TextStrings.FirstOrDefault().TextChars.FirstOrDefault();
+                            // Console.WriteLine($"First hit - need to draw {replace.Replacement.Replace}");
+
+                            composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
+                            composer.SetFillColor(textChar.Style.FillColor);
+                            composer.SetStrokeColor(textChar.Style.StrokeColor);
+                            composer.SetTextRenderMode(textChar.Style.RenderMode);
+
+                            PointF refPoint;
+                            switch (replace.XAlignment)
+                            {
+                                case XAlignmentEnum.Left:
+                                    refPoint = replace.Rect.Location;
+                                    break;
+                                case XAlignmentEnum.Center:
+                                case XAlignmentEnum.Justify:
+                                    refPoint = new PointF(replace.Rect.X + (replace.Rect.Width / 2), replace.Rect.Y);
+                                    break;
+                                case XAlignmentEnum.Right:
+                                default:
+                                    refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
+                                    break;
+                            }
+                            // textChar.Style.Font.Encode("9");                                    
+                            // var bytes = textChar.Style.Font.Encode("9");
+                            composer.ShowText(replace.Replacement.Replace, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
+                            replace.AlreadyStamp = true;
+                        }
+                        // Remove text from document
+                        level.Remove();
+                        level.Contents.Flush();  
                     }
                 }
                 else if (content is ContainerObject)
