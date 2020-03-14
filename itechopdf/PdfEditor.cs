@@ -15,6 +15,7 @@ using org.pdfclown.documents.interaction.actions;
 using System.Linq;
 using System.IO;
 using System.Web;
+using org.pdfclown.documents.contents.colorSpaces;
 
 namespace ItechoPdf
 {
@@ -196,16 +197,16 @@ namespace ItechoPdf
                             switch (replace.XAlignment)
                             {
                                 case XAlignmentEnum.Left:
+                                case XAlignmentEnum.Justify:
                                     refPoint = replace.Rect.Location;
                                     break;
                                 case XAlignmentEnum.Center:
-                                case XAlignmentEnum.Justify:
                                     refPoint = new PointF(replace.Rect.X + (replace.Rect.Width / 2), replace.Rect.Y);
                                     break;
                                 case XAlignmentEnum.Right:
                                 default:
                                     refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
-                                    break;
+                                    break; 
                             }
                             composer.ShowText(replace.Text, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
                             replace.AlreadyStamp = true;
