@@ -16,6 +16,8 @@ using System.Linq;
 using System.IO;
 using System.Web;
 using org.pdfclown.documents.contents.colorSpaces;
+using org.pdfclown.documents.contents.fonts;
+using static org.pdfclown.documents.contents.fonts.Font;
 
 namespace ItechoPdf
 {
@@ -42,7 +44,7 @@ namespace ItechoPdf
 
         public int Pages => _file?.Document.Pages.Count ?? 0;
         public double HeightAndSpacing { get; set; }
-        
+
         public byte[] Save()
         {
             using (var ms = new MemoryStream())
@@ -98,7 +100,7 @@ namespace ItechoPdf
             PrimitiveComposer composer = stamper.Foreground;
 
             var links = FindLinks(page, variables);
-            
+
             foreach (var d in links)
             {
                 // composer.SetStrokeColor(new DeviceRGBColor(1, 0, 1 ));
@@ -137,16 +139,16 @@ namespace ItechoPdf
 
         private static bool RectWithin(float x, float y, RectangleF check)
         {
-            return 
-                x > check.Left && 
-                x < check.Right && 
-                y > check.Top && 
+            return
+                x > check.Left &&
+                x < check.Right &&
+                y > check.Top &&
                 y < check.Bottom;
         }
 
         private static bool RectContains(RectangleF a, RectangleF b)
         {
-            return 
+            return
                 RectWithin(a.X, a.Y, b) ||
                 RectWithin(a.X + a.Width, a.Y, b) ||
                 RectWithin(a.X + a.Width, a.Y + a.Height, b) ||
@@ -165,13 +167,13 @@ namespace ItechoPdf
             {
                 ContentObject content = level.Current;
                 if (content is Text)
-                {                    
+                {
                     ContentScanner.TextWrapper wrapper = (ContentScanner.TextWrapper)level.CurrentWrapper;
                     // composer.SetStrokeColor(new DeviceRGBColor(0.2, 0.2, 0.2));
                     // composer.SetLineWidth(0.2);
                     // composer.DrawRectangle(wrapper.Box.Value);
                     // composer.Stroke();
-                    
+
                     foreach (var replace in replaceList)
                     {
                         // var before = String.Join("", wrapper.TextStrings.Select(t => t.Text));
@@ -183,12 +185,19 @@ namespace ItechoPdf
                         }
 
                         // only draw on the first hit
-                        if (!replace.AlreadyStamp) 
+                        if (!replace.AlreadyStamp)
                         {
                             // Take the first match and extract styling 
                             var textChar = wrapper.TextStrings.FirstOrDefault().TextChars.FirstOrDefault();
-                            
-                            composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
+
+                            StandardType1Font font = new StandardType1Font(
+                                _file.Document,
+                                StandardType1Font.FamilyEnum.Helvetica,
+                                textChar.Style.Font.Flags.HasFlag(FlagsEnum.ForceBold),
+                                textChar.Style.Font.Flags.HasFlag(FlagsEnum.Italic)
+                            );
+
+                            composer.SetFont(font, FontSizeToPt(textChar.Style.FontSize));
                             composer.SetFillColor(textChar.Style.FillColor);
                             composer.SetStrokeColor(textChar.Style.StrokeColor);
                             composer.SetTextRenderMode(textChar.Style.RenderMode);
@@ -206,37 +215,14 @@ namespace ItechoPdf
                                 case XAlignmentEnum.Right:
                                 default:
                                     refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
-                                    break; 
+                                    break;
                             }
-                            float em = (float)Math.Abs(textChar.Style.FontSize);
-                            // https://docs.microsoft.com/en-us/typography/develop/character-design-standards/whitespace
-                            // Advance width rule : The space's advance width is set by visually selecting a value that is appropriate for the current font. The general guidelines for the advance widths are:
-                            // The minimum value should be no less than 1/5 the em, which is equivalent to the value of a thin space in traditional typesetting.
-                            // For an average width font a good value is ~1/4 the em.
-                            // Example: In Monotype's font Times New Roman-regular the space is 512 units, the em is 2048.
-                            // For a wide width font a good value is ~1/3 the em.
-                            // Example: in Microsoft's Verdana the space is 720 units, Tahoma is 640 units. In Stephenson Blake's Wide Latin the space is 612 units. In all fonts the em is 2048 units.
-                            // The maximum width should be no greater than 1/2 the em, which is equivalent to the en space of a typeface.
-                            // Go with: ~1/4 the em
-                            float space = em / 4;
-
-                            // split replace into segements
-                            // double x = 0;
-                            // foreach (var segment in replace.Text.Split(' '))
-                            // {
-                            //     if (x != 0)
-                            //     {
-                            //         x += space;
-                            //     }
-                            //     x += textChar.Style.Font.GetWidth(segment,  FontSizeToPt(textChar.Style.FontSize));
-                            // }
-
-                            composer.ShowText(replace.Text.Replace(' ', '0'), refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
+                            composer.ShowText(replace.Text, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
                             replace.AlreadyStamp = true;
                         }
                         // Remove text from document
                         level.Remove();
-                        level.Contents.Flush();  
+                        level.Contents.Flush();
                     }
                 }
                 else if (content is ContainerObject)
