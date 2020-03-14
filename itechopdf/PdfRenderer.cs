@@ -324,11 +324,10 @@ namespace ItechoPdf
                 var text = n.GetAttributeValue("text", null);
                 var align = n.GetAttributeValue("text-align", "right");
                 Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
-            
+
                 var textReplacement = Regex.Replace(text, @"\[.*?\]", new String('5', digits));
                 // Spaces is ignored or has some special meaning in PDF? Include a space or tab with the text.
                 // Otherwise PDF font encode will throw exception because the glyphs of the embedded font will be missing
-                textReplacement = textReplacement.Replace(" ", "&nbsp;");
                 var replace = CreateReplacementAnchor(doc, align, textReplacement, text);
                 n.ParentNode.ReplaceChild(replace, n);
             }
