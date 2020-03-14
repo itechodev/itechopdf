@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
 using org.pdfclown.files;
@@ -57,7 +58,7 @@ namespace ItechoPdf
                 var bytes = HtmlDocToPdf(htmlDoc, doc);
 
                 var editor = new PdfEditor();
-                editor.HeightAndSpacing = doc.Header?.Height + doc.Header?.Spacing + doc.Footer?.Spacing ??  0;
+                editor.HeightAndSpacing = doc.Header?.Height + doc.Header?.Spacing ?? 0;
                 editor.ReadFromBytes(bytes);
                 totalPages += editor.Pages;
 
@@ -78,10 +79,10 @@ namespace ItechoPdf
                 {
                     var replace = new List<VariableReplace>
                     {
-                        new VariableReplace("documentpage", (docpage + 1).ToString(), doc.Settings.DocumentPage),
-                        new VariableReplace("documentpages", edit.Pages.ToString(), doc.Settings.DocumentPages),
-                        new VariableReplace("page", (page + 1).ToString(), doc.Settings.Page),
-                        new VariableReplace("pages", totalPages.ToString(), doc.Settings.Pages),
+                        new VariableReplace("documentpage", (docpage + 1).ToString()),
+                        new VariableReplace("documentpages", edit.Pages.ToString()),
+                        new VariableReplace("page", (page + 1).ToString()),
+                        new VariableReplace("pages", totalPages.ToString()),
                     };
                     edit.ReplacePage(docpage, replace);
                     page++;
@@ -320,44 +321,45 @@ namespace ItechoPdf
             }
             foreach (var n in varNodes)
             {
-                Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
+                var text = n.GetAttributeValue("text", null);
                 var align = n.GetAttributeValue("text-align", "right");
-                var name = n.GetAttributeValue("name", "");
-
-                var replace = CreateReplacementAnchor(doc, name, align, digits);
+                var textReplacement = Regex.Replace(text, @"\[.*?\]", "");
+                textReplacement = textReplacement.Replace(" ", "&nbsp;");
+                var replace = CreateReplacementAnchor(doc, align, textReplacement, text);
                 n.ParentNode.ReplaceChild(replace, n);
             }
             return newDoc;
         }
 
-        public HtmlNode CreateReplacementAnchor(HtmlDocument doc, string name, string align, int digits)
+        public HtmlNode CreateReplacementAnchor(HtmlDocument doc, string align, string replace, string text)
         {
             var a = doc.CreateElement("a");
             a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
             // Skip all data in the anchor's href
-            a.SetAttributeValue("href", $"/var?align={align}&name={name}");
-            a.AppendChild(doc.CreateTextNode(new String('5', digits)));
+            a.SetAttributeValue("href", $"/var?align={align}&text={text}");
+            a.AppendChild(doc.CreateTextNode(replace));
 
             // Need to include the full set of digits glyphs into the PDF for restamping
             // Cannot declare it globally as the font used in paging may be different 
-            a.AppendChild(CreateDigit(doc, 0));
-            a.AppendChild(CreateDigit(doc, 1));
-            a.AppendChild(CreateDigit(doc, 2));
-            a.AppendChild(CreateDigit(doc, 3));
-            a.AppendChild(CreateDigit(doc, 4));
-            a.AppendChild(CreateDigit(doc, 5));
-            a.AppendChild(CreateDigit(doc, 6));
-            a.AppendChild(CreateDigit(doc, 7));
-            a.AppendChild(CreateDigit(doc, 8));
-            a.AppendChild(CreateDigit(doc, 9));
+            // Only need to add possible variable characters
+            a.AppendChild(CreateDigit(doc, "0"));
+            a.AppendChild(CreateDigit(doc, "1"));
+            a.AppendChild(CreateDigit(doc, "2"));
+            a.AppendChild(CreateDigit(doc, "3"));
+            a.AppendChild(CreateDigit(doc, "4"));
+            a.AppendChild(CreateDigit(doc, "5"));
+            a.AppendChild(CreateDigit(doc, "6"));
+            a.AppendChild(CreateDigit(doc, "7"));
+            a.AppendChild(CreateDigit(doc, "8"));
+            a.AppendChild(CreateDigit(doc, "9"));
             return a;
         }
 
-        private HtmlNode CreateDigit(HtmlDocument doc, int digit)
+        private HtmlNode CreateDigit(HtmlDocument doc, string digit)
         {
             var abs = doc.CreateElement("div");
             abs.SetAttributeValue("style", "position: absolute; top: 0px; left: 0px;");
-            abs.InnerHtml = digit.ToString();
+            abs.InnerHtml = digit;
             return abs;
         }
 

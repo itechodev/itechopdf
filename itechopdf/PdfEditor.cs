@@ -14,14 +14,11 @@ using System.Drawing;
 using org.pdfclown.documents.interaction.actions;
 using System.Linq;
 using System.IO;
-using org.pdfclown.documents.contents.colorSpaces;
 using System.Web;
 
 namespace ItechoPdf
 {
-    
-
-    public class PdfEditor : IDisposable
+    internal class PdfEditor : IDisposable
     {
         private files.File _file;
 
@@ -54,8 +51,7 @@ namespace ItechoPdf
             }
         }
 
-
-        private List<ReplaceRect> FindLinks(Page page, List<VariableReplace> replace)
+        private List<ReplaceRect> FindLinks(Page page, List<VariableReplace> variables)
         {
             var ret = new List<ReplaceRect>();
             PageAnnotations annotations = page.Annotations;
@@ -77,13 +73,12 @@ namespace ItechoPdf
                             if (go.URI.AbsolutePath == "/var")
                             {
                                 var namevalue = HttpUtility.ParseQueryString(go.URI.Query.Substring(1));
-                                var align = namevalue.GetValues("align")?.FirstOrDefault();
-                                var name = namevalue.GetValues("name")?.FirstOrDefault();
-                                
-                                var replacement = replace.Find(r => r.Name == name);
-                                if (replacement != null)
+                                string text = namevalue.GetValues("text")?.FirstOrDefault();
+                                if (text != null)
                                 {
-                                    var ins = new ReplaceRect(FixAnchorBox(annotation.Box), replacement, ToXAlignmentEnum(align), annotation);
+                                    var align = namevalue.GetValues("align")?.FirstOrDefault() ?? "right";
+                                    string replaceText = FormatNewText(text, variables);
+                                    var ins = new ReplaceRect(FixAnchorBox(annotation.Box), replaceText, ToXAlignmentEnum(align), annotation);
                                     ret.Add(ins);
                                 }
                             }
@@ -94,14 +89,14 @@ namespace ItechoPdf
             return ret;
         }
 
-        public void ReplacePage(int pageNumber, List<VariableReplace> replace)
+        public void ReplacePage(int pageNumber, List<VariableReplace> variables)
         {
             PageStamper stamper = new PageStamper();
             var page = _file.Document.Pages[pageNumber];
             stamper.Page = page;
             PrimitiveComposer composer = stamper.Foreground;
 
-            var links = FindLinks(page, replace);
+            var links = FindLinks(page, variables);
             
             foreach (var d in links)
             {
@@ -158,7 +153,7 @@ namespace ItechoPdf
 
         }
 
-        private static void Extract(ContentScanner level, PrimitiveComposer composer, List<ReplaceRect> replaceList)
+        private void Extract(ContentScanner level, PrimitiveComposer composer, List<ReplaceRect> replaceList)
         {
             if (level == null)
             {
@@ -168,12 +163,9 @@ namespace ItechoPdf
             while (level.MoveNext())
             {
                 ContentObject content = level.Current;
-
                 if (content is Text)
                 {                    
-                    // level.CurrentWrapper
                     ContentScanner.TextWrapper wrapper = (ContentScanner.TextWrapper)level.CurrentWrapper;
-
                     // composer.SetStrokeColor(new DeviceRGBColor(0.2, 0.2, 0.2));
                     // composer.SetLineWidth(0.2);
                     // composer.DrawRectangle(wrapper.Box.Value);
@@ -181,7 +173,9 @@ namespace ItechoPdf
                     
                     foreach (var replace in replaceList)
                     {
-                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && (ts.TextChars.All(c => Char.IsDigit(c.Value)) && RectContains(ts.Box.Value, replace.Rect)));
+                        // var before = String.Join("", wrapper.TextStrings.Select(t => t.Text));
+                        // Console.WriteLine($"Before hit text: {before}");
+                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && ts.TextChars.Any(c => RectContains(ts.Box.Value, replace.Rect)));
                         if (!hit)
                         {
                             continue;
@@ -192,8 +186,7 @@ namespace ItechoPdf
                         {
                             // Take the first match and extract styling 
                             var textChar = wrapper.TextStrings.FirstOrDefault().TextChars.FirstOrDefault();
-                            // Console.WriteLine($"First hit - need to draw {replace.Replacement.Replace}");
-
+                            
                             composer.SetFont(textChar.Style.Font, FontSizeToPt(textChar.Style.FontSize));
                             composer.SetFillColor(textChar.Style.FillColor);
                             composer.SetStrokeColor(textChar.Style.StrokeColor);
@@ -214,9 +207,7 @@ namespace ItechoPdf
                                     refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
                                     break;
                             }
-                            // textChar.Style.Font.Encode("9");                                    
-                            // var bytes = textChar.Style.Font.Encode("9");
-                            composer.ShowText(replace.Replacement.Replace, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
+                            composer.ShowText(replace.Text, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
                             replace.AlreadyStamp = true;
                         }
                         // Remove text from document
@@ -230,6 +221,24 @@ namespace ItechoPdf
                     Extract(level.ChildLevel, composer, replaceList);
                 }
             }
+        }
+
+        private string FormatNewText(string text, List<VariableReplace> variables)
+        {
+            // The whitespace charpoint 32 is not included as the embedded PDF glyphs 
+            // Which makes kind of sense, because a space doesn't have any value in a PDF. 
+            // Each character or sequency of characters is placed with absolute position
+            // See textChar.Style.Font.codes.Values. 32 is never present
+            // I also read somewhere that 32 in PDF is reserved for other purposes?
+            // So we use a horizontal tab instead. Point code 9.
+            // First we do variable substitution
+            var newText = text;
+            foreach (var variable in variables)
+            {
+                newText = newText.Replace($"[{variable.Name}]", variable.Replace);
+            }
+            // Then replace space with 9
+            return newText.Replace((char)32, (char)9);
         }
 
         private static XAlignmentEnum ToXAlignmentEnum(string align)
