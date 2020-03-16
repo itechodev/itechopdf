@@ -127,8 +127,9 @@ namespace ItechoPdf
 
             // Size	72 PPI	96 PPI	150 PPI	300 PPI
             // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
-            // Now convert 5mm to pixles
-            // Footer height + spacing header + spacing footer
+            // A4 is 210mm x 297mm. Which means 842px = 297mm
+            // 842 / 297 = 2,835016835 px / mm
+            // HeightAndSpacing is in mm. 
             float moveDown = (float)HeightAndSpacing * 2.83333333f;
             return new RectangleF
             {
