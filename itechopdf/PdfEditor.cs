@@ -139,22 +139,22 @@ namespace ItechoPdf
             };
         }
 
-        private static bool RectWithin(float x, float y, RectangleF check)
+        private static bool RectWithin(float x, float y, RectangleF check, float tollerance)
         {
             return
-                x > check.Left &&
-                x < check.Right &&
-                y > check.Top &&
-                y < check.Bottom;
+                x >= check.Left - tollerance  &&
+                x <= check.Right + tollerance &&
+                y >= check.Top - tollerance &&
+                y <= check.Bottom + tollerance;
         }
 
-        private static bool RectContains(RectangleF a, RectangleF b)
+        private static bool RectContains(RectangleF a, RectangleF b, float tollerance)
         {
             return
-                RectWithin(a.X, a.Y, b) ||
-                RectWithin(a.X + a.Width, a.Y, b) ||
-                RectWithin(a.X + a.Width, a.Y + a.Height, b) ||
-                RectWithin(a.X, a.Y + a.Height, b);
+                RectWithin(a.X, a.Y, b, tollerance) ||
+                RectWithin(a.X + a.Width, a.Y, b, tollerance) ||
+                RectWithin(a.X + a.Width, a.Y + a.Height, b, tollerance) ||
+                RectWithin(a.X, a.Y + a.Height, b, tollerance);
 
         }
 
@@ -180,7 +180,7 @@ namespace ItechoPdf
                     {
                         // var before = String.Join("", wrapper.TextStrings.Select(t => t.Text));
                         // Console.WriteLine($"Before hit text: {before}");
-                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && ts.TextChars.Any(c => RectContains(ts.Box.Value, replace.Rect)));
+                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && ts.TextChars.Any(c => RectContains(ts.Box.Value, replace.Rect, 5)));
                         if (!hit)
                         {
                             continue;
