@@ -45,6 +45,21 @@ renderer.Add(doc);
 var bytes = renderer.RenderToBytes();
 File.WriteAllBytes("output.pdf", bytes);
 ```
+**Variables in headers and footers**
+To use a variable you have to wrap it in the <var> tag. See why we favour the var tag syntax above moustache syntax [here](https://github.com/itechodev/itechopdf/issues/11).
+    
+```html
+    <var text-align="right" text="[page] of [pages]" digits="2">10 of 10</var>
+```
+
+
+Variable replacement is done through what we call PDF stamping. This is a post PDF creation process and therefore a bit more complicated that regular variable replacement.
+
+
+
+This was by far the most changelling concept to implement.
+
+
 ## HTML Caveats and limitations
 * Flex not supported
 * SVG images should have explicit width and height
