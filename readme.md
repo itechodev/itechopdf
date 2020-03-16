@@ -52,13 +52,23 @@ To use a variable you have to wrap it in the <var> tag. See why we favour the va
     <var text-align="right" text="[page] of [pages]" digits="2">10 of 10</var>
 ```
 
+| Attribute        | Options           | Meaning  | Default |
+| -----------------|-------------------| ---------|---------|
+| text-align | left, center, right | Align the replacement text relative to the bounding box | left |
+| text  | variables enclosed with [] with any text | The actual text to replace | |
+| digits | numberic | The original bounding box is formed by the maximum number of digits the variables can hold. In the example above [page] and [pages] will be replaced by 55 (two digits) to form the maximum bounding box. | 2 |
+| innerText | Any string | Only for design purposes. Design your template to what the replacement might look like | |
+
+| Variable Name | Desc |
+|---------------|------|
+| page | The current page in the PDF |
+| pages | The total number of pages in the PDF|
+| documentpage | The current page of the PdfDocument. Remember that a PDF may consists of multiple documents |
+| documentpages | The total number of pages in the document |
 
 Variable replacement is done through what we call PDF stamping. This is a post PDF creation process and therefore a bit more complicated that regular variable replacement.
 
-
-
 This was by far the most changelling concept to implement.
-
 
 ## HTML Caveats and limitations
 * Flex not supported
