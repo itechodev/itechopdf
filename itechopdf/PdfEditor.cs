@@ -18,9 +18,11 @@ using System.Web;
 using org.pdfclown.documents.contents.colorSpaces;
 using org.pdfclown.documents.contents.fonts;
 using static org.pdfclown.documents.contents.fonts.Font;
+using System.Text.RegularExpressions;
 
 namespace ItechoPdf
 {
+
     internal class PdfEditor : IDisposable
     {
         private files.File _file;
@@ -244,8 +246,19 @@ namespace ItechoPdf
         {
             var ret = new StampTexts();
             ret.Width = 0;
-            // For now make space width the same as width of 1
-            float spaceWidth = (float)style.Font.GetWidth('1', size);
+            // Somethimes the space literal can be used
+            float spaceWidth = (float)style.Font.GetWidth(' ', size);
+            if (spaceWidth == 0)
+            {
+                // otherwise try the tab literal
+                spaceWidth = (float) style.Font.GetWidth((char)9, size);
+            }
+            if (spaceWidth == 0)
+            {
+                // fallback half size of 1
+                spaceWidth = (float)style.Font.GetWidth('1', size)  / 2;
+            }
+             
             var segments = Regex.Split(text, @"\s+");
             foreach (string segment in segments)
             {

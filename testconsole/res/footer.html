@@ -8,20 +8,31 @@
     </style>
 </head>
 <body>
-    <div style="float:left; padding: 0.5rem; text-align: center;">
-        <div style="font-size: 0.8rem;">document</div>
-        <div class="funny">
-            <var text-align="center" text="[documentpage] of [documentpages]">5 of 10</var>
-        </div>
-    </div>
-
-    <div style="float:right; padding: 0.5rem; text-align: center;">
-        <div style="font-size: 0.8rem;">page</div>
-        <div class="funny">
-            <var text-align="left" text="[page] of [pages]">5 of 10</var>
-        </div>
-    </div>
-    <div style="clear: both;"></div>
+    <table class="table-fixed w-full">
+        <tr>
+            <td class="w-1o6 text-center funny text-xs">
+                <var text-align="left" text="[documentpage] of [documentpages]">10 of 10</var>
+            </td>
+            <td class="w-1o6 text-center funny text-sm">
+                <var text-align="center" text="[documentpage] of [documentpages]">10 of 10</var>
+            </td>
+            <td class="w-1o6 text-center funny text-base">
+                <var text-align="right" text="[documentpage] of [documentpages]">10 of 10</var>
+            </td>
+            
+            <td class="w-1o6 text-center funny text-lg">
+                <var text-align="left" text="[page] of [pages]">10 of 10</var>
+            </td>
+            <td class="w-1o6 text-center funny text-xl">
+                <var text-align="center" text="[page] of [pages]">10 of 10</var>
+            </td>
+            <td class="w-1o6 text-center funny text-2xl">
+                <var text-align="right" text="[page] of [pages]">10 of 10</var>
+            </td>
+            
+        </tr>
+    </table>
+  
 </body>
 </html>
 
