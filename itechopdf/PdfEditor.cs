@@ -26,10 +26,11 @@ namespace ItechoPdf
     internal class PdfEditor : IDisposable
     {
         private files.File _file;
+        private PdfDocument _pdfDocument;
 
-        public PdfEditor()
+        public PdfEditor(PdfDocument doc)
         {
-
+            _pdfDocument = doc;
         }
 
         public Pages GetPages()
@@ -127,10 +128,18 @@ namespace ItechoPdf
 
             // Size	72 PPI	96 PPI	150 PPI	300 PPI
             // A4	595 x 842	794 x 1123	1240 x 1754	2480 x 3508
+            var pageSizePx = _file.Document.GetSize();
+             
+            // swap the width and height if in landscape mode
+            var heightmm = _pdfDocument.Settings.Orientation == Orientation.Landscape
+                ? _pdfDocument.Settings.PaperSize.Width
+                : _pdfDocument.Settings.PaperSize.Height;
+            
             // A4 is 210mm x 297mm. Which means 842px = 297mm
             // 842 / 297 = 2,835016835 px / mm
             // HeightAndSpacing is in mm. 
-            float moveDown = (float)HeightAndSpacing * 2.83333333f;
+            float mmPerPx = pageSizePx.Height / (float)heightmm;
+            float moveDown = (float)HeightAndSpacing * mmPerPx;
             return new RectangleF
             {
                 Height = box.Height,
@@ -140,22 +149,22 @@ namespace ItechoPdf
             };
         }
 
-        private static bool RectWithin(float x, float y, RectangleF check, float tollerance)
+        private static bool RectWithin(float x, float y, RectangleF check, float tolerance)
         {
             return
-                x >= check.Left - tollerance  &&
-                x <= check.Right + tollerance &&
-                y >= check.Top - tollerance &&
-                y <= check.Bottom + tollerance;
+                x >= check.Left - tolerance  &&
+                x <= check.Right + tolerance &&
+                y >= check.Top - tolerance &&
+                y <= check.Bottom + tolerance;
         }
 
-        private static bool RectContains(RectangleF a, RectangleF b, float tollerance)
+        private static bool RectContains(RectangleF a, RectangleF b, float tolerance)
         {
             return
-                RectWithin(a.X, a.Y, b, tollerance) ||
-                RectWithin(a.X + a.Width, a.Y, b, tollerance) ||
-                RectWithin(a.X + a.Width, a.Y + a.Height, b, tollerance) ||
-                RectWithin(a.X, a.Y + a.Height, b, tollerance);
+                RectWithin(a.X, a.Y, b, tolerance) ||
+                RectWithin(a.X + a.Width, a.Y, b, tolerance) ||
+                RectWithin(a.X + a.Width, a.Y + a.Height, b, tolerance) ||
+                RectWithin(a.X, a.Y + a.Height, b, tolerance);
 
         }
 
@@ -181,7 +190,7 @@ namespace ItechoPdf
                     {
                         // var before = String.Join("", wrapper.TextStrings.Select(t => t.Text));
                         // Console.WriteLine($"Before hit text: {before}");
-                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && ts.TextChars.Any(c => RectContains(ts.Box.Value, replace.Rect, 5)));
+                        bool hit = wrapper.TextStrings.Any(ts => ts.Box.HasValue && ts.TextChars.Any(c => RectContains(ts.Box.Value, replace.Rect, 1)));
                         if (!hit)
                         {
                             continue;

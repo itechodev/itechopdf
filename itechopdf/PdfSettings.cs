@@ -87,11 +87,6 @@ namespace ItechoPdf
             CookieJar = settings.CookieJar;
             PaperSize = settings.PaperSize;
             Margins = new MarginSettings(settings.Margins);
-            Page = settings.Page;
-            Pages = settings.Pages;
-            DocumentPage = settings.DocumentPage;
-            DocumentPages = settings.DocumentPages;
-            VariableDigits = settings.VariableDigits;
         }
 
         /// <summary>
@@ -297,32 +292,5 @@ namespace ItechoPdf
 
         public MarginSettings Margins { get; set; } = new MarginSettings();
 
-
-        /// <summary>
-        /// The {{page}} variables anchor alignment
-        /// </summary>
-        public VariableAlign Page { get; set; } = VariableAlign.Right;
-        
-        /// <summary>
-        /// The {{pages}} variables anchor alignment
-        /// </summary>
-        public VariableAlign Pages { get; set; } = VariableAlign.Right;
-        
-        /// <summary>
-        /// The {{documentpage}} variables anchor alignment
-        /// </summary>
-        public VariableAlign DocumentPage { get; set; } = VariableAlign.Right;
-        
-        /// <summary>
-        /// The {{documentpages}} variables anchor alignment
-        /// </summary>
-        public VariableAlign DocumentPages { get; set; } = VariableAlign.Right;
-        
-        /// <summary>
-        /// The maximum number of digits the variables should cater for in terms of spacing. Default 2
-        /// .eg 2 digits will ensure there always room for two digits. 0-99 wil fit in.
-        /// In case of less digits used than occupied the align function will suffice
-        /// </summary>
-        public int VariableDigits { get; set; } = 2;
     }
 }

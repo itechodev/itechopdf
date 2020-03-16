@@ -163,7 +163,7 @@ namespace ItechoPdf.Core
         public string PaperSize { get; set; }
 
         /// <summary>
-        /// The height of the output document
+        /// The height of the output document in millimeters
         /// </summary>
         public string PaperHeight { get; set; }
         public string PaperWidth { get; set; }

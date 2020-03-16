@@ -184,8 +184,9 @@ namespace ItechoPdf
                 OutlineDepth = settings.OutlineDepth,
                 PageOffset = settings.PageOffset,
                 PagesCount = settings.PagesCount,
-                PaperHeight = settings.PaperSize.Height,
-                PaperWidth = settings.PaperSize.Width,
+                // always in millimeters
+                PaperHeight = settings.PaperSize.Height + "mm",
+                PaperWidth = settings.PaperSize.Width + "mm",
                 PaperSize = null,
                 PrintBackground = settings.PrintBackground,
                 PrintMediaType = settings.PrintMediaType,
@@ -322,6 +323,10 @@ namespace ItechoPdf
             foreach (var n in varNodes)
             {
                 var text = n.GetAttributeValue("text", null);
+                if (String.IsNullOrEmpty(text))
+                {
+                    continue;
+                }
                 var align = n.GetAttributeValue("text-align", "right");
                 Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
                 var textReplacement = Regex.Replace(text, @"\[.*?\]", new String('5', digits));
