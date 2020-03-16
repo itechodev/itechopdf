@@ -190,18 +190,21 @@ namespace ItechoPdf
                             // Take the first match and extract styling 
                             var textChar = wrapper.TextStrings.FirstOrDefault().TextChars.FirstOrDefault();
 
-                            StandardType1Font font = new StandardType1Font(
-                                _file.Document,
-                                StandardType1Font.FamilyEnum.Helvetica,
-                                textChar.Style.Font.Flags.HasFlag(FlagsEnum.ForceBold),
-                                textChar.Style.Font.Flags.HasFlag(FlagsEnum.Italic)
-                            );
-
-                            composer.SetFont(font, FontSizeToPt(textChar.Style.FontSize));
+                            // StandardType1Font font = new StandardType1Font(
+                            //     _file.Document,
+                            //     StandardType1Font.FamilyEnum.Helvetica,
+                            //     textChar.Style.Font.Flags.HasFlag(FlagsEnum.ForceBold),
+                            //     textChar.Style.Font.Flags.HasFlag(FlagsEnum.Italic)
+                            // );
+                            double pt = FontSizeToPt(textChar.Style.FontSize);
+                            composer.SetFont(textChar.Style.Font, pt);
                             composer.SetFillColor(textChar.Style.FillColor);
                             composer.SetStrokeColor(textChar.Style.StrokeColor);
                             composer.SetTextRenderMode(textChar.Style.RenderMode);
 
+                            var stamps = GetStampList(replace.Text, textChar.Style, pt);
+                            float diffWidth = (float)stamps.Width - (float)replace.Rect.Width;
+                            
                             PointF refPoint;
                             switch (replace.XAlignment)
                             {
@@ -210,14 +213,18 @@ namespace ItechoPdf
                                     refPoint = replace.Rect.Location;
                                     break;
                                 case XAlignmentEnum.Center:
-                                    refPoint = new PointF(replace.Rect.X + (replace.Rect.Width / 2), replace.Rect.Y);
+                                refPoint = new PointF(replace.Rect.X - (diffWidth / 2), replace.Rect.Y);
                                     break;
                                 case XAlignmentEnum.Right:
                                 default:
-                                    refPoint = new PointF(replace.Rect.X + replace.Rect.Width, replace.Rect.Y);
+                                    refPoint = new PointF(replace.Rect.X - diffWidth, replace.Rect.Y);
                                     break;
                             }
-                            composer.ShowText(replace.Text, refPoint, replace.XAlignment, YAlignmentEnum.Top, 0);
+
+                            foreach (var stamp in stamps.Texts)
+                            {
+                                composer.ShowText(stamp.Text, new PointF(refPoint.X + stamp.Point.X, refPoint.Y + stamp.Point.Y), XAlignmentEnum.Left, YAlignmentEnum.Top, 0);
+                            }
                             replace.AlreadyStamp = true;
                         }
                         // Remove text from document
@@ -231,6 +238,25 @@ namespace ItechoPdf
                     Extract(level.ChildLevel, composer, replaceList);
                 }
             }
+        }
+
+        private StampTexts GetStampList(string text, TextStyle style, double size)
+        {
+            var ret = new StampTexts();
+            ret.Width = 0;
+            // For now make space width the same as width of 1
+            float spaceWidth = (float)style.Font.GetWidth('1', size);
+            var segments = Regex.Split(text, @"\s+");
+            foreach (string segment in segments)
+            {
+                if (ret.Width != 0)
+                {
+                    ret.Width += spaceWidth;
+                }
+                ret.Add(new StampText(new PointF((float)ret.Width, 0), segment));
+                ret.Width += style.Font.GetWidth(segment, size);
+            }
+            return ret;
         }
 
         private string FormatNewText(string text, List<VariableReplace> variables)

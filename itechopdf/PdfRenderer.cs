@@ -329,6 +329,7 @@ namespace ItechoPdf
                 // Spaces is ignored or has some special meaning in PDF? Include a space or tab with the text.
                 // Otherwise PDF font encode will throw exception because the glyphs of the embedded font will be missing
                 var replace = CreateReplacementAnchor(doc, align, textReplacement, text);
+                
                 n.ParentNode.ReplaceChild(replace, n);
             }
             return newDoc;
@@ -342,8 +343,30 @@ namespace ItechoPdf
             a.SetAttributeValue("href", $"/var?align={align}&text={text}");
             a.AppendChild(doc.CreateTextNode(replace));
 
+            // Need to include the full set of digits glyphs into the PDF for restamping
+            // Cannot declare it globally as the font used in paging may be different 
+            // Only need to add possible variable characters and the space character
+            a.AppendChild(CreateDigit(doc, "0"));
+            a.AppendChild(CreateDigit(doc, "1"));
+            a.AppendChild(CreateDigit(doc, "2"));
+            a.AppendChild(CreateDigit(doc, "3"));
+            a.AppendChild(CreateDigit(doc, "4"));
+            a.AppendChild(CreateDigit(doc, "5"));
+            a.AppendChild(CreateDigit(doc, "6"));
+            a.AppendChild(CreateDigit(doc, "7"));
+            a.AppendChild(CreateDigit(doc, "8"));
+            a.AppendChild(CreateDigit(doc, "9"));
             return a;
         }
+
+        private HtmlNode CreateDigit(HtmlDocument doc, string digit)
+        {
+            var abs = doc.CreateElement("div");
+            abs.SetAttributeValue("style", "position: absolute; top: 0px; left: 0px;");
+            abs.InnerHtml = digit;
+            return abs;
+        }
+
 
         private void AddResources(HtmlNode head, HtmlNode body, List<PdfResource> resources)
         {
