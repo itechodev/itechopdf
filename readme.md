@@ -73,16 +73,19 @@ This was by far the most changelling concept to implement.
 ## HTML Caveats and limitations
 * Flex not supported
 * SVG images should have explicit width and height
-* Using a retina display on OSX will render very small. This is because wkhtmltox uses your screen dimensions to create the PDF. Current solution is to play around with the DPI.
+* Html tables will always have a border/outline. Use CSS-based table to remove this.
 * CSS transforms should be prefixed with -webkit-.
+* Using a retina display on OSX will render very small. This is because wkhtmltox uses your screen dimensions to create the PDF. Current solution is to play around with the DPI.
 * Performance. The underlying Wkhtmltopdf does not support multihreading.
 
 ## Why another library?
 I needed a solution to produce rich PDF documents from HTML. By rich I mean: cover pages, multiple pages with potential different sizes and orientations, customizable headers and footers etc. None of the open source libraries could do that easily. There are commercial solutions but the pricetag scared me off, so I wrote my own.
 
 ## How does it work
-Really simple actually.
-1. HTML is inspected and changed to ensure correct paths, fix doctypes and add resource files including javascript and css. This is done using HtmlAgilityPack
-2. Covert HTML to PDF using wkhtmltopdf
-3. Merge all PDF's using PDFsharp
+Really simple actually. For each document:
+1. HTML is inspected and changed to ensure correct paths, fix doctypes and add resource files including javascript and css. Variables is converted to anchors with dummy text with a specific link making it identifiable in the PDF. This is done using HtmlAgilityPack
+2. HTML is then converted to PDF using wkhtmltopdf.
+3. These PDF's is then inspected to extract the variables and their placement- and style properties.
+4. All regions overlapping the (anchor or variable) is replace (stamping) by its new value.
+5. All seperate PDF's is then merged into one. All PDF operations is done by PDFClown.
 
