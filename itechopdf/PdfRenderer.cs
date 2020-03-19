@@ -59,7 +59,7 @@ namespace ItechoPdf
                 
                 var editor = new PdfEditor(doc);
                 // add everything to do with top
-                editor.HeightAndSpacing = doc.Header?.Height + doc.Header?.Spacing + doc.Settings.Margins?.Top ?? 0;
+                editor.HeightAndSpacing = (doc.Header?.Height ?? 0) + (doc.Header?.Spacing ?? 0) + (doc.Settings.Margins?.Top ?? 0);
                 editor.ReadFromBytes(bytes);
                 totalPages += editor.Pages;
 
