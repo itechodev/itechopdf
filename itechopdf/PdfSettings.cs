@@ -145,9 +145,9 @@ namespace ItechoPdf
         public bool? LoadImages { get; set; }
 
         /// <summary>
-        /// Should we enable javascript. Default = true
+        /// Should we enable javascript. Default = false
         /// </summary>
-        public bool? EnableJavascript { get; set; }
+        public bool EnableJavascript { get; set; } = false;
 
         /// <summary>
         /// Should we enable intelligent shrinkng to fit more content on one page. Has no effect for wkhtmltoimage. Default = false
