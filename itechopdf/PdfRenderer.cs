@@ -4,8 +4,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
-using org.pdfclown.files;
-using org.pdfclown.tools;
 
 namespace ItechoPdf
 {
@@ -49,54 +47,22 @@ namespace ItechoPdf
 
         public byte[] RenderToBytes()
         {
-            List<(PdfEditor, PdfDocument)> editors = new List<(PdfEditor, PdfDocument)>();
-
-            int totalPages = 0;
             foreach (var doc in _documents)
             {
                 HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false, doc.Settings);
                 var bytes = HtmlDocToPdf(htmlDoc, doc);
-                
-                var editor = new PdfEditor(doc);
-                // add everything to do with top
-                editor.HeightAndSpacing = (doc.Header?.Height ?? 0) + (doc.Header?.Spacing ?? 0) + (doc.Settings.Margins?.Top ?? 0);
-                editor.ReadFromBytes(bytes);
-                totalPages += editor.Pages;
-
-                editors.Add((editor, doc));
             }
 
-            var merged = new org.pdfclown.files.File();
-            var manager = new PageManager(merged.Document);
+            // var replace = new List<VariableReplace>
+            // {
+            //     new VariableReplace("documentpage", (docpage + 1).ToString()),
+            //     new VariableReplace("documentpages", edit.Pages.ToString()),
+            //     new VariableReplace("page", (page + 1).ToString()),
+            //     new VariableReplace("pages", totalPages.ToString()),
+            // };
             
-            // Now replace all variables
-            List<byte[]> pdfs = new List<byte[]>();
-            
-            int page = 0;
-            foreach (var (edit, doc) in editors)
-            {
-                
-                for (int docpage = 0; docpage < edit.Pages; docpage++)
-                {
-                    var replace = new List<VariableReplace>
-                    {
-                        new VariableReplace("documentpage", (docpage + 1).ToString()),
-                        new VariableReplace("documentpages", edit.Pages.ToString()),
-                        new VariableReplace("page", (page + 1).ToString()),
-                        new VariableReplace("pages", totalPages.ToString()),
-                    };
-                    edit.ReplacePage(docpage, replace);
-                    page++;
-                }
-                
-                manager.Add(edit.GetDocument);
-            }
-
-            using (var ms = new MemoryStream())
-            {
-                merged.Save(new org.pdfclown.bytes.Stream(ms), SerializationModeEnum.Standard);
-                return ms.ToArray();
-            }
+            // Merge PDF's
+            return null;
         }
 
         public void RenderToFile(string output)
