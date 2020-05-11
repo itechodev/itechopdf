@@ -32,7 +32,7 @@ namespace ItechoPdf
             Strategy = strategy;
         }
 
-        public PdfDocument AddDocument(int headerHeightmm, int footerHeightmm, PdfSettings settings = null)
+        public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, PdfSettings settings = null)
         {
             var doc = new PdfDocument(headerHeightmm, footerHeightmm, settings);
             _documents.Add(doc);
@@ -48,7 +48,15 @@ namespace ItechoPdf
         {
             foreach (var doc in _documents)
             {
-                // HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false, doc.Settings);
+                // build html from page sources
+                foreach (var page in doc.Pages)
+                {
+
+                }
+                // doc.Settings.
+                // // doc.HeaderHeight
+                // // doc.FooterHeight
+                // HtmlDocument htmlDoc = DocFromSource(doc.pages Source, doc.Resources, false, doc.Settings);
                 // var bytes = HtmlDocToPdf(htmlDoc, doc);
             }
 

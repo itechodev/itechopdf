@@ -13,30 +13,6 @@ namespace testconsole
 {
     class Program
     {
-        static byte[] Create(int i)
-        {
-            var renderer = new PdfRenderer(settings => {
-                // Set global settings for all documents rendered through this service
-                settings.DPI = 300;
-                settings.Margins.Set(0, 0, 0, 0,Unit.Millimeters);
-            });
-            
-            Console.WriteLine("WkHTML version:" + renderer.GetVersion());
-
-            // var cover = renderer.AddDocument(PdfSource.FromFile("res/cover.html"));
-            var doc = renderer.AddDocument(25, 15);
-
-            // var content = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
-            
-            // content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
-            // content.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
-
-            // var content2 = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
-            // content2.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
-
-            return renderer.RenderToBytes();
-        }
-
         private static void PdfClipping()
         {
             // Open the external documents as XPdfForm objects. Such objects are
@@ -61,11 +37,56 @@ namespace testconsole
             // No data is available for encoding 1252
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var bytes = Create(0);
-            File.WriteAllBytes("output.pdf", bytes);
+            var renderer = new PdfRenderer(settings => {
+                // Set global settings for all documents rendered through this service
+                settings.DPI = 300;
+                settings.Margins.Set(0, 0, 0, 0,Unit.Millimeters);
+                settings.PaperSize = PaperKind.A4;
+                settings.Orientation = Orientation.Landscape;
+            });
+            
+            Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
-            // Parallel.For(0, 2, i => {
-            // });
+            // var cover = renderer.AddDocument(PdfSource.FromFile("res/cover.html"));
+            var doc = renderer.AddDocument();
+            doc.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
+            doc.AddCSS(PdfSource.FromHtml(@"
+            html, body, .bb {
+        height: 100%;
+        width: 100%;
+    }
+    .bb {              
+        background: url(cover.jpg);
+        background-size: cover;
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        margin: -2cm 0 0 -97mm;
+    }"));
+
+
+            doc.AddPage(PdfSource.FromFile("pages/cover.html"));
+        
+            var content = renderer.AddDocument(25, 15);
+            content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
+            
+            content.AddPage(PdfSource.FromFile("pages/PlayField-0.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-1.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-2.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-3.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-4.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-5.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-6.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-7.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-8.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-9.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-10.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            
+            var summary = renderer.AddDocument();
+            summary.AddPage(PdfSource.FromFile("pages/summary.cshtml"));
+
+            var bytes = renderer.RenderToBytes();
+            File.WriteAllBytes("output.pdf", bytes);
         }
     }
 }
