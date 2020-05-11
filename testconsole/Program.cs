@@ -21,13 +21,15 @@ namespace testconsole
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
             // var cover = renderer.AddDocument(PdfSource.FromFile("res/cover.html"));
-            var content = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
-            
-            content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
-            content.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
+            var doc = renderer.AddDocument(25, 15);
 
-            var content2 = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
-            content2.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
+            // var content = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
+            
+            // content.SetHeader(PdfSource.FromFile("res/header.html"), 25, 5);
+            // content.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
+
+            // var content2 = renderer.AddDocument(PdfSource.FromFile("res/content.html"));
+            // content2.SetFooter(PdfSource.FromFile("res/footer.html"), 15, 5);
 
             return renderer.RenderToBytes();
         }

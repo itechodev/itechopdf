@@ -7,21 +7,35 @@ using ItechoPdf.Core;
 
 namespace ItechoPdf
 {
+    public enum PdfRendererStrategy
+    {
+        // Determine best rendering strategy based on variables present in header / footers
+        Auto,
+        // Single conversion
+        Single,
+        // First convert to PDF to determine page counts then again with replaced variables
+        Double,
+        // Render header and footer in separate document and merge them back in.
+        Embedding
+    }
+
     public class PdfRenderer
     {
         private List<PdfDocument> _documents { get; set; } = new List<PdfDocument>();
         private List<string> _tempFiles = new List<string>();
         public PdfSettings Settings { get; set; } = new PdfSettings();
+        public PdfRendererStrategy Strategy { get; }
 
-        public PdfRenderer(Action<PdfSettings> config = null)
+        public PdfRenderer(Action<PdfSettings> config = null, PdfRendererStrategy strategy = PdfRendererStrategy.Auto)
         {
             config?.Invoke(Settings);
+            Strategy = strategy;
         }
 
-        public PdfDocument AddDocument(PdfSource source)
+        public PdfDocument AddDocument(int headerHeightmm, int footerHeightmm, PdfSettings settings = null)
         {
-            var doc = new PdfDocument(source, new PdfSettings(Settings));
-            Add(doc);
+            var doc = new PdfDocument(headerHeightmm, footerHeightmm, settings);
+            _documents.Add(doc);
             return doc;
         }
 
@@ -30,27 +44,12 @@ namespace ItechoPdf
             return WkHtmlToPdf.GetVersion() + (WkHtmlToPdf.ExtendedQt() ? " (Extended QT)" : "");
         }
 
-        public void Add(PdfDocument doc)
-        {
-            _documents.Add(doc);
-        }
-
-        public void InsertAt(PdfDocument doc, int index)
-        {
-            _documents.Insert(index, doc);
-        }
-
-        public void Clear()
-        {
-            _documents.Clear();
-        }
-
         public byte[] RenderToBytes()
         {
             foreach (var doc in _documents)
             {
-                HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false, doc.Settings);
-                var bytes = HtmlDocToPdf(htmlDoc, doc);
+                // HtmlDocument htmlDoc = DocFromSource(doc.Source, doc.Resources, false, doc.Settings);
+                // var bytes = HtmlDocToPdf(htmlDoc, doc);
             }
 
             // var replace = new List<VariableReplace>
@@ -106,12 +105,12 @@ namespace ItechoPdf
 
             if (marginTop.HasValue)
             {
-                marginTop = marginTop.Value + (document.Header?.Spacing ?? 0) + (document.Header?.Height ?? 0);
+                marginTop = marginTop.Value + document.HeaderHeight;
             }
 
             if (marginBottom.HasValue)
             {
-                marginBottom = marginBottom.Value + (document.Footer?.Spacing ?? 0) + (document.Footer?.Height ?? 0);
+                marginBottom = marginBottom.Value + document.FooterHeight;
             }
 
             return new WkHtmlToPdfSettings
@@ -135,8 +134,8 @@ namespace ItechoPdf
                 DumpOutline = settings.DumpOutline,
                 EnableIntelligentShrinking = settings.EnableIntelligentShrinking,
                 EnableJavascript = settings.EnableJavascript,
-                Footer = BuildHeaderFooter(document.Footer, document.Settings),
-                Header = BuildHeaderFooter(document.Header, document.Settings),
+                Footer =  null, // BuildHeaderFooter(document.Footer, document.Settings),
+                Header =  null, // BuildHeaderFooter(document.Header, document.Settings),
                 ImageDPI = settings.ImageDPI,
                 ImageQuality = settings.ImageQuality,
                 IncludeInOutline = settings.IncludeInOutline,
@@ -294,49 +293,17 @@ namespace ItechoPdf
                 {
                     continue;
                 }
-                var align = n.GetAttributeValue("text-align", "right");
-                Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
-                var textReplacement = Regex.Replace(text, @"\[.*?\]", new String('5', digits));
-                // Otherwise PDF font encode will throw exception because the glyphs of the embedded font will be missing
-                var replace = CreateReplacementAnchor(doc, align, textReplacement, text);
+                // var align = n.GetAttributeValue("text-align", "right");
+                // Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
+                // var textReplacement = Regex.Replace(text, @"\[.*?\]", new String('5', digits));
+                // // Otherwise PDF font encode will throw exception because the glyphs of the embedded font will be missing
                 
-                n.ParentNode.ReplaceChild(replace, n);
+                // var replace = CreateReplacementAnchor(doc, align, textReplacement, text);
+                
+                // n.ParentNode.ReplaceChild(replace, n);
             }
             return newDoc;
         }
-
-        public HtmlNode CreateReplacementAnchor(HtmlDocument doc, string align, string replace, string text)
-        {
-            var a = doc.CreateElement("a");
-            a.SetAttributeValue("style", "text-decoration: none; color:inherit; position: relative;");
-            // Skip all data in the anchor's href
-            a.SetAttributeValue("href", $"/var?align={align}&text={text}");
-            a.AppendChild(doc.CreateTextNode(replace));
-
-            // Need to include the full set of digits glyphs into the PDF for restamping
-            // Cannot declare it globally as the font used in paging may be different 
-            // Only need to add possible variable characters and the space character
-            a.AppendChild(CreateDigit(doc, "0"));
-            a.AppendChild(CreateDigit(doc, "1"));
-            a.AppendChild(CreateDigit(doc, "2"));
-            a.AppendChild(CreateDigit(doc, "3"));
-            a.AppendChild(CreateDigit(doc, "4"));
-            a.AppendChild(CreateDigit(doc, "5"));
-            a.AppendChild(CreateDigit(doc, "6"));
-            a.AppendChild(CreateDigit(doc, "7"));
-            a.AppendChild(CreateDigit(doc, "8"));
-            a.AppendChild(CreateDigit(doc, "9"));
-            return a;
-        }
-
-        private HtmlNode CreateDigit(HtmlDocument doc, string digit)
-        {
-            var abs = doc.CreateElement("div");
-            abs.SetAttributeValue("style", "position: absolute; top: 0px; left: 0px;");
-            abs.InnerHtml = digit;
-            return abs;
-        }
-
 
         private void AddResources(HtmlNode head, HtmlNode body, List<PdfResource> resources)
         {
@@ -347,8 +314,8 @@ namespace ItechoPdf
             foreach (var res in resources)
             {
                 var node = res.Type == ResourceType.Javascript
-                    ? CreateJavascriptResource(head.OwnerDocument, res.Source)
-                    : CreateCSSResource(head.OwnerDocument, res.Source);
+                    ? CreateJavascriptResource(head.OwnerDocument, res.Content)
+                    : CreateCSSResource(head.OwnerDocument, res.Content);
 
                 if (res.Placement == ResourcePlacement.Head) 
                 {

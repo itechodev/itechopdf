@@ -3,45 +3,32 @@ using System.Collections.Generic;
 
 namespace ItechoPdf
 {
-    public enum ResourcePlacement
-    {
-        Head,
-        EndOfDocument
-    }
-
-    public enum ResourceType
-    {
-        StyleSheet,
-        Javascript
-    }
-
-    public class PdfResource
-    {
-        public PdfResource(PdfSource source, ResourcePlacement placement, ResourceType type)
-        {
-            Source = source;
-            Placement = placement;
-            Type = type;
-        }
-
-        public PdfSource Source { get; set; }
-        public ResourcePlacement Placement { get; set; }
-        public ResourceType Type { get; set; }
-    }
-
     public class PdfDocument
     {
-        public PdfSource Source { get; }
+        public List<PdfPage> Pages { get; } = new List<PdfPage>();
         public PdfSettings Settings { get; private set; } = new PdfSettings();
-
-        public HeaderFooter Header { get; private set; }
-        public HeaderFooter Footer { get; private set; }
         public List<PdfResource> Resources { get; }
 
-        public PdfDocument(PdfSource source, PdfSettings settings = null)
+        public int HeaderHeight { get; set; }
+        public int FooterHeight { get; set; }
+
+        public PdfDocument(int headerHeightmm = 0, int footerHeightmm = 0, PdfSettings settings = null)
         {
-            Source = source;
+            HeaderHeight = headerHeightmm;
+            FooterHeight = footerHeightmm;
             Settings = settings ?? new PdfSettings();
+        }
+
+        public PdfPage AddPage(PdfSource content, PdfSource header = null, PdfSource footer = null)
+        {
+            var page = new PdfPage
+            {
+                Source = content,
+                Header = header,
+                Footer = footer
+            };
+            this.Pages.Add(page);
+            return page;
         }
 
         public void AddCSS(PdfSource content, ResourcePlacement placement = ResourcePlacement.Head)
@@ -54,36 +41,6 @@ namespace ItechoPdf
             Resources.Add(new PdfResource(content, placement, ResourceType.Javascript));
         }
         
-        public void SetHeader(PdfSource source, double height, double? spacing = null, bool? line = null)
-        {
-            SetHeader(new HtmlHeaderFooter(source)
-            {   
-                Height = height,
-                Spacing = spacing,
-                Line = line
-            });
-        }
-
-        public void SetFooter(PdfSource source, double height, double? spacing = null, bool? line = null)
-        {
-            SetFooter(new HtmlHeaderFooter(source)
-            {   
-                Height = height,
-                Spacing = spacing,
-                Line = line
-            });
-        }
-        
-        private void SetHeader(HeaderFooter header)
-        {
-            Header = header;
-        }
-
-        private void SetFooter(HeaderFooter footer)
-        {
-            Footer = footer;
-        }
-    
         public void Configure(Action<PdfSettings> settings)
         {
             settings?.Invoke(Settings);
