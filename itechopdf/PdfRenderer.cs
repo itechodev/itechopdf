@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
@@ -46,18 +48,38 @@ namespace ItechoPdf
 
         public byte[] RenderToBytes()
         {
+            int count = 0;
             foreach (var doc in _documents)
             {
-                // build html from page sources
+                var builder = new StringBuilder();
+                builder.Append(@"<!DOCTYPE html><html><head>..resources...</head><body><base/>");
+                                
+                string pageBreak = "<div style=\"page-break-after: always;\"></div>";
+
                 foreach (var page in doc.Pages)
                 {
+                    // Idea here is to split all pages with a empty page
+                    if (page != doc.Pages.First())
+                    {
+                        builder.Append(pageBreak);
+                    }
 
+                    if (page.Source is PdfSourceHtml html)
+                    {
+                        builder.Append(html.Html);
+                    }
+                    else if (page.Source is PdfSourceFile file)
+                    {
+                        builder.Append(File.ReadAllText(file.Path));
+                    }
                 }
-                // doc.Settings.
-                // // doc.HeaderHeight
-                // // doc.FooterHeight
-                // HtmlDocument htmlDoc = DocFromSource(doc.pages Source, doc.Resources, false, doc.Settings);
-                // var bytes = HtmlDocToPdf(htmlDoc, doc);
+                builder.Append("</body></html>");
+
+                var settings = ConvertToCoreSettings(doc);
+                var bytes = HtmlToPdf(builder.ToString(), settings);
+
+                File.WriteAllBytes($"{count}.pdf", bytes);
+                count++;
             }
 
             // var replace = new List<VariableReplace>
@@ -77,15 +99,11 @@ namespace ItechoPdf
             System.IO.File.WriteAllBytes(output, RenderToBytes());
         }
 
-        private byte[] HtmlDocToPdf(HtmlDocument doc, PdfDocument document)
+        private byte[] HtmlToPdf(string html, WkHtmlToPdfSettings settings)
         {
             try
             {
-                using (var sw = new StringWriter())
-                {
-                    doc.Save(sw);
-                    return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(sw.ToString()), ConvertToCoreSettings(document));
-                }
+                return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(html), settings);
             }
             finally
             {
@@ -170,11 +188,12 @@ namespace ItechoPdf
                 UseLocalLinks = settings.UseExternalLinks,
             };
         }
-
         
         private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace, PdfSettings settings)
         {
             var htmlDoc = new HtmlDocument();
+            htmlDoc.CreateElement("html");
+            
             string baseUrl = null;
             if (source is PdfSourceHtml html)
             {

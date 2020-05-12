@@ -7,7 +7,7 @@ namespace ItechoPdf
     {
         public List<PdfPage> Pages { get; } = new List<PdfPage>();
         public PdfSettings Settings { get; private set; } = new PdfSettings();
-        public List<PdfResource> Resources { get; }
+        public List<PdfResource> Resources { get; } = new List<PdfResource>();
 
         public int HeaderHeight { get; set; }
         public int FooterHeight { get; set; }
