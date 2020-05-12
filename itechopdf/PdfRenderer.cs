@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,8 +35,11 @@ namespace ItechoPdf
             Strategy = strategy;
         }
 
-        public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, PdfSettings settings = null)
+        public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, Action<PdfSettings> settingsAction = null)
         {
+            // copy settings from render
+            var settings = new PdfSettings(Settings);
+            settingsAction?.Invoke(settings);
             var doc = new PdfDocument(headerHeightmm, footerHeightmm, settings);
             _documents.Add(doc);
             return doc;
@@ -48,11 +52,24 @@ namespace ItechoPdf
 
         public byte[] RenderToBytes()
         {
+            long total = 0;
             int count = 0;
             foreach (var doc in _documents)
             {
+                var watch = new Stopwatch();
+                watch.Start();
+            
+                // Or set by the document
+                string baseUrl = Environment.CurrentDirectory;
+                //  // make sure baseUrl is always ending with directory seperator
+
+                if (!baseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                {
+                    baseUrl += Path.DirectorySeparatorChar;
+                }
+                
                 var builder = new StringBuilder();
-                builder.Append(@"<!DOCTYPE html><html><head>..resources...</head><body><base/>");
+                builder.Append($"<!DOCTYPE html><html><head><base href=\"file://{baseUrl}\"/> {RenderResources(doc.Resources)}</head><body>");
                                 
                 string pageBreak = "<div style=\"page-break-after: always;\"></div>";
 
@@ -79,8 +96,12 @@ namespace ItechoPdf
                 var bytes = HtmlToPdf(builder.ToString(), settings);
 
                 File.WriteAllBytes($"{count}.pdf", bytes);
+                Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
+                total += watch.ElapsedMilliseconds;
+           
                 count++;
             }
+            Console.WriteLine($"Total time: {total}ms");
 
             // var replace = new List<VariableReplace>
             // {
@@ -189,56 +210,56 @@ namespace ItechoPdf
             };
         }
         
-        private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace, PdfSettings settings)
-        {
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.CreateElement("html");
+        // private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace, PdfSettings settings)
+        // {
+        //     var htmlDoc = new HtmlDocument();
+        //     htmlDoc.CreateElement("html");
             
-            string baseUrl = null;
-            if (source is PdfSourceHtml html)
-            {
-                baseUrl = html.BaseUrl ?? Environment.CurrentDirectory;
-                htmlDoc.LoadHtml(html.Html);
-            }
+        //     string baseUrl = null;
+        //     if (source is PdfSourceHtml html)
+        //     {
+        //         baseUrl = html.BaseUrl ?? Environment.CurrentDirectory;
+        //         htmlDoc.LoadHtml(html.Html);
+        //     }
 
-            if (source is PdfSourceFile file)
-            {
-                baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
-                using (var fs = System.IO.File.OpenRead(file.Path))
-                {
-                    htmlDoc.Load(fs);
-                }
-            }
+        //     if (source is PdfSourceFile file)
+        //     {
+        //         baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
+        //         using (var fs = System.IO.File.OpenRead(file.Path))
+        //         {
+        //             htmlDoc.Load(fs);
+        //         }
+        //     }
             
-            return FormatHtml(htmlDoc, baseUrl, resources, replace, settings);
-        }
+        //     return FormatHtml(htmlDoc, baseUrl, resources, replace, settings);
+        // }
         
-        private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings, PdfSettings pdf)
-        {
-            if (settings == null)
-            {
-                return null;
-            }
+        // private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings, PdfSettings pdf)
+        // {
+        //     if (settings == null)
+        //     {
+        //         return null;
+        //     }
 
-            if (settings is HtmlHeaderFooter source)
-            {
-                HtmlDocument htmlDoc = DocFromSource(source.Source, null, true, pdf);
-                var path = CreateTempFile();
-                using (var sw = System.IO.File.Create(path))
-                {
-                    htmlDoc.Save(sw);
-                }
+        //     if (settings is HtmlHeaderFooter source)
+        //     {
+        //         HtmlDocument htmlDoc = DocFromSource(source.Source, null, true, pdf);
+        //         var path = CreateTempFile();
+        //         using (var sw = System.IO.File.Create(path))
+        //         {
+        //             htmlDoc.Save(sw);
+        //         }
 
-                return new HeaderFooterSettings
-                {
-                    Spacing = settings.Spacing,
-                    Line = settings.Line,
-                    Url = path
-                };
-            }
+        //         return new HeaderFooterSettings
+        //         {
+        //             Spacing = settings.Spacing,
+        //             Line = settings.Line,
+        //             Url = path
+        //         };
+        //     }
 
-            throw new Exception($"Unknown settings type {settings.GetType().Name}");
-        }
+        //     throw new Exception($"Unknown settings type {settings.GetType().Name}");
+        // }
 
         private string CreateTempFile()
         {
@@ -249,144 +270,51 @@ namespace ItechoPdf
             return path;
         }
 
-
-        private HtmlDocument FormatHtml(HtmlDocument doc, string baseUrl, List<PdfResource> resources, bool replaceVariables, PdfSettings settings)
+        private string RenderResources(List<PdfResource> resources)
         {
-            // make sure baeUrl is always ending with directory seperator
-            if (!baseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            if (resources == null)
             {
-                baseUrl += Path.DirectorySeparatorChar;
+                return null;
             }
-
-            HtmlNode html = doc.DocumentNode.SelectSingleNode("html");
-            if (html == null)
-            {
-                // html does not exists. <head> and <body> possible inside html
-                // Add everything into html
-                html = doc.CreateElement("html");
-                html.AppendChildren(doc.DocumentNode.ChildNodes);
-            }
-            // head might be inside html
-            HtmlNode head = html.SelectSingleNode("head");
-            if (head == null)
-            {
-                head = doc.CreateElement("head");
-                html.PrependChild(head);
-            }
-            // Add base for resource paths
-            var baseTag =  doc.CreateElement("base");
-            baseTag.SetAttributeValue("href", @"file://" + baseUrl);
-            head.PrependChild(baseTag);
-
-
-            HtmlNode body = html.SelectSingleNode("body");
-            if (body == null)
-            {
-                body = doc.CreateElement("body");
-                // All html.ChildNodes except head
-                HtmlNodeCollection col = new HtmlNodeCollection(body);
-                foreach (var child in html.ChildNodes)
-                {
-                    if (child != head)
-                    {
-                        col.Add(child);
-                    }
-                }
-            }
-            
-            var newDoc = new HtmlDocument();
-            // Ensure doctype
-            HtmlCommentNode doctype = doc.CreateComment("<!DOCTYPE html>");
-            newDoc.DocumentNode.PrependChild(doctype);
-            newDoc.DocumentNode.AppendChild(html);
-
-            AddResources(head, body, resources);
-
-            // Replace variables
-            if (!replaceVariables)
-            {
-                return newDoc;
-            }
-
-            var varNodes = body.SelectNodes("//var");
-            if (varNodes == null)
-            {
-                return newDoc;
-            }
-            foreach (var n in varNodes)
-            {
-                var text = n.GetAttributeValue("text", null);
-                if (String.IsNullOrEmpty(text))
-                {
-                    continue;
-                }
-                // var align = n.GetAttributeValue("text-align", "right");
-                // Int32.TryParse(n.GetAttributeValue("digits", "2"),  out int digits);
-                // var textReplacement = Regex.Replace(text, @"\[.*?\]", new String('5', digits));
-                // // Otherwise PDF font encode will throw exception because the glyphs of the embedded font will be missing
-                
-                // var replace = CreateReplacementAnchor(doc, align, textReplacement, text);
-                
-                // n.ParentNode.ReplaceChild(replace, n);
-            }
-            return newDoc;
-        }
-
-        private void AddResources(HtmlNode head, HtmlNode body, List<PdfResource> resources)
-        {
-            if (resources == null) 
-            {
-                return;
-            }
+            StringBuilder content = new StringBuilder();
             foreach (var res in resources)
             {
-                var node = res.Type == ResourceType.Javascript
-                    ? CreateJavascriptResource(head.OwnerDocument, res.Content)
-                    : CreateCSSResource(head.OwnerDocument, res.Content);
-
-                if (res.Placement == ResourcePlacement.Head) 
+                if (res.Type == ResourceType.Javascript)
                 {
-                    head.AppendChild(node);
+                    content.Append(CreateJavascriptResource(res.Content));
                 }
                 else 
                 {
-                    body.AppendChild(node);
+                    content.Append(CreateCSSResource(res.Content));
                 }
-            }            
+            }
+            return content.ToString();
         }
 
-        private HtmlNode CreateCSSResource(HtmlDocument document, PdfSource source)
+        private string CreateCSSResource(PdfSource source)
         {
             if (source is PdfSourceFile file)
             {
-                var node = document.CreateElement("link");
-                node.SetAttributeValue("rel", "stylesheet");
-                node.SetAttributeValue("href", file.Path);
-                return node;
+                return $"<link rel=\"stylesheet\" href=\"{file.Path}\"/>";
             }
             if (source is PdfSourceHtml html)
             {
-                var node = document.CreateElement("style");
-                node.AppendChild(document.CreateTextNode(html.Html));
-                return node;
+                return $"<style>{html.Html}</style>";
             }
-            throw new NotImplementedException();
+            return null;
         }
 
-        private HtmlNode CreateJavascriptResource(HtmlDocument document, PdfSource source)
+        private string CreateJavascriptResource(PdfSource source)
         {
-            var node = document.CreateElement("script");
-            node.SetAttributeValue("type", "text/javascript");
-            node.SetAttributeValue("language", "javascript");
             if (source is PdfSourceFile file)
             {
-                node.SetAttributeValue("src", file.Path);
+                return $"<script type=\"text/javascript\" language=\"javascript\" src=\"{file.Path}\"></script>";
             }
             if (source is PdfSourceHtml content)
             {
-                node.AppendChild(document.CreateTextNode(content.Html));
+                return $"<script type=\"text/javascript\" language=\"javascript\">{content.Html}</script>";
             }
-            return node;
+            return null;
         }
     }
 }

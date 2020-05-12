@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,31 +41,29 @@ namespace testconsole
             var renderer = new PdfRenderer(settings => {
                 // Set global settings for all documents rendered through this service
                 settings.DPI = 300;
-                settings.Margins.Set(0, 0, 0, 0,Unit.Millimeters);
+                settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
                 settings.PaperSize = PaperKind.A4;
                 settings.Orientation = Orientation.Landscape;
             });
             
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
-            // var cover = renderer.AddDocument(PdfSource.FromFile("res/cover.html"));
             var doc = renderer.AddDocument();
             doc.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
             doc.AddCSS(PdfSource.FromHtml(@"
-            html, body, .bb {
+    html, body, .bb {
         height: 100%;
         width: 100%;
     }
     .bb {              
-        background: url(cover.jpg);
+        background: url(pages/cover.jpg);
         background-size: cover;
         position: fixed;
         left: 0px;
         top: 0px;
         margin: -2cm 0 0 -97mm;
     }"));
-
-
+    
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
             var content = renderer.AddDocument(25, 15);
@@ -81,12 +80,13 @@ namespace testconsole
             content.AddPage(PdfSource.FromFile("pages/PlayField-8.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
             content.AddPage(PdfSource.FromFile("pages/PlayField-9.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
             content.AddPage(PdfSource.FromFile("pages/PlayField-10.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            
+             
             var summary = renderer.AddDocument();
-            summary.AddPage(PdfSource.FromFile("pages/summary.cshtml"));
+            content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
+            summary.AddPage(PdfSource.FromFile("pages/summary.html"));
 
             var bytes = renderer.RenderToBytes();
-            File.WriteAllBytes("output.pdf", bytes);
+            // File.WriteAllBytes("output.pdf", bytes);
         }
     }
 }
