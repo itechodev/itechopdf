@@ -87,6 +87,13 @@ namespace testconsole
 
             var bytes = renderer.RenderToBytes();
             // File.WriteAllBytes("output.pdf", bytes);
+
+            // Create the output document
+            var watch = new Stopwatch();
+            watch.Start();
+            PdfMerge.Merge();
+            Console.WriteLine($"PDf merged took {watch.ElapsedMilliseconds}ms");
+        
         }
     }
 }
