@@ -50,6 +50,63 @@ namespace ItechoPdf
             return WkHtmlToPdf.GetVersion() + (WkHtmlToPdf.ExtendedQt() ? " (Extended QT)" : "");
         }
 
+        private void BuilderAppend(StringBuilder builder, PdfSource source)
+        {
+             if (source is PdfSourceHtml html)
+            {
+                builder.Append(html.Html);
+            }
+            else if (source is PdfSourceFile file)
+            {
+                builder.Append(File.ReadAllText(file.Path));
+            }
+        }
+
+        const string pageBreak = "<div style=\"page-break-after: always;\"></div>";
+        const string closeHtml = "</body></html>";
+        const string startHtml = "<!DOCTYPE html><html><head><base href=\"file://{0}\"/>{1}</head><body>";
+        const string headerFootStart = "<div style=\"overflow: hidden; height: {0}mm\">";
+        const string headerFootClose = "</div>";
+
+        private string BuildHtml(PdfDocument doc, string baseUrl)
+        {
+            var builder = new StringBuilder();
+            builder.Append(String.Format(startHtml, baseUrl, RenderResources(doc.Resources)));
+        
+            foreach (var page in doc.Pages)
+            {
+                // Idea here is to split all pages with a empty page
+                if (page != doc.Pages.First())
+                {
+                    builder.Append(pageBreak);
+                }
+                BuilderAppend(builder, page.Source);
+            }
+            builder.Append(closeHtml);
+            return builder.ToString();
+        }
+
+        private string BuildHeaderFooter(PdfDocument doc, string baseUrl)
+        {
+            var builder = new StringBuilder();
+            builder.Append(String.Format(startHtml, doc, RenderResources(doc.Resources)));
+
+            // Now add all the headers and footer in abs position
+            foreach (var page in doc.Pages)
+            {
+                builder.Append(pageBreak);
+                builder.Append(String.Format(headerFootStart, doc.HeaderHeight));
+                BuilderAppend(builder, page.Header);
+
+                builder.Append(headerFootClose);
+                builder.Append(String.Format(headerFootStart, doc.FooterHeight));
+                BuilderAppend(builder, page.Footer);
+                builder.Append(headerFootClose);
+            }
+            builder.Append(closeHtml);
+            return builder.ToString();
+        }
+
         public byte[] RenderToBytes()
         {
             long total = 0;
@@ -67,35 +124,18 @@ namespace ItechoPdf
                 {
                     baseUrl += Path.DirectorySeparatorChar;
                 }
-                
-                var builder = new StringBuilder();
-                builder.Append($"<!DOCTYPE html><html><head><base href=\"file://{baseUrl}\"/> {RenderResources(doc.Resources)}</head><body>");
-                                
-                string pageBreak = "<div style=\"page-break-after: always;\"></div>";
 
-                foreach (var page in doc.Pages)
-                {
-                    // Idea here is to split all pages with a empty page
-                    if (page != doc.Pages.First())
-                    {
-                        builder.Append(pageBreak);
-                    }
-
-                    if (page.Source is PdfSourceHtml html)
-                    {
-                        builder.Append(html.Html);
-                    }
-                    else if (page.Source is PdfSourceFile file)
-                    {
-                        builder.Append(File.ReadAllText(file.Path));
-                    }
-                }
-                builder.Append("</body></html>");
+                var htmlPages = BuildHtml(doc, baseUrl);
 
                 var settings = ConvertToCoreSettings(doc);
-                var bytes = HtmlToPdf(builder.ToString(), settings);
+                var bytes = HtmlToPdf(htmlPages, settings);
 
                 File.WriteAllBytes($"{count}.pdf", bytes);
+
+                var headerFooterHtml = BuildHeaderFooter(doc, baseUrl);
+                var bb = HtmlToPdf(headerFooterHtml, settings);
+                File.WriteAllBytes($"{count}-headerfooters.pdf", bb);
+
                 Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
                 total += watch.ElapsedMilliseconds;
            
