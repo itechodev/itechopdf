@@ -78,6 +78,9 @@ namespace ItechoPdf
                 // Idea here is to split all pages with a empty page
                 if (page != doc.Pages.First())
                 {
+                    // Split document pages by empty page to identify split
+                    builder.Append(pageBreak);
+                    builder.Append("-");
                     builder.Append(pageBreak);
                 }
                 BuilderAppend(builder, page.Source);

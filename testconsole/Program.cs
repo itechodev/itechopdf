@@ -41,14 +41,18 @@ namespace testconsole
             var renderer = new PdfRenderer(settings => {
                 // Set global settings for all documents rendered through this service
                 settings.DPI = 300;
-                settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
+                // settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
+                settings.Margins.Set(5, 5, 0, 5, Unit.Millimeters);
                 settings.PaperSize = PaperKind.A4;
                 settings.Orientation = Orientation.Landscape;
             });
             
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
-            var doc = renderer.AddDocument();
+            var doc = renderer.AddDocument(0, 0, settings => 
+            {
+                settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
+            });
             doc.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
             doc.AddCSS(PdfSource.FromHtml(@"
     html, body, .bb {
@@ -89,10 +93,10 @@ namespace testconsole
             // File.WriteAllBytes("output.pdf", bytes);
 
             // Create the output document
-            var watch = new Stopwatch();
-            watch.Start();
-            PdfMerge.Merge();
-            Console.WriteLine($"PDf merged took {watch.ElapsedMilliseconds}ms");
+            // var watch = new Stopwatch();
+            // watch.Start();
+            // PdfMerge.Merge();
+            // Console.WriteLine($"PDf merged took {watch.ElapsedMilliseconds}ms");
         
         }
     }
