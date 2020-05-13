@@ -31,24 +31,19 @@ namespace testconsole
                 XGraphics gfx = XGraphics.FromPdfPage(newPage);
                 // DrawPdfPage(gfx, hf, , new XRect(0, 0, newPage.Width, 100));
                 
-                // var source = new XRect(0, 80, newPage.Width, 90);
-                // var dest = new XRect(50, 50, newPage.Width, 90);
+                var source = new XRect(610, 62, 180, 160);
+                var dest = new XRect(200, 400, 90, 80);
 
-                // double rx = source.Width / dest.Width;
-                // double ry = source.Height / dest.Height;
+                double rx = dest.Width / source.Width;
+                double ry = dest.Height / source.Height;
 
-                gfx.IntersectClip(new XRect(
-                    100, 
-                    100,
-                    180 * 2, 
-                    160 * 2
-                ));
+                gfx.IntersectClip(dest);
                 
                 gfx.DrawImage(hf, new XRect(
-                    (-610 * 2) + 100,
-                    (-63 * 2) + 100,
-                    newPage.Width * 2, 
-                    newPage.Height * 2));
+                    (-source.Left * rx) + dest.Left,
+                    (-source.Top * ry) + dest.Top,
+                    newPage.Width * rx, 
+                    newPage.Height * ry));
             }
 
             outDoc.Save("output.pdf");
