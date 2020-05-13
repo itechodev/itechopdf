@@ -66,7 +66,7 @@ namespace testconsole
     
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
-            var content = renderer.AddDocument(25, 15);
+            var content = renderer.AddDocument(30, 15);
             content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
             
             content.AddPage(PdfSource.FromFile("pages/PlayField-0.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
