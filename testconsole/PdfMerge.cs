@@ -46,8 +46,11 @@ namespace testconsole
                 if (page.Annotations.Count == 1)
                 {
                     var link = GetUrlLink(page.Annotations[0]);
-                    Console.WriteLine(link);
-                    continue;
+                    if (link == "itechopdf://splitdocument")
+                    {
+                        Console.WriteLine(link);
+                        continue;
+                    }
                 }
 
                 // page.Contents.Elements.Items.Length == 1
