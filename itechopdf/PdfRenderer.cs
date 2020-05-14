@@ -80,7 +80,7 @@ namespace ItechoPdf
                 {
                     // Split document pages by empty page to identify split
                     builder.Append(pageBreak);
-                    builder.Append("-");
+                    builder.Append("<a href=\"split\">-</a>");
                     builder.Append(pageBreak);
                 }
                 BuilderAppend(builder, page.Source);
