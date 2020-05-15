@@ -100,7 +100,7 @@ namespace ItechoPdf
             {
                 return;
             }
-            ReplaceHtmlWithVariables(html, vars);
+            html = ReplaceHtmlWithVariables(html, vars);
             builder.Append(html);
             builder.Append(HeaderFootClose);
         }
@@ -121,19 +121,20 @@ namespace ItechoPdf
                 {
                     builder.Append(PageBreak);
                 }
+                // all variables is zero based
                 var replace = new List<VariableReplace>
                 {
-                    new VariableReplace("documentpage", "1"),
-                    new VariableReplace("documentpages", "2"),
-                    new VariableReplace("page", "3"),
-                    new VariableReplace("pages", "4"),
+                    new VariableReplace("overflow", c.Overflow + 1),
+                    new VariableReplace("overflows", c.Overflows + 1),
+                    new VariableReplace("document", c.Documents + 1),
+                    new VariableReplace("documents", c.Documents + 1),
+                    new VariableReplace("page", c.Page + 1),
+                    new VariableReplace("pages", c.Pages + 1)
                 };
-                    
-                
+
                 BuildHeaderFooter(builder, c.RenderPage.Header, doc.HeaderHeight, replace);                    
                 BuildHeaderFooter(builder, c.RenderPage.Footer, doc.FooterHeight, replace);
             }
-
             builder.Append(CloseHtml);
             return builder.ToString();
         }

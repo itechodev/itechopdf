@@ -10,6 +10,12 @@ namespace ItechoPdf
             Replace = replace;
         }
 
+        public VariableReplace(string name, int replace)
+        {
+            Name = name;
+            Replace = replace.ToString();
+        }
+
         public string Name { get; set; }
         public string Replace { get; set; }
     }
