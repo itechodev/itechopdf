@@ -30,8 +30,7 @@ namespace testconsole
 
             outputDocument.Save("output/b.pdf");
         }
-
-
+        
         static void Main(string[] args)
         {
             // Console.WindowWidth;
@@ -49,7 +48,7 @@ namespace testconsole
             
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
-            var doc = renderer.AddDocument(0, 0, settings => 
+            var doc = renderer.AddDocument(0, 0, null, settings => 
             {
                 settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
             });
@@ -67,7 +66,8 @@ namespace testconsole
         top: 0px;
         margin: -2cm 0 0 -97mm;
     }"));
-    
+
+
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
             var content = renderer.AddDocument(30, 15);

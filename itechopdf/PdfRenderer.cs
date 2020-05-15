@@ -35,12 +35,12 @@ namespace ItechoPdf
             Strategy = strategy;
         }
 
-        public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, Action<PdfSettings> settingsAction = null)
+        public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, string baseUrl = null, Action<PdfSettings> settingsAction = null)
         {
             // copy settings from render
             var settings = new PdfSettings(Settings);
             settingsAction?.Invoke(settings);
-            var doc = new PdfDocument(headerHeightmm, footerHeightmm, settings);
+            var doc = new PdfDocument(headerHeightmm, footerHeightmm, baseUrl, settings);
             _documents.Add(doc);
             return doc;
         }
@@ -68,10 +68,10 @@ namespace ItechoPdf
         const string headerFootStart = "<div style=\"overflow: hidden; height: {0}mm\">";
         const string headerFootClose = "</div>";
 
-        private string BuildHtml(PdfDocument doc, string baseUrl)
+        private string BuildHtml(PdfDocument doc)
         {
             var builder = new StringBuilder();
-            builder.Append(String.Format(startHtml, baseUrl, RenderResources(doc.Resources)));
+            builder.Append(String.Format(startHtml, doc.BaseUrl, RenderResources(doc.Resources)));
         
             foreach (var page in doc.Pages)
             {
@@ -89,7 +89,7 @@ namespace ItechoPdf
             return builder.ToString();
         }
 
-        private string BuildHeaderFooter(PdfDocument doc, string baseUrl)
+        private string BuildHeaderFooter(PdfDocument doc)
         {
             if (doc.HeaderHeight == 0 && doc.FooterHeight == 0)
             {
@@ -97,7 +97,7 @@ namespace ItechoPdf
             }
 
             var builder = new StringBuilder();
-            builder.Append(String.Format(startHtml, baseUrl, RenderResources(doc.Resources)));
+            builder.Append(String.Format(startHtml, doc.BaseUrl, RenderResources(doc.Resources)));
 
             // Now add all the headers and footer in abs position
             foreach (var page in doc.Pages)
@@ -125,6 +125,8 @@ namespace ItechoPdf
 
         public byte[] RenderToBytes()
         {
+            // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
+            
             long total = 0;
             int count = 0;
             foreach (var doc in _documents)
@@ -132,16 +134,7 @@ namespace ItechoPdf
                 var watch = new Stopwatch();
                 watch.Start();
             
-                // Or set by the document
-                string baseUrl = Environment.CurrentDirectory;
-                //  // make sure baseUrl is always ending with directory seperator
-
-                if (!baseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
-                {
-                    baseUrl += Path.DirectorySeparatorChar;
-                }
-
-                var htmlPages = BuildHtml(doc, baseUrl);
+                var htmlPages = BuildHtml(doc);
 
                 var settings = ConvertToCoreSettings(doc);
                 var bytes = HtmlToPdf(htmlPages, settings);
@@ -149,7 +142,7 @@ namespace ItechoPdf
                 File.WriteAllBytes($"{count}.pdf", bytes);
 
                 
-                var headerFooterHtml = BuildHeaderFooter(doc, baseUrl);
+                var headerFooterHtml = BuildHeaderFooter(doc);
                 if (headerFooterHtml != null)
                 {
                     var bb = HtmlToPdf(headerFooterHtml, settings);

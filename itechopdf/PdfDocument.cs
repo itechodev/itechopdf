@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ItechoPdf
 {
@@ -11,12 +12,19 @@ namespace ItechoPdf
 
         public int HeaderHeight { get; set; }
         public int FooterHeight { get; set; }
+        public string BaseUrl { get; private set; }
 
-        public PdfDocument(int headerHeightmm = 0, int footerHeightmm = 0, PdfSettings settings = null)
+        public PdfDocument(int headerHeightmm = 0, int footerHeightmm = 0, string baseUrl = null, PdfSettings settings = null)
         {
             HeaderHeight = headerHeightmm;
             FooterHeight = footerHeightmm;
             Settings = settings ?? new PdfSettings();
+            BaseUrl = baseUrl ?? Environment.CurrentDirectory;
+            // make sure baseUrl always ends with directory seperator
+            if (!BaseUrl.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                BaseUrl += Path.DirectorySeparatorChar;
+            }
         }
 
         public PdfPage AddPage(PdfSource content, PdfSource header = null, PdfSource footer = null)
