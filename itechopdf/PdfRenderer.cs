@@ -7,32 +7,21 @@ using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.Annotations;
+using PdfSharp.Pdf.IO;
 
 namespace ItechoPdf
 {
-    public enum PdfRendererStrategy
-    {
-        // Determine best rendering strategy based on variables present in header / footers
-        Auto,
-        // Single conversion
-        Single,
-        // First convert to PDF to determine page counts then again with replaced variables
-        Double,
-        // Render header and footer in separate document and merge them back in.
-        Embedding
-    }
-
     public class PdfRenderer
     {
         private List<PdfDocument> _documents { get; set; } = new List<PdfDocument>();
         private List<string> _tempFiles = new List<string>();
         public PdfSettings Settings { get; set; } = new PdfSettings();
-        public PdfRendererStrategy Strategy { get; }
-
-        public PdfRenderer(Action<PdfSettings> config = null, PdfRendererStrategy strategy = PdfRendererStrategy.Auto)
+        
+        public PdfRenderer(Action<PdfSettings> config = null)
         {
             config?.Invoke(Settings);
-            Strategy = strategy;
         }
 
         public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, string baseUrl = null, Action<PdfSettings> settingsAction = null)
@@ -71,6 +60,8 @@ namespace ItechoPdf
         const string StyleHtml = "<style>{0}</style>";
         const string ScriptLinkHtml = "<script type=\"text/javascript\" language=\"javascript\" src=\"{0}\"></script>";
         const string ScriptHtml = "<script type=\"text/javascript\" language=\"javascript\">{0}</script>";
+        const string SplitDocumentUri = "itechopdf://splitdocument";
+        const string AnchorHtml = "<a href=\"{0}\">{1}</a>";
 
 
         private string BuildHtml(PdfDocument doc)
@@ -84,8 +75,9 @@ namespace ItechoPdf
                 if (page != doc.Pages.First())
                 {
                     // Split document pages by empty page to identify split
+                    // Pages may overflow onto next page
                     builder.Append(PageBreak);
-                    builder.Append("<a href=\"itechopdf://splitdocument\">-</a>");
+                    builder.Append(String.Format(AnchorHtml, SplitDocumentUri, '-'));
                     builder.Append(PageBreak);
                 }
                 BuilderAppend(builder, page.Source);
@@ -128,6 +120,25 @@ namespace ItechoPdf
             return builder.ToString();
         }
 
+        private string GetUrlLink(PdfAnnotation ano)
+        {
+            var d = ano.Elements["/A"];
+            if (d is PdfDictionary dic)
+            {
+                var uriElement = dic.Elements["/URI"];   
+                if (uriElement is PdfString str)
+                {
+                    return str.Value;
+                }
+            }
+            return null;
+        }
+
+        private bool IsPageSplit(PdfSharp.Pdf.PdfPage page)
+        {
+            return page.Annotations.Count == 1 && GetUrlLink(page.Annotations[0]) == SplitDocumentUri;
+        }
+        
         public byte[] RenderToBytes()
         {
             // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
@@ -143,10 +154,16 @@ namespace ItechoPdf
 
                 var settings = ConvertToCoreSettings(doc);
                 var bytes = HtmlToPdf(htmlPages, settings);
+                
+                watch.Stop();
+                Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
+                total += watch.ElapsedMilliseconds;
 
+                // Now read / parse the generate PDF to determine page counts
+                var inDoc = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
+           
                 File.WriteAllBytes($"{count}.pdf", bytes);
 
-                
                 // var headerFooterHtml = BuildHeaderFooter(doc);
                 // if (headerFooterHtml != null)
                 // {
@@ -154,9 +171,7 @@ namespace ItechoPdf
                 //     File.WriteAllBytes($"{count}-headerfooters.pdf", bb);
                 // }
                 
-                Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
-                total += watch.ElapsedMilliseconds;
-           
+                
                 count++;
             }
             Console.WriteLine($"Total time: {total}ms");
