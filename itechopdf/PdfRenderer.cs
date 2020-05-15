@@ -62,16 +62,21 @@ namespace ItechoPdf
             }
         }
 
-        const string pageBreak = "<div style=\"page-break-after: always;\"></div>";
-        const string closeHtml = "</body></html>";
-        const string startHtml = "<!DOCTYPE html><html><head><base href=\"file://{0}\"/>{1}</head><body>";
-        const string headerFootStart = "<div style=\"overflow: hidden; height: {0}mm\">";
-        const string headerFootClose = "</div>";
+        const string PageBreak = "<div style=\"page-break-after: always;\"></div>";
+        const string CloseHtml = "</body></html>";
+        const string StartHtml = "<!DOCTYPE html><html><head><base href=\"file://{0}\"/>{1}</head><body>";
+        const string HeaderFootStart = "<div style=\"overflow: hidden; height: {0}mm\">";
+        const string HeaderFootClose = "</div>";
+        const string StyleLinkHtml = "<link rel=\"stylesheet\" href=\"{0}\"/>";
+        const string StyleHtml = "<style>{0}</style>";
+        const string ScriptLinkHtml = "<script type=\"text/javascript\" language=\"javascript\" src=\"{0}\"></script>";
+        const string ScriptHtml = "<script type=\"text/javascript\" language=\"javascript\">{0}</script>";
+
 
         private string BuildHtml(PdfDocument doc)
         {
             var builder = new StringBuilder();
-            builder.Append(String.Format(startHtml, doc.BaseUrl, RenderResources(doc.Resources)));
+            builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
         
             foreach (var page in doc.Pages)
             {
@@ -79,13 +84,13 @@ namespace ItechoPdf
                 if (page != doc.Pages.First())
                 {
                     // Split document pages by empty page to identify split
-                    builder.Append(pageBreak);
+                    builder.Append(PageBreak);
                     builder.Append("<a href=\"itechopdf://splitdocument\">-</a>");
-                    builder.Append(pageBreak);
+                    builder.Append(PageBreak);
                 }
                 BuilderAppend(builder, page.Source);
             }
-            builder.Append(closeHtml);
+            builder.Append(CloseHtml);
             return builder.ToString();
         }
 
@@ -97,29 +102,29 @@ namespace ItechoPdf
             }
 
             var builder = new StringBuilder();
-            builder.Append(String.Format(startHtml, doc.BaseUrl, RenderResources(doc.Resources)));
+            builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
 
             // Now add all the headers and footer in abs position
             foreach (var page in doc.Pages)
             {
                 if (page != doc.Pages.First())
                 {
-                    builder.Append(pageBreak);
+                    builder.Append(PageBreak);
                 }
                 if (doc.HeaderHeight != 0)
                 {
-                    builder.Append(String.Format(headerFootStart, doc.HeaderHeight));
+                    builder.Append(String.Format(HeaderFootStart, doc.HeaderHeight));
                     BuilderAppend(builder, page.Header);
-                    builder.Append(headerFootClose);
+                    builder.Append(HeaderFootClose);
                 }
                 if (doc.FooterHeight != 0)
                 {
-                    builder.Append(String.Format(headerFootStart, doc.FooterHeight));
+                    builder.Append(String.Format(HeaderFootStart, doc.FooterHeight));
                     BuilderAppend(builder, page.Footer);
-                    builder.Append(headerFootClose);
+                    builder.Append(HeaderFootClose);
                 }
             }
-            builder.Append(closeHtml);
+            builder.Append(CloseHtml);
             return builder.ToString();
         }
 
@@ -142,12 +147,12 @@ namespace ItechoPdf
                 File.WriteAllBytes($"{count}.pdf", bytes);
 
                 
-                var headerFooterHtml = BuildHeaderFooter(doc);
-                if (headerFooterHtml != null)
-                {
-                    var bb = HtmlToPdf(headerFooterHtml, settings);
-                    File.WriteAllBytes($"{count}-headerfooters.pdf", bb);
-                }
+                // var headerFooterHtml = BuildHeaderFooter(doc);
+                // if (headerFooterHtml != null)
+                // {
+                //     var bb = HtmlToPdf(headerFooterHtml, settings);
+                //     File.WriteAllBytes($"{count}-headerfooters.pdf", bb);
+                // }
                 
                 Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
                 total += watch.ElapsedMilliseconds;
@@ -348,24 +353,25 @@ namespace ItechoPdf
         {
             if (source is PdfSourceFile file)
             {
-                return $"<link rel=\"stylesheet\" href=\"{file.Path}\"/>";
+                return String.Format(StyleLinkHtml, file.Path);
             }
             if (source is PdfSourceHtml html)
             {
-                return $"<style>{html.Html}</style>";
+                return String.Format(StyleHtml, html.Html);
             }
             return null;
         }
 
+    
         private string CreateJavascriptResource(PdfSource source)
         {
             if (source is PdfSourceFile file)
             {
-                return $"<script type=\"text/javascript\" language=\"javascript\" src=\"{file.Path}\"></script>";
+                return String.Format(ScriptLinkHtml, file.Path);
             }
             if (source is PdfSourceHtml content)
             {
-                return $"<script type=\"text/javascript\" language=\"javascript\">{content.Html}</script>";
+                return String.Format(ScriptHtml, content.Html);
             }
             return null;
         }
