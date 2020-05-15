@@ -13,12 +13,12 @@ using PdfSharp.Pdf.IO;
 
 namespace ItechoPdf
 {
-    public class PdfRenderer
+    public partial class PdfRenderer
     {
         private List<PdfDocument> _documents { get; set; } = new List<PdfDocument>();
         private List<string> _tempFiles = new List<string>();
         public PdfSettings Settings { get; set; } = new PdfSettings();
-        
+
         public PdfRenderer(Action<PdfSettings> config = null)
         {
             config?.Invoke(Settings);
@@ -41,7 +41,7 @@ namespace ItechoPdf
 
         private string ResolveSource(PdfSource source)
         {
-             if (source is PdfSourceHtml html)
+            if (source is PdfSourceHtml html)
             {
                 return html.Html;
             }
@@ -69,7 +69,7 @@ namespace ItechoPdf
         {
             var builder = new StringBuilder();
             builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
-        
+
             foreach (var page in doc.Pages)
             {
                 // Idea here is to split all pages with a empty page
@@ -132,7 +132,7 @@ namespace ItechoPdf
                     new VariableReplace("pages", c.Pages + 1)
                 };
 
-                BuildHeaderFooter(builder, c.RenderPage.Header, doc.HeaderHeight, replace);                    
+                BuildHeaderFooter(builder, c.RenderPage.Header, doc.HeaderHeight, replace);
                 BuildHeaderFooter(builder, c.RenderPage.Footer, doc.FooterHeight, replace);
             }
             builder.Append(CloseHtml);
@@ -149,7 +149,7 @@ namespace ItechoPdf
             var d = ano.Elements["/A"];
             if (d is PdfDictionary dic)
             {
-                var uriElement = dic.Elements["/URI"];   
+                var uriElement = dic.Elements["/URI"];
                 if (uriElement is PdfString str)
                 {
                     return str.Value;
@@ -163,39 +163,14 @@ namespace ItechoPdf
             return page.Annotations.Count == 1 && GetUrlLink(page.Annotations[0]) == SplitDocumentUri;
         }
 
-        public class PageCount
+        private List<PageCount> DocumentToPdf(PdfSharp.Pdf.PdfDocument finalPdf)
         {
-            public int Overflow { get; set; }
-            public int Document { get; set; }
-            public int Page { get; set; }
-
-            public int Overflows { get; set; }
-            public int Documents { get; set; }
-            public int Pages { get; set; }
-
-            public PdfSharp.Pdf.PdfPage PdfPage { get; set; }
-            public PdfDocument RenderDocument { get; set; }
-            public PdfPage RenderPage { get; set; }
-        }
-        
-        public byte[] RenderToBytes()
-        {
-            // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
-            
-            // The final output document
-            var finalPdf = new PdfSharp.Pdf.PdfDocument();
             var pageCounters = new List<PageCount>();
-            // var totalCount = new PageCount();
-            long totalTime = 0;
-            
             int pageCount = 0;
             int documentCount = 0;
-           
-            foreach (var doc in _documents)
-            {   
-                // var documentCount = new PageCount();
-                // var pageCount = new PageCount();
 
+            foreach (var doc in _documents)
+            {
                 var watch = new Stopwatch();
                 watch.Start();
 
@@ -205,10 +180,9 @@ namespace ItechoPdf
 
                 var settings = ConvertToCoreSettings(doc);
                 var bytes = HtmlToPdf(htmlPages, settings);
-                
+
                 watch.Stop();
                 Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
-                totalTime += watch.ElapsedMilliseconds;
 
                 // Now read / parse the generate PDF to determine page counts
                 var pdf = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
@@ -221,7 +195,7 @@ namespace ItechoPdf
                     if (IsPageSplit(page))
                     {
                         // Update the last overflow overflowCount to overflowCount
-                        for (var i = 0; i < overflowCount; i++) 
+                        for (var i = 0; i < overflowCount; i++)
                         {
                             pageCounters[pageCounters.Count - i - 1].Overflows = overflowCount - 1;
                         }
@@ -241,7 +215,7 @@ namespace ItechoPdf
                         RenderDocument = doc,
                         RenderPage = doc.Pages.ElementAt(renderPageIndex)
                     });
-                    
+
                     var newPage = finalPdf.AddPage(page);
                     overflowCount++;
                     pageCount++;
@@ -249,13 +223,23 @@ namespace ItechoPdf
 
                 documentCount++;
             }
-            
             // Update document and page count
             foreach (var c in pageCounters)
             {
                 c.Documents = documentCount - 1;
                 c.Pages = pageCount - 1;
             }
+
+            return pageCounters;
+        }
+
+        public byte[] RenderToBytes()
+        {
+            // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
+            // The final output document
+            var finalPdf = new PdfSharp.Pdf.PdfDocument();
+            
+            var pageCounters = DocumentToPdf(finalPdf);
 
             // Now generate headers and footers
             foreach (var doc in _documents)
@@ -268,19 +252,19 @@ namespace ItechoPdf
                 // and genereate a header / footer pair for each page
                 // one page can be rendered as multiple pages
                 var html = BuildHeaderFooter(doc, counters);
-                
+
                 if (html != null)
                 {
                     var settings = ConvertToCoreSettings(doc);
                     var bytes = HtmlToPdf(html, settings);
                     File.WriteAllBytes("headerfooter.pdf", bytes);
                 }
-                
+
                 Console.WriteLine($"Header and footer generation took {watch.ElapsedMilliseconds}ms");
             }
 
             finalPdf.Save("output.pdf");
-            
+
             // Merge PDF's
             return null;
         }
@@ -351,8 +335,8 @@ namespace ItechoPdf
                 DumpOutline = settings.DumpOutline,
                 EnableIntelligentShrinking = settings.EnableIntelligentShrinking,
                 EnableJavascript = settings.EnableJavascript,
-                Footer =  null, // BuildHeaderFooter(document.Footer, document.Settings),
-                Header =  null, // BuildHeaderFooter(document.Header, document.Settings),
+                Footer = null, // BuildHeaderFooter(document.Footer, document.Settings),
+                Header = null, // BuildHeaderFooter(document.Header, document.Settings),
                 ImageDPI = settings.ImageDPI,
                 ImageQuality = settings.ImageQuality,
                 IncludeInOutline = settings.IncludeInOutline,
@@ -379,12 +363,12 @@ namespace ItechoPdf
                 UseLocalLinks = settings.UseExternalLinks,
             };
         }
-        
+
         private string ReplaceHtmlWithVariables(string html, List<VariableReplace> vars)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
-            
+
             var varNodes = doc.DocumentNode.SelectNodes("//var");
             if (varNodes == null)
             {
@@ -434,7 +418,7 @@ namespace ItechoPdf
                 {
                     content.Append(CreateJavascriptResource(res.Content));
                 }
-                else 
+                else
                 {
                     content.Append(CreateCSSResource(res.Content));
                 }
@@ -455,7 +439,6 @@ namespace ItechoPdf
             return null;
         }
 
-    
         private string CreateJavascriptResource(PdfSource source)
         {
             if (source is PdfSourceFile file)
