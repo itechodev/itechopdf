@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
+using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Annotations;
 using PdfSharp.Pdf.IO;
@@ -204,19 +205,19 @@ namespace ItechoPdf
                         renderPageIndex++;
                         continue;
                     }
+                    var newPage = finalPdf.AddPage(page);
 
                     pageCounters.Add(new PageCount
                     {
                         Overflow = overflowCount,
                         Page = pageCount,
                         Document = documentCount,
-                        PdfPage = page,
+                        PdfPage = newPage,
 
                         RenderDocument = doc,
                         RenderPage = doc.Pages.ElementAt(renderPageIndex)
                     });
 
-                    var newPage = finalPdf.AddPage(page);
                     overflowCount++;
                     pageCount++;
                 }
@@ -231,6 +232,24 @@ namespace ItechoPdf
             }
 
             return pageCounters;
+        } 
+        
+        private void Clip(XGraphics gfx, XPdfForm hf, PdfSharp.Pdf.PdfPage newPage, XRect source, XRect dest)
+        {
+            double rx = dest.Width / source.Width;
+            double ry = dest.Height / source.Height;
+
+            gfx.Save();
+            gfx.IntersectClip(dest);
+
+            gfx.DrawImage(hf, new XRect(
+                (-source.Left * rx) + dest.Left,
+                (-source.Top * ry) + dest.Top,
+                newPage.Width * rx,
+                newPage.Height * ry));
+
+            // Restore default intersect clip
+            gfx.Restore();
         }
 
         public byte[] RenderToBytes()
@@ -255,8 +274,35 @@ namespace ItechoPdf
 
                 if (html != null)
                 {
+                    
                     var settings = ConvertToCoreSettings(doc);
                     var bytes = HtmlToPdf(html, settings);
+                    
+                    XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
+
+                    if (hf.PageCount != counters.Count())
+                    {
+                        throw new Exception("Header and footer segments does not match number of pages.");
+                    }
+                    foreach (var c in counters)
+                    {
+                        XGraphics gfx = XGraphics.FromPdfPage(c.PdfPage);
+
+                        // 1 inch = 72 points, 1 inch = 25.4 mm, 1 point = 0.352777778 mm
+                        // points per millimeter
+                        var ppm = c.PdfPage.Height.Point / c.PdfPage.Height.Millimeter; // or page.Width.Point / page.Width.Millimeter
+                        var mt = doc.Settings.Margins.Top ?? 0;
+                        var mb = doc.Settings.Margins.Bottom ?? 0;
+                        Clip(gfx, hf, c.PdfPage, 
+                            new XRect(0, (doc.HeaderHeight + mt) * ppm, c.PdfPage.Width, doc.HeaderHeight * ppm), 
+                            new XRect(0, mt * ppm, c.PdfPage.Width, doc.HeaderHeight * ppm));
+
+                        Clip(gfx, hf, c.PdfPage, 
+                            new XRect(0, (doc.HeaderHeight + doc.HeaderHeight + mt) * ppm, c.PdfPage.Width, doc.FooterHeight * ppm), 
+                            new XRect(0, c.PdfPage.Height - (doc.FooterHeight * ppm), c.PdfPage.Width, doc.FooterHeight * ppm)
+                        );                        
+                    }
+
                     File.WriteAllBytes("headerfooter.pdf", bytes);
                 }
 

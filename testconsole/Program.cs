@@ -66,8 +66,6 @@ namespace testconsole
         top: 0px;
         margin: -2cm 0 0 -97mm;
     }"));
-
-
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
             var content = renderer.AddDocument(30, 15);
@@ -85,18 +83,16 @@ namespace testconsole
             content.AddPage(PdfSource.FromFile("pages/PlayField-9.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
             content.AddPage(PdfSource.FromFile("pages/PlayField-10.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
              
-            var summary = renderer.AddDocument();
-            content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
-            summary.AddPage(PdfSource.FromFile("pages/summary.html"));
+            content.AddPage(PdfSource.FromFile("pages/summary.html"), null, null);
 
             var bytes = renderer.RenderToBytes();
             // File.WriteAllBytes("output.pdf", bytes);
 
             // Create the output document
-            var watch = new Stopwatch();
-            watch.Start();
-            PdfMerge.Merge();
-            Console.WriteLine($"PDf merged took {watch.ElapsedMilliseconds}ms");
+            // var watch = new Stopwatch();
+            // watch.Start();
+            // PdfMerge.Merge();
+            // Console.WriteLine($"PDf merged took {watch.ElapsedMilliseconds}ms");
         
         }
     }
