@@ -91,18 +91,13 @@ namespace ItechoPdf
 
         private void BuildHeaderFooter(StringBuilder builder, PdfSource source, int height, List<VariableReplace> vars)
         {
-            if (height == 0)
-            {
-                return;
-            }
             builder.Append(String.Format(HeaderFootStart, height));
             var html = ResolveSource(source);
-            if (String.IsNullOrEmpty(html))
+            if (!String.IsNullOrEmpty(html))
             {
-                return;
+                html = ReplaceHtmlWithVariables(html, vars);
+                builder.Append(html);
             }
-            html = ReplaceHtmlWithVariables(html, vars);
-            builder.Append(html);
             builder.Append(HeaderFootClose);
         }
 
