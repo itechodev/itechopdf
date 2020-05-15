@@ -86,7 +86,7 @@ namespace ItechoPdf
             return builder.ToString();
         }
 
-        private string BuildHeaderFooter(PdfDocument doc)
+        private string BuildHeaderFooter(PdfDocument doc, IEnumerable<PageCount> counts)
         {
             if (doc.HeaderHeight == 0 && doc.FooterHeight == 0)
             {
@@ -96,26 +96,28 @@ namespace ItechoPdf
             var builder = new StringBuilder();
             builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
 
-            // Now add all the headers and footer in abs position
-            foreach (var page in doc.Pages)
+            foreach (var c in counts)
             {
-                if (page != doc.Pages.First())
+                if (c != counts.First())
                 {
                     builder.Append(PageBreak);
                 }
                 if (doc.HeaderHeight != 0)
                 {
                     builder.Append(String.Format(HeaderFootStart, doc.HeaderHeight));
-                    BuilderAppend(builder, page.Header);
+                    // replace variables
+                    BuilderAppend(builder, c.RenderPage.Header);
                     builder.Append(HeaderFootClose);
                 }
                 if (doc.FooterHeight != 0)
                 {
                     builder.Append(String.Format(HeaderFootStart, doc.FooterHeight));
-                    BuilderAppend(builder, page.Footer);
+                    // replace variables
+                    BuilderAppend(builder, c.RenderPage.Footer);
                     builder.Append(HeaderFootClose);
                 }
             }
+
             builder.Append(CloseHtml);
             return builder.ToString();
         }
@@ -155,6 +157,8 @@ namespace ItechoPdf
             public int Pages { get; set; }
 
             public PdfSharp.Pdf.PdfPage PdfPage { get; set; }
+            public PdfDocument RenderDocument { get; set; }
+            public PdfPage RenderPage { get; set; }
         }
         
         public byte[] RenderToBytes()
@@ -192,7 +196,7 @@ namespace ItechoPdf
                 // Now read / parse the generate PDF to determine page counts
                 var pdf = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
                 var overflowCount = 0;
-
+                int renderPageIndex = 0;
                 for (var p = 0; p < pdf.PageCount; p++)
                 {
                     var page = pdf.Pages[p];
@@ -206,6 +210,7 @@ namespace ItechoPdf
                         }
 
                         overflowCount = 0;
+                        renderPageIndex++;
                         continue;
                     }
 
@@ -215,6 +220,9 @@ namespace ItechoPdf
                         Page = pageCount,
                         Document = documentCount,
                         PdfPage = page,
+
+                        RenderDocument = doc,
+                        RenderPage = doc.Pages.ElementAt(renderPageIndex)
                     });
                     
                     var newPage = finalPdf.AddPage(page);
@@ -222,7 +230,6 @@ namespace ItechoPdf
                     pageCount++;
                 }
 
-                File.WriteAllBytes($"{pageCount}.pdf", bytes);
                 documentCount++;
             }
             
@@ -233,8 +240,27 @@ namespace ItechoPdf
                 c.Pages = pageCount - 1;
             }
 
+            // Now generate headers and footers
+            foreach (var doc in _documents)
+            {
+                var watch = new Stopwatch();
+                watch.Start();
 
-            Console.WriteLine($"Total time: {totalTime}ms");
+                // get all pages of the generated document
+                var counters = pageCounters.Where(c => c.RenderDocument == doc);
+                // and genereate a header / footer pair for each page
+                // one page can be rendered as multiple pages
+                var html = BuildHeaderFooter(doc, counters);
+                
+                if (html != null)
+                {
+                    var settings = ConvertToCoreSettings(doc);
+                    var bytes = HtmlToPdf(html, settings);
+                    File.WriteAllBytes("headerfooter.pdf", bytes);
+                }
+                
+                Console.WriteLine($"Header and footer generation took {watch.ElapsedMilliseconds}ms");
+            }
 
             finalPdf.Save("output.pdf");
 
