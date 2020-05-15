@@ -120,6 +120,11 @@ namespace ItechoPdf
             return builder.ToString();
         }
 
+        //  case LinkType.Web:
+        //   //pdf.AppendFormat("/A<</S/URI/URI{0}>>\n", PdfEncoders.EncodeAsLiteral(this.url));
+        //   Elements[Keys.A] = new PdfLiteral("<</S/URI/URI{0}>>", //PdfEncoders.EncodeAsLiteral(this.url));
+        //     PdfEncoders.ToStringLiteral(this.url, PdfStringEncoding.WinAnsiEncoding, writer.SecurityHandler));
+        //   break;
         private string GetUrlLink(PdfAnnotation ano)
         {
             var d = ano.Elements["/A"];
@@ -138,18 +143,42 @@ namespace ItechoPdf
         {
             return page.Annotations.Count == 1 && GetUrlLink(page.Annotations[0]) == SplitDocumentUri;
         }
+
+        public class PageCount
+        {
+            public int Overflow { get; set; }
+            public int Document { get; set; }
+            public int Page { get; set; }
+
+            public int Overflows { get; set; }
+            public int Documents { get; set; }
+            public int Pages { get; set; }
+        }
         
         public byte[] RenderToBytes()
         {
             // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
             
-            long total = 0;
-            int count = 0;
+            // The final output document
+            var finalPdf = new PdfSharp.Pdf.PdfDocument();
+            var pageCounters = new List<PageCount>();
+            // var totalCount = new PageCount();
+            long totalTime = 0;
+            
+            int pageCount = 0;
+            int documentCount = 0;
+           
             foreach (var doc in _documents)
             {
+                
+                // var documentCount = new PageCount();
+                // var pageCount = new PageCount();
+
                 var watch = new Stopwatch();
                 watch.Start();
-            
+
+                // Concatenate all pages into one HTML document for performance
+                // Try to minimize calls to native WkHtmlToPdf because it's slowish.
                 var htmlPages = BuildHtml(doc);
 
                 var settings = ConvertToCoreSettings(doc);
@@ -157,12 +186,43 @@ namespace ItechoPdf
                 
                 watch.Stop();
                 Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
-                total += watch.ElapsedMilliseconds;
+                totalTime += watch.ElapsedMilliseconds;
 
                 // Now read / parse the generate PDF to determine page counts
-                var inDoc = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
-           
-                File.WriteAllBytes($"{count}.pdf", bytes);
+                var pdf = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
+                var overflowCount = 0;
+
+                for (var p = 0; p < pdf.PageCount; p++)
+                {
+                    var page = pdf.Pages[p];
+                    
+                    // DocumentSplit
+                    if (IsPageSplit(page))
+                    {
+                        // Update the last overflow overflowCount to overflowCount
+                        for (var i = 0; i < overflowCount; i++) 
+                        {
+                            pageCounters[pageCounters.Count - i - 1].Overflows = overflowCount;
+                        }
+
+                        overflowCount = 0;
+                        documentCount++;
+                        continue;
+                    }
+                    
+                    pageCounters.Add(new PageCount
+                    {
+                        Overflow = overflowCount,
+                        Page = pageCount,
+                        Document = documentCount,
+                    });
+
+                    var newPage = finalPdf.AddPage(page);
+                    overflowCount++;
+                    pageCount++;
+                }
+
+                File.WriteAllBytes($"{pageCount}.pdf", bytes);
 
                 // var headerFooterHtml = BuildHeaderFooter(doc);
                 // if (headerFooterHtml != null)
@@ -170,11 +230,17 @@ namespace ItechoPdf
                 //     var bb = HtmlToPdf(headerFooterHtml, settings);
                 //     File.WriteAllBytes($"{count}-headerfooters.pdf", bb);
                 // }
-                
-                
-                count++;
             }
-            Console.WriteLine($"Total time: {total}ms");
+            
+            // Update document and page count
+            foreach (var c in pageCounters)
+            {
+                c.Documents = documentCount;
+                c.Pages = pageCount - 1;
+            }
+
+
+            Console.WriteLine($"Total time: {totalTime}ms");
 
             // var replace = new List<VariableReplace>
             // {
