@@ -39,16 +39,17 @@ namespace ItechoPdf
             return WkHtmlToPdf.GetVersion() + (WkHtmlToPdf.ExtendedQt() ? " (Extended QT)" : "");
         }
 
-        private void BuilderAppend(StringBuilder builder, PdfSource source)
+        private string ResolveSource(PdfSource source)
         {
              if (source is PdfSourceHtml html)
             {
-                builder.Append(html.Html);
+                return html.Html;
             }
             else if (source is PdfSourceFile file)
             {
-                builder.Append(File.ReadAllText(file.Path));
+                return File.ReadAllText(file.Path);
             }
+            return null;
         }
 
         const string PageBreak = "<div style=\"page-break-after: always;\"></div>";
@@ -80,10 +81,28 @@ namespace ItechoPdf
                     builder.Append(String.Format(AnchorHtml, SplitDocumentUri, '-'));
                     builder.Append(PageBreak);
                 }
-                BuilderAppend(builder, page.Source);
+                var html = ResolveSource(page.Source);
+                builder.Append(html);
             }
             builder.Append(CloseHtml);
             return builder.ToString();
+        }
+
+        private void BuildHeaderFooter(StringBuilder builder, PdfSource source, int height, List<VariableReplace> vars)
+        {
+            if (height == 0)
+            {
+                return;
+            }
+            builder.Append(String.Format(HeaderFootStart, height));
+            var html = ResolveSource(source);
+            if (String.IsNullOrEmpty(html))
+            {
+                return;
+            }
+            ReplaceHtmlWithVariables(html, vars);
+            builder.Append(html);
+            builder.Append(HeaderFootClose);
         }
 
         private string BuildHeaderFooter(PdfDocument doc, IEnumerable<PageCount> counts)
@@ -102,20 +121,17 @@ namespace ItechoPdf
                 {
                     builder.Append(PageBreak);
                 }
-                if (doc.HeaderHeight != 0)
+                var replace = new List<VariableReplace>
                 {
-                    builder.Append(String.Format(HeaderFootStart, doc.HeaderHeight));
-                    // replace variables
-                    BuilderAppend(builder, c.RenderPage.Header);
-                    builder.Append(HeaderFootClose);
-                }
-                if (doc.FooterHeight != 0)
-                {
-                    builder.Append(String.Format(HeaderFootStart, doc.FooterHeight));
-                    // replace variables
-                    BuilderAppend(builder, c.RenderPage.Footer);
-                    builder.Append(HeaderFootClose);
-                }
+                    new VariableReplace("documentpage", "1"),
+                    new VariableReplace("documentpages", "2"),
+                    new VariableReplace("page", "3"),
+                    new VariableReplace("pages", "4"),
+                };
+                    
+                
+                BuildHeaderFooter(builder, c.RenderPage.Header, doc.HeaderHeight, replace);                    
+                BuildHeaderFooter(builder, c.RenderPage.Footer, doc.FooterHeight, replace);
             }
 
             builder.Append(CloseHtml);
@@ -263,14 +279,6 @@ namespace ItechoPdf
             }
 
             finalPdf.Save("output.pdf");
-
-            // var replace = new List<VariableReplace>
-            // {
-            //     new VariableReplace("documentpage", (docpage + 1).ToString()),
-            //     new VariableReplace("documentpages", edit.Pages.ToString()),
-            //     new VariableReplace("page", (page + 1).ToString()),
-            //     new VariableReplace("pages", totalPages.ToString()),
-            // };
             
             // Merge PDF's
             return null;
@@ -371,56 +379,37 @@ namespace ItechoPdf
             };
         }
         
-        // private HtmlDocument DocFromSource(PdfSource source, List<PdfResource> resources, bool replace, PdfSettings settings)
-        // {
-        //     var htmlDoc = new HtmlDocument();
-        //     htmlDoc.CreateElement("html");
+        private string ReplaceHtmlWithVariables(string html, List<VariableReplace> vars)
+        {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
             
-        //     string baseUrl = null;
-        //     if (source is PdfSourceHtml html)
-        //     {
-        //         baseUrl = html.BaseUrl ?? Environment.CurrentDirectory;
-        //         htmlDoc.LoadHtml(html.Html);
-        //     }
-
-        //     if (source is PdfSourceFile file)
-        //     {
-        //         baseUrl = Path.GetDirectoryName(Path.GetFullPath(file.Path)) + Path.DirectorySeparatorChar;
-        //         using (var fs = System.IO.File.OpenRead(file.Path))
-        //         {
-        //             htmlDoc.Load(fs);
-        //         }
-        //     }
-            
-        //     return FormatHtml(htmlDoc, baseUrl, resources, replace, settings);
-        // }
-        
-        // private HeaderFooterSettings BuildHeaderFooter(HeaderFooter settings, PdfSettings pdf)
-        // {
-        //     if (settings == null)
-        //     {
-        //         return null;
-        //     }
-
-        //     if (settings is HtmlHeaderFooter source)
-        //     {
-        //         HtmlDocument htmlDoc = DocFromSource(source.Source, null, true, pdf);
-        //         var path = CreateTempFile();
-        //         using (var sw = System.IO.File.Create(path))
-        //         {
-        //             htmlDoc.Save(sw);
-        //         }
-
-        //         return new HeaderFooterSettings
-        //         {
-        //             Spacing = settings.Spacing,
-        //             Line = settings.Line,
-        //             Url = path
-        //         };
-        //     }
-
-        //     throw new Exception($"Unknown settings type {settings.GetType().Name}");
-        // }
+            var varNodes = doc.DocumentNode.SelectNodes("//var");
+            if (varNodes == null)
+            {
+                return html;
+            }
+            foreach (var n in varNodes)
+            {
+                var name = n.GetAttributeValue("name", null);
+                if (String.IsNullOrEmpty(name))
+                {
+                    continue;
+                }
+                var var = vars.FirstOrDefault(v => v.Name == name);
+                if (var == null)
+                {
+                    continue;
+                }
+                var replace = doc.CreateTextNode(var.Replace);
+                n.ParentNode.ReplaceChild(replace, n);
+            }
+            using (var text = new StringWriter())
+            {
+                doc.Save(text);
+                return text.ToString();
+            }
+        }
 
         private string CreateTempFile()
         {
