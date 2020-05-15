@@ -153,6 +153,8 @@ namespace ItechoPdf
             public int Overflows { get; set; }
             public int Documents { get; set; }
             public int Pages { get; set; }
+
+            public PdfSharp.Pdf.PdfPage PdfPage { get; set; }
         }
         
         public byte[] RenderToBytes()
@@ -169,8 +171,7 @@ namespace ItechoPdf
             int documentCount = 0;
            
             foreach (var doc in _documents)
-            {
-                
+            {   
                 // var documentCount = new PageCount();
                 // var pageCount = new PageCount();
 
@@ -195,52 +196,47 @@ namespace ItechoPdf
                 for (var p = 0; p < pdf.PageCount; p++)
                 {
                     var page = pdf.Pages[p];
-                    
                     // DocumentSplit
                     if (IsPageSplit(page))
                     {
                         // Update the last overflow overflowCount to overflowCount
                         for (var i = 0; i < overflowCount; i++) 
                         {
-                            pageCounters[pageCounters.Count - i - 1].Overflows = overflowCount;
+                            pageCounters[pageCounters.Count - i - 1].Overflows = overflowCount - 1;
                         }
 
                         overflowCount = 0;
-                        documentCount++;
                         continue;
                     }
-                    
+
                     pageCounters.Add(new PageCount
                     {
                         Overflow = overflowCount,
                         Page = pageCount,
                         Document = documentCount,
+                        PdfPage = page,
                     });
-
+                    
                     var newPage = finalPdf.AddPage(page);
                     overflowCount++;
                     pageCount++;
                 }
 
                 File.WriteAllBytes($"{pageCount}.pdf", bytes);
-
-                // var headerFooterHtml = BuildHeaderFooter(doc);
-                // if (headerFooterHtml != null)
-                // {
-                //     var bb = HtmlToPdf(headerFooterHtml, settings);
-                //     File.WriteAllBytes($"{count}-headerfooters.pdf", bb);
-                // }
+                documentCount++;
             }
             
             // Update document and page count
             foreach (var c in pageCounters)
             {
-                c.Documents = documentCount;
+                c.Documents = documentCount - 1;
                 c.Pages = pageCount - 1;
             }
 
 
             Console.WriteLine($"Total time: {totalTime}ms");
+
+            finalPdf.Save("output.pdf");
 
             // var replace = new List<VariableReplace>
             // {
