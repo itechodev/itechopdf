@@ -241,7 +241,6 @@ namespace ItechoPdf
 
             gfx.Save();
             gfx.IntersectClip(dest);
-
             gfx.DrawImage(hf, new XRect(
                 (-source.Left * rx) + dest.Left,
                 (-source.Top * ry) + dest.Top,
@@ -284,6 +283,7 @@ namespace ItechoPdf
                     {
                         throw new Exception("Header and footer segments does not match number of pages.");
                     }
+                    int pageCount = 0;
                     foreach (var c in counters)
                     {
                         XGraphics gfx = XGraphics.FromPdfPage(c.PdfPage);
@@ -293,13 +293,14 @@ namespace ItechoPdf
                         var ppm = c.PdfPage.Height.Point / c.PdfPage.Height.Millimeter; // or page.Width.Point / page.Width.Millimeter
                         var mt = doc.Settings.Margins.Top ?? 0;
                         var mb = doc.Settings.Margins.Bottom ?? 0;
+                        hf.PageIndex = pageCount++; 
                         Clip(gfx, hf, c.PdfPage, 
                             new XRect(0, (doc.HeaderHeight + mt) * ppm, c.PdfPage.Width, doc.HeaderHeight * ppm), 
                             new XRect(0, mt * ppm, c.PdfPage.Width, doc.HeaderHeight * ppm));
 
                         Clip(gfx, hf, c.PdfPage, 
                             new XRect(0, (doc.HeaderHeight + doc.HeaderHeight + mt) * ppm, c.PdfPage.Width, doc.FooterHeight * ppm), 
-                            new XRect(0, c.PdfPage.Height - (doc.FooterHeight * ppm), c.PdfPage.Width, doc.FooterHeight * ppm)
+                            new XRect(0, c.PdfPage.Height - ((doc.FooterHeight - mb) * ppm), c.PdfPage.Width, doc.FooterHeight * ppm)
                         );                        
                     }
 
