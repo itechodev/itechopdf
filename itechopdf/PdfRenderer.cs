@@ -247,7 +247,7 @@ namespace ItechoPdf
                     var height = Math.Max(doc.HeaderHeight, doc.FooterHeight);
                     // Keep the same settings as the document except the height and y - margins
                     var settings = ConvertToCoreSettings(doc);
-                    settings.Orientation = "Portrait";
+                    settings.Orientation = Orientation.Portrait;
                     if (doc.Settings.Orientation == Orientation.Landscape)
                     {
                         settings.PaperHeight = height + "mm";
@@ -263,8 +263,7 @@ namespace ItechoPdf
                     settings.MarginTop = "0mm";
                     
                     var bytes = HtmlToPdf(html, settings);
-                    File.WriteAllBytes("headerfooter.pdf", bytes);
-
+                    
                     XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
 
                     if (hf.PageCount != counters.Count() * 2)
@@ -344,14 +343,14 @@ namespace ItechoPdf
                 BlockLocalFileAccess = settings.BlockLocalFileAccess,
                 DebugJavascript = settings.DebugJavascript,
                 JSDelay = settings.JSDelay,
-                LoadErrorHandling = settings.LoadErrorHandling?.ToString(),
+                LoadErrorHandling = settings.LoadErrorHandling,
                 Password = settings.Password,
                 Proxy = settings.Proxy,
                 StopSlowScript = settings.StopSlowScript,
                 Username = settings.Username,
 
                 Collate = settings.Collate,
-                ColorMode = settings.ColorMode?.ToString(),
+                ColorMode = settings.ColorMode,
                 CookieJar = settings.CookieJar,
                 Copies = settings.Copies,
                 DefaultEncoding = settings.DefaultEncoding,
@@ -371,7 +370,7 @@ namespace ItechoPdf
                 MarginBottom = settings.Margins.GetMarginValue(marginBottom),
                 MarginTop = settings.Margins.GetMarginValue(marginTop),
                 MinimumFontSize = settings.MinimumFontSize,
-                Orientation = settings.Orientation?.ToString(),
+                Orientation = settings.Orientation,
                 Outline = settings.Outline,
                 OutlineDepth = settings.OutlineDepth,
                 PageOffset = settings.PageOffset,

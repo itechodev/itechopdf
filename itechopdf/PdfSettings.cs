@@ -1,43 +1,12 @@
+using ItechoPdf.Core;
+
 namespace ItechoPdf
 {
-    public enum ContentErrorHandling
-    {
-        Abort,
-        Skip,
-        Ignore
-    }
-    
-    
-    public enum ColorMode
-    {
-        Color,
-        Grayscale
-    }
-
-    public enum Orientation
-    {
-        Landscape,
-        Portrait
-    }
-
     public enum Unit
     {
         Inches,
         Millimeters,
         Centimeters
-    }
-
-    public enum SettingsType
-    {
-        Global,
-        Object,
-    }
-
-    public enum VariableAlign
-    {
-        Left,
-        Center, 
-        Right,
     }
 
     // Combined load and print- settings
@@ -127,7 +96,7 @@ namespace ItechoPdf
         /// <summary>
         /// How should we handle obejcts that fail to load. Default = Abort
         /// </summary>
-        public ContentErrorHandling? LoadErrorHandling { get; set; }
+        public ContentErrorHandling LoadErrorHandling { get; set; }
 
         /// <summary>
         /// String describing what proxy to use when loading the object. Default = ""
@@ -213,12 +182,12 @@ namespace ItechoPdf
         /// <summary>
         /// The orientation of the output document, must be either "Landscape" or "Portrait". Default = "portrait"
         /// </summary>
-        public Orientation? Orientation { get; set; }
+        public Orientation Orientation { get; set; }
 
         /// <summary>
         /// Should the output be printed in color or gray scale, must be either "Color" or "Grayscale". Default = "color"
         /// </summary>
-        public ColorMode? ColorMode { get; set; }
+        public ColorMode ColorMode { get; set; }
 
         /// <summary>
         /// Should we use loss less compression when creating the pdf file. Default = true

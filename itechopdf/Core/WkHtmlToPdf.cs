@@ -161,8 +161,8 @@ namespace ItechoPdf.Core
             GlobalSetting(globalSettings, "size.pageSize", settings.PaperSize);
             GlobalSetting(globalSettings, "size.width", settings.PaperWidth);
             GlobalSetting(globalSettings, "size.height", settings.PaperHeight);
-            GlobalSetting(globalSettings, "orientation", settings.Orientation);
-            GlobalSetting(globalSettings, "colorMode", settings.ColorMode);
+            GlobalSetting(globalSettings, "orientation", settings.Orientation.ToString());
+            GlobalSetting(globalSettings, "colorMode", settings.ColorMode.ToString());
             GlobalSetting(globalSettings, "dpi", settings.DPI);
             GlobalSetting(globalSettings, "pageOffset", settings.PageOffset);
             GlobalSetting(globalSettings, "copies", settings.Copies);
@@ -199,7 +199,7 @@ namespace ItechoPdf.Core
             ObjectSetting(objectSettings, "load.blockLocalFileAccess", settings.BlockLocalFileAccess);
             ObjectSetting(objectSettings, "load.stopSlowScript", settings.StopSlowScript);
             ObjectSetting(objectSettings, "load.debugJavascript", settings.DebugJavascript);
-            ObjectSetting(objectSettings, "load.loadErrorHandling", settings.LoadErrorHandling?.ToString());
+            ObjectSetting(objectSettings, "load.loadErrorHandling", settings.LoadErrorHandling.ToString());
             ObjectSetting(objectSettings, "load.proxy", settings.Proxy);
 
             // web settings
