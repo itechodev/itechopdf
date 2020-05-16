@@ -167,18 +167,12 @@ namespace ItechoPdf
 
             foreach (var doc in _documents)
             {
-                var watch = new Stopwatch();
-                watch.Start();
-
                 // Concatenate all pages into one HTML document for performance
                 // Try to minimize calls to native WkHtmlToPdf because it's slowish.
                 var htmlPages = BuildHtml(doc);
 
                 var settings = ConvertToCoreSettings(doc);
                 var bytes = HtmlToPdf(htmlPages, settings);
-
-                watch.Stop();
-                Console.WriteLine($"Total elapsed time {watch.ElapsedMilliseconds}ms");
 
                 // Now read / parse the generate PDF to determine page counts
                 var pdf = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
@@ -257,9 +251,6 @@ namespace ItechoPdf
             // Now generate headers and footers
             foreach (var doc in _documents)
             {
-                var watch = new Stopwatch();
-                watch.Start();
-
                 // get all pages of the generated document
                 var counters = pageCounters.Where(c => c.RenderDocument == doc);
                 // and genereate a header / footer pair for each page
@@ -267,11 +258,10 @@ namespace ItechoPdf
                 var html = BuildHeaderFooter(doc, counters);
 
                 if (html != null)
-                {
-                    
+                {                    
                     var settings = ConvertToCoreSettings(doc);
                     var bytes = HtmlToPdf(html, settings);
-                    
+
                     XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
 
                     if (hf.PageCount != counters.Count())
@@ -298,16 +288,10 @@ namespace ItechoPdf
                             new XRect(0, c.PdfPage.Height - ((doc.FooterHeight - mb) * ppm), c.PdfPage.Width, doc.FooterHeight * ppm)
                         );                        
                     }
-
-                    File.WriteAllBytes("headerfooter.pdf", bytes);
                 }
-
-                Console.WriteLine($"Header and footer generation took {watch.ElapsedMilliseconds}ms");
             }
 
             finalPdf.Save("output.pdf");
-
-            // Merge PDF's
             return null;
         }
 
