@@ -129,7 +129,9 @@ namespace ItechoPdf
                 };
 
                 BuildHeaderFooter(builder, c.RenderPage.Header, doc.HeaderHeight, replace);
+                builder.Append(PageBreak);
                 BuildHeaderFooter(builder, c.RenderPage.Footer, doc.FooterHeight, replace);
+                builder.Append(PageBreak);
             }
             builder.Append(CloseHtml);
             return builder.ToString();
@@ -223,23 +225,6 @@ namespace ItechoPdf
             return pageCounters;
         } 
         
-        private void Clip(XGraphics gfx, XPdfForm hf, PdfSharp.Pdf.PdfPage newPage, XRect source, XRect dest)
-        {
-            double rx = dest.Width / source.Width;
-            double ry = dest.Height / source.Height;
-
-            gfx.Save();
-            gfx.IntersectClip(dest);
-            gfx.DrawImage(hf, new XRect(
-                (-source.Left * rx) + dest.Left,
-                (-source.Top * ry) + dest.Top,
-                newPage.Width * rx,
-                newPage.Height * ry));
-
-            // Restore default intersect clip
-            gfx.Restore();
-        }
-
         public byte[] RenderToBytes()
         {
             // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
@@ -259,12 +244,20 @@ namespace ItechoPdf
 
                 if (html != null)
                 {                    
+                    var height = Math.Max(doc.HeaderHeight, doc.FooterHeight);
+                    // Keep the same settings as the document except the height and y - margins
                     var settings = ConvertToCoreSettings(doc);
+                    settings.Orientation = "Portrait";
+                    settings.PaperHeight = height + "mm";
+                    settings.MarginBottom = "0mm";
+                    settings.MarginTop = "0mm";
+                    
                     var bytes = HtmlToPdf(html, settings);
+                    File.WriteAllBytes("headerfooter.pdf", bytes);
 
                     XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
 
-                    if (hf.PageCount != counters.Count())
+                    if (hf.PageCount != counters.Count() * 2)
                     {
                         throw new Exception("Header and footer segments does not match number of pages.");
                     }
@@ -272,21 +265,17 @@ namespace ItechoPdf
                     foreach (var c in counters)
                     {
                         XGraphics gfx = XGraphics.FromPdfPage(c.PdfPage);
-
                         // 1 inch = 72 points, 1 inch = 25.4 mm, 1 point = 0.352777778 mm
                         // points per millimeter
                         var ppm = c.PdfPage.Height.Point / c.PdfPage.Height.Millimeter; // or page.Width.Point / page.Width.Millimeter
                         var mt = doc.Settings.Margins.Top ?? 0;
                         var mb = doc.Settings.Margins.Bottom ?? 0;
-                        hf.PageIndex = pageCount++; 
-                        Clip(gfx, hf, c.PdfPage, 
-                            new XRect(0, (doc.HeaderHeight + mt) * ppm, c.PdfPage.Width, doc.HeaderHeight * ppm), 
-                            new XRect(0, mt * ppm, c.PdfPage.Width, doc.HeaderHeight * ppm));
 
-                        Clip(gfx, hf, c.PdfPage, 
-                            new XRect(0, (doc.HeaderHeight + doc.HeaderHeight + mt) * ppm, c.PdfPage.Width, doc.FooterHeight * ppm), 
-                            new XRect(0, c.PdfPage.Height - ((doc.FooterHeight - mb) * ppm), c.PdfPage.Width, doc.FooterHeight * ppm)
-                        );                        
+                        hf.PageIndex = pageCount++;
+                        gfx.DrawImage(hf, 0, mt * ppm);
+
+                        hf.PageIndex = pageCount++;
+                        gfx.DrawImage(hf, 0, c.PdfPage.Height - ((doc.FooterHeight - mb) * ppm));
                     }
                 }
             }
