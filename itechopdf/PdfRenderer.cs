@@ -248,7 +248,17 @@ namespace ItechoPdf
                     // Keep the same settings as the document except the height and y - margins
                     var settings = ConvertToCoreSettings(doc);
                     settings.Orientation = "Portrait";
-                    settings.PaperHeight = height + "mm";
+                    if (doc.Settings.Orientation == Orientation.Landscape)
+                    {
+                        settings.PaperHeight = height + "mm";
+                        settings.PaperWidth = doc.Settings.PaperSize.Height + "mm";
+                    }
+                    else 
+                    {
+                        settings.PaperHeight = height + "mm";
+                        settings.PaperWidth = doc.Settings.PaperSize.Width + "mm";
+                    }
+                    
                     settings.MarginBottom = "0mm";
                     settings.MarginTop = "0mm";
                     
