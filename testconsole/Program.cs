@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using ItechoPdf;
+using ItechoPdf.Core;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 
@@ -66,6 +67,9 @@ namespace testconsole
         top: 0px;
         margin: -2cm 0 0 -97mm;
     }"));
+            var watch = new Stopwatch();
+            watch.Start();
+
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
             var content = renderer.AddDocument(30, 15);
@@ -83,17 +87,12 @@ namespace testconsole
             content.AddPage(PdfSource.FromFile("pages/PlayField-9.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
             content.AddPage(PdfSource.FromFile("pages/PlayField-10.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
              
-            content.AddPage(PdfSource.FromFile("pages/summary.html"), null, null);
+            content.AddPage(PdfSource.FromFile("pages/summary.html"), null, PdfSource.FromFile("pages/footer.html"));
 
             var bytes = renderer.RenderToBytes();
-            // File.WriteAllBytes("output.pdf", bytes);
+            Console.WriteLine($"PDF generation took {watch.ElapsedMilliseconds}ms");
 
-            // Create the output document
-            // var watch = new Stopwatch();
-            // watch.Start();
-            // PdfMerge.Merge();
-            // Console.WriteLine($"PDf merged took {watch.ElapsedMilliseconds}ms");
-        
+            // File.WriteAllBytes("output.pdf", bytes);
         }
     }
 }
