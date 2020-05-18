@@ -4,7 +4,7 @@
         <PackageId>itechopdf</PackageId>
         <Title>ItechoPdf</Title>
         <PackageDescription>PDF creation library around WkHtmlToPdf. Creates rich PDF's from HTML, CSS and javascript. Include cover pages, header and footers with a simple API. </PackageDescription>
-        <Version>1.1.1</Version>
+        <Version>2.0.0</Version>
         <Authors>Willem Bijker;Jaco van Rensburg</Authors>
         <Company>Itecho</Company>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -13,7 +13,7 @@
         <IncludeContentInPack>True</IncludeContentInPack>
         <RepositoryUrl>https://github.com/itechodev/itechopdf</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageReleaseNotes>Various header and footer variables fixes</PackageReleaseNotes>
+        <PackageReleaseNotes>Mayor performance improvement for large PDF's using clipping techniques.</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

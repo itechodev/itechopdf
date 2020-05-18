@@ -15,33 +15,14 @@ namespace testconsole
 {
     class Program
     {
-        private static void PdfClipping()
-        {
-            // Open the external documents as XPdfForm objects. Such objects are
-            // treated like images. By default the first page of the document is
-            // referenced by a new XPdfForm.
-            XPdfForm form1 = XPdfForm.FromFile("input/b.pdf");
-
-            PdfSharp.Pdf.PdfDocument outputDocument = new PdfSharp.Pdf.PdfDocument();
-
-            PdfSharp.Pdf.PdfPage page1 = outputDocument.AddPage();
-
-            var gfx = XGraphics.FromPdfPage(page1);
-            gfx.DrawImage(form1, new XRect(0, 0, 100, 100));
-
-            outputDocument.Save("output/b.pdf");
-        }
-        
         static void Main(string[] args)
         {
-            // Console.WindowWidth;
             // No data is available for encoding 1252
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             var renderer = new PdfRenderer(settings => {
                 // Set global settings for all documents rendered through this service
                 settings.DPI = 300;
-                // settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
                 settings.Margins.Set(5, 5, 0, 5, Unit.Millimeters);
                 settings.PaperSize = PaperKind.A4;
                 settings.Orientation = Orientation.Landscape;
@@ -72,12 +53,8 @@ namespace testconsole
 
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
-            var content = renderer.AddDocument(30, 15);
+            var content = renderer.AddDocument(30, 10);
             content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
-            content.VariableResolver = (PageVariables vars) => {
-                return null;
-            };
-
             
             content.AddPage(PdfSource.FromFile("pages/PlayField-0.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
             content.AddPage(PdfSource.FromFile("pages/PlayField-1.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
