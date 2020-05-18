@@ -72,8 +72,7 @@ namespace testconsole
 
             var bytes = renderer.RenderToBytes();
             Console.WriteLine($"PDF generation took {watch.ElapsedMilliseconds}ms");
-
-            // File.WriteAllBytes("output.pdf", bytes);
+            File.WriteAllBytes("output.pdf", bytes);
         }
     }
 }

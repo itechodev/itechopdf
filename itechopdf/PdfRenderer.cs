@@ -289,8 +289,11 @@ namespace ItechoPdf
                 }
             }
 
-            finalPdf.Save("output.pdf");
-            return null;
+            using (var ms = new MemoryStream())
+            {
+                finalPdf.Save(ms);
+                return ms.ToArray();
+            }
         }
 
         public void RenderToFile(string output)
