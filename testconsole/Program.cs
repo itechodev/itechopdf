@@ -74,6 +74,10 @@ namespace testconsole
         
             var content = renderer.AddDocument(30, 15);
             content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
+            content.VariableResolver = (PageVariables vars) => {
+                return null;
+            };
+
             
             content.AddPage(PdfSource.FromFile("pages/PlayField-0.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
             content.AddPage(PdfSource.FromFile("pages/PlayField-1.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));

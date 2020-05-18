@@ -13,6 +13,7 @@ namespace ItechoPdf
         public int HeaderHeight { get; set; }
         public int FooterHeight { get; set; }
         public string BaseUrl { get; private set; }
+        public Func<PageVariables, List<VariableReplace>> VariableResolver { get; set; }
 
         public PdfDocument(int headerHeightmm = 0, int footerHeightmm = 0, string baseUrl = null, PdfSettings settings = null)
         {

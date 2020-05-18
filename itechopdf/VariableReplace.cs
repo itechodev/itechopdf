@@ -2,7 +2,7 @@ namespace ItechoPdf
 {
     // Contains what is regarded as a variable.
     // eg "[page] of [pages]. Page and pages are both variables with respective values
-    internal class VariableReplace
+    public class VariableReplace
     {
         public VariableReplace(string name, string replace)
         {
