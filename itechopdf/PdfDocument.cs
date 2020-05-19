@@ -10,15 +10,16 @@ namespace ItechoPdf
         public PdfSettings Settings { get; private set; } = new PdfSettings();
         public List<PdfResource> Resources { get; } = new List<PdfResource>();
 
-        public int HeaderHeight { get; set; }
-        public int FooterHeight { get; set; }
+        public int HeaderHeight { get; private set; } = 0;
+        public PdfSourceFile HeaderSource { get; private set; }
+        public int FooterHeight { get; private set; } = 0;
+        public PdfSourceFile FooterSource { get; private set; }
+
         public string BaseUrl { get; private set; }
         public Func<PageVariables, List<VariableReplace>> VariableResolver { get; set; }
 
-        public PdfDocument(int headerHeightmm = 0, int footerHeightmm = 0, string baseUrl = null, PdfSettings settings = null)
+        public PdfDocument(string baseUrl = null, PdfSettings settings = null)
         {
-            HeaderHeight = headerHeightmm;
-            FooterHeight = footerHeightmm;
             Settings = settings ?? new PdfSettings();
             BaseUrl = baseUrl ?? Environment.CurrentDirectory;
             // make sure baseUrl always ends with directory seperator
@@ -53,6 +54,18 @@ namespace ItechoPdf
         public void Configure(Action<PdfSettings> settings)
         {
             settings?.Invoke(Settings);
+        }
+
+        public void SetFooter(int height, PdfSourceFile source)
+        {
+            FooterHeight = height;
+            FooterSource = source;
+        }
+
+        public void SetHeader(int height, PdfSourceFile source)
+        {
+            HeaderHeight = height;
+            HeaderSource = source;
         }
     }
 }

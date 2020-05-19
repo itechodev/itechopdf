@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using ItechoPdf.Core;
 using PdfSharp.Drawing;
@@ -25,12 +23,12 @@ namespace ItechoPdf
             config?.Invoke(Settings);
         }
 
-        public PdfDocument AddDocument(int headerHeightmm = 0, int footerHeightmm = 0, string baseUrl = null, Action<PdfSettings> settingsAction = null)
+        public PdfDocument AddDocument(string baseUrl = null, Action<PdfSettings> settingsAction = null)
         {
             // copy settings from render
             var settings = new PdfSettings(Settings);
             settingsAction?.Invoke(settings);
-            var doc = new PdfDocument(headerHeightmm, footerHeightmm, baseUrl, settings);
+            var doc = new PdfDocument(baseUrl, settings);
             _documents.Add(doc);
             return doc;
         }
@@ -128,9 +126,9 @@ namespace ItechoPdf
                     new VariableReplace("pages", c.Pages + 1)
                 };
 
-                BuildHeaderFooter(builder, c.RenderPage.Header, doc.HeaderHeight, replace);
+                BuildHeaderFooter(builder, c.RenderPage.Header ?? doc.HeaderSource, doc.HeaderHeight, replace);
                 builder.Append(PageBreak);
-                BuildHeaderFooter(builder, c.RenderPage.Footer, doc.FooterHeight, replace);
+                BuildHeaderFooter(builder, c.RenderPage.Footer ?? doc.FooterSource, doc.FooterHeight, replace);
                 builder.Append(PageBreak);
             }
             builder.Append(CloseHtml);

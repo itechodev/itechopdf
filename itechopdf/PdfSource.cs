@@ -4,6 +4,11 @@ namespace ItechoPdf
 {
     public abstract class PdfSource
     {
+        public static PdfSourceEmpty Empty()
+        {
+            return new PdfSourceEmpty();
+        }
+
         public static PdfSourceFile FromFile(string path)
         {
             return new PdfSourceFile(path);
