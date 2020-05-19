@@ -89,6 +89,6 @@ The are 6 variables per default. You can use the VariableResolver to add your ow
 * Performance. The underlying Wkhtmltopdf does not support multihreading. 
 
 ## Why another library?
-I needed a solution to produce rich PDF documents from HTML. By rich I mean: cover pages, multiple pages with potential different sizes and orientations, customizable headers and footers etc. None of the open source libraries could do that easily. There are commercial solutions but the pricetag scared me off, so I wrote my own. 
+I needed a solution to produce rich PDF documents from HTML. By rich I mean: cover pages, multiple pages with potential different sizes and orientations, customizable headers and footers etc. None of the open source libraries could do that easily. And even if they did they took 6x longer than mine. 
 
 
