@@ -229,11 +229,16 @@ namespace ItechoPdf
             return pageCounters;
         } 
         
-        public byte[] RenderToBytes()
+        public byte[] RenderToBytes(string title = null, string author = null, string subject = null, string keywords = null)
         {
             // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
             // The final output document
             var finalPdf = new PdfSharp.Pdf.PdfDocument();
+            finalPdf.Info.Title = title;
+            finalPdf.Info.Author = author;
+            finalPdf.Info.Subject = subject;
+            finalPdf.Info.Keywords = keywords;
+            finalPdf.Info.Creator = "ItechoPDF";
             
             var pageCounters = DocumentToPdf(finalPdf);
 
