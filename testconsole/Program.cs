@@ -30,7 +30,7 @@ namespace testconsole
             
             Console.WriteLine("WkHTML version:" + renderer.GetVersion());
 
-            var doc = renderer.AddDocument(0, 0, null, settings => 
+            var doc = renderer.AddDocument(null, settings => 
             {
                 settings.Margins.Set(0, 0, 0, 0, Unit.Millimeters);
             });
@@ -53,22 +53,37 @@ namespace testconsole
 
             doc.AddPage(PdfSource.FromFile("pages/cover.html"));
         
-            var content = renderer.AddDocument(30, 10);
+            var content = renderer.AddDocument();
             content.AddCSS(PdfSource.FromFile("pages/tailwind.min.css"));
             
-            content.AddPage(PdfSource.FromFile("pages/PlayField-0.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-1.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-2.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-3.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-4.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-5.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-6.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-7.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-8.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-9.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
-            content.AddPage(PdfSource.FromFile("pages/PlayField-10.html"), PdfSource.FromFile("pages/header.html"), PdfSource.FromFile("pages/footer.html"));
+            // Set header and footer for all pages in this document.
+            // Can be overriden for each indivdual page
+            // Or you can use the variables resolver to inject dynamic content into your headers / footers
+            content.SetFooter(15, PdfSource.FromFile("pages/footer.html"));
+            content.SetHeader(30, PdfSource.FromFile("pages/header.html"));
+
+            content.VariableResolver = (vars) => {
+                var r = new Random();
+                var color = $"rgb({r.Next(256)}, {r.Next(256)}, {r.Next(256)})";
+                return new List<VariableReplace> 
+                { 
+                    new VariableReplace("size", $"<span style=\"color:{color};\">{vars.Page * 123.59}</span>")
+                };
+            };
+            
+            content.AddPage(PdfSource.FromFile("pages/PlayField-0.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-1.html"), PdfSource.Empty());
+            content.AddPage(PdfSource.FromFile("pages/PlayField-2.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-3.html"), PdfSource.Empty());
+            content.AddPage(PdfSource.FromFile("pages/PlayField-4.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-5.html"), PdfSource.Empty());
+            content.AddPage(PdfSource.FromFile("pages/PlayField-6.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-7.html"), PdfSource.Empty());
+            content.AddPage(PdfSource.FromFile("pages/PlayField-8.html"));
+            content.AddPage(PdfSource.FromFile("pages/PlayField-9.html"), PdfSource.Empty());
+            content.AddPage(PdfSource.FromFile("pages/PlayField-10.html"));
              
-            content.AddPage(PdfSource.FromFile("pages/summary.html"), null, PdfSource.FromFile("pages/footer.html"));
+            content.AddPage(PdfSource.FromFile("pages/summary.html"), PdfSource.Empty());
 
             var bytes = renderer.RenderToBytes();
             Console.WriteLine($"PDF generation took {watch.ElapsedMilliseconds}ms");

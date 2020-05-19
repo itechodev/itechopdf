@@ -126,6 +126,12 @@ namespace ItechoPdf
                     new VariableReplace("pages", c.Pages + 1)
                 };
 
+                var extra = doc.VariableResolver?.Invoke(c);
+                if (extra != null)
+                {
+                    replace.AddRange(extra);
+                }
+
                 BuildHeaderFooter(builder, c.RenderPage.Header ?? doc.HeaderSource, doc.HeaderHeight, replace);
                 builder.Append(PageBreak);
                 BuildHeaderFooter(builder, c.RenderPage.Footer ?? doc.FooterSource, doc.FooterHeight, replace);
