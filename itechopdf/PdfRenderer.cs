@@ -62,12 +62,15 @@ namespace ItechoPdf
         const string ScriptHtml = "<script type=\"text/javascript\" language=\"javascript\">{0}</script>";
         const string SplitDocumentUri = "itechopdf://splitdocument";
         const string AnchorHtml = "<a href=\"{0}\">{1}</a>";
+        const string TableOverflowHeaderStyle = "thead { display: table-header-group; } tfoot { display: table-row-group; } tr { page-break-inside: avoid; }";
 
 
         private string BuildHtml(PdfDocument doc)
         {
             var builder = new StringBuilder();
-            builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
+            var res = new List<PdfResource>(doc.Resources);
+            res.Add(new PdfResource(PdfSource.FromHtml(TableOverflowHeaderStyle), ResourcePlacement.Head, ResourceType.StyleSheet));
+            builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(res)));
 
             foreach (var page in doc.Pages)
             {
