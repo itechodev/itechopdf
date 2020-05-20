@@ -135,7 +135,10 @@ namespace ItechoPdf
                 BuildHeaderFooter(builder, c.RenderPage.Header ?? doc.HeaderSource, doc.HeaderHeight, replace);
                 builder.Append(PageBreak);
                 BuildHeaderFooter(builder, c.RenderPage.Footer ?? doc.FooterSource, doc.FooterHeight, replace);
-                builder.Append(PageBreak);
+                if (c != counts.Last())
+                {
+                    builder.Append(PageBreak);
+                }
             }
             builder.Append(CloseHtml);
             return builder.ToString();
