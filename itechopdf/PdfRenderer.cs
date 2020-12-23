@@ -281,7 +281,9 @@ namespace ItechoPdf
                     
                     XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
 
-                    if (hf.PageCount != counters.Count() * 2)
+                    // HF can be 1 page more than pages because of page breaks or of manual page breaking inside headers or footers
+                    // But should never be less.
+                    if (hf.PageCount < counters.Count() * 2)
                     {
                         throw new Exception("Header and footer segments does not match number of pages.");
                     }
