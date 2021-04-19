@@ -90,7 +90,7 @@ namespace ItechoPdf
             return builder.ToString();
         }
 
-        private void BuildHeaderFooter(StringBuilder builder, PdfSource source, int height, List<VariableReplace> vars)
+        private void BuildHeaderFooter(StringBuilder builder, PdfSource source, double height, List<VariableReplace> vars)
         {
             builder.Append(String.Format(HeaderFootStart, height));
             var html = ResolveSource(source);

@@ -10,9 +10,9 @@ namespace ItechoPdf
         public PdfSettings Settings { get; private set; } = new PdfSettings();
         public List<PdfResource> Resources { get; } = new List<PdfResource>();
 
-        public int HeaderHeight { get; private set; } = 0;
+        public double HeaderHeight { get; private set; } = 0;
         public PdfSourceFile HeaderSource { get; private set; }
-        public int FooterHeight { get; private set; } = 0;
+        public double FooterHeight { get; private set; } = 0;
         public PdfSourceFile FooterSource { get; private set; }
 
         public string BaseUrl { get; private set; }
@@ -56,13 +56,13 @@ namespace ItechoPdf
             settings?.Invoke(Settings);
         }
 
-        public void SetFooter(int height, PdfSourceFile source)
+        public void SetFooter(double height, PdfSourceFile source)
         {
             FooterHeight = height;
             FooterSource = source;
         }
 
-        public void SetHeader(int height, PdfSourceFile source)
+        public void SetHeader(double height, PdfSourceFile source)
         {
             HeaderHeight = height;
             HeaderSource = source;
