@@ -54,7 +54,7 @@ namespace ItechoPdf
         const string PageBreak = "<div style=\"page-break-after: always;\"></div>";
         const string CloseHtml = "</body></html>";
         const string StartHtml = "<!DOCTYPE html><html><head><base href=\"file://{0}\"/>{1}</head><body>";
-        const string HeaderFootStart = "<div style=\"overflow: hidden; height: {0}mm\">";
+        const string HeaderFootStart = "<div style=\"overflow: hidden; margin: 0; height:{0}mm; page-break-inside: avoid;\">";
         const string HeaderFootClose = "</div>";
         const string StyleLinkHtml = "<link rel=\"stylesheet\" href=\"{0}\"/>";
         const string StyleHtml = "<style>{0}</style>";
@@ -259,8 +259,8 @@ namespace ItechoPdf
 
                 if (html != null)
                 {                    
-                    // add 10mm extra to fill rounding height issues caused by wkhtmlopdf
-                    var height = Math.Max(doc.HeaderHeight, doc.FooterHeight) + 10;
+                    // add 1mm extra to fill rounding height issues caused by wkhtmlopdf
+                    var height = Math.Max(doc.HeaderHeight, doc.FooterHeight) + 1;
                     // Keep the same settings as the document except the height and y - margins
                     var settings = ConvertToCoreSettings(doc);
                     settings.Orientation = Orientation.Portrait;
