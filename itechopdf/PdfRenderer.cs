@@ -259,7 +259,8 @@ namespace ItechoPdf
 
                 if (html != null)
                 {                    
-                    var height = Math.Max(doc.HeaderHeight, doc.FooterHeight);
+                    // add 10mm extra to fill rounding height issues caused by wkhtmlopdf
+                    var height = Math.Max(doc.HeaderHeight, doc.FooterHeight) + 10;
                     // Keep the same settings as the document except the height and y - margins
                     var settings = ConvertToCoreSettings(doc);
                     settings.Orientation = Orientation.Portrait;
