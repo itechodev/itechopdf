@@ -9,14 +9,14 @@ using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Annotations;
 using PdfSharp.Pdf.IO;
+using static System.String;
 
 namespace ItechoPdf
 {
-    public partial class PdfRenderer
+    public class PdfRenderer
     {
-        private List<PdfDocument> _documents { get; set; } = new List<PdfDocument>();
-        private List<string> _tempFiles = new List<string>();
-        public PdfSettings Settings { get; set; } = new PdfSettings();
+        private List<PdfDocument> Documents { get; } = new List<PdfDocument>();
+        private PdfSettings Settings { get; } = new PdfSettings();
 
         public PdfRenderer(Action<PdfSettings> config = null)
         {
@@ -29,7 +29,7 @@ namespace ItechoPdf
             var settings = new PdfSettings(Settings);
             settingsAction?.Invoke(settings);
             var doc = new PdfDocument(baseUrl, settings);
-            _documents.Add(doc);
+            Documents.Add(doc);
             return doc;
         }
 
@@ -40,37 +40,45 @@ namespace ItechoPdf
 
         private string ResolveSource(PdfSource source)
         {
-            if (source is PdfSourceHtml html)
+            switch (source)
             {
-                return html.Html;
+                case PdfSourceHtml html:
+                    return html.Html;
+                case PdfSourceFile file:
+                    return File.ReadAllText(file.Path);
+                default:
+                    return null;
             }
-            else if (source is PdfSourceFile file)
-            {
-                return File.ReadAllText(file.Path);
-            }
-            return null;
         }
 
-        const string PageBreak = "<div style=\"page-break-after: always;\"></div>";
-        const string CloseHtml = "</body></html>";
-        const string StartHtml = "<!DOCTYPE html><html><head><base href=\"file://{0}\"/>{1}</head><body>";
-        const string HeaderFootStart = "<div style=\"overflow: hidden; margin: 0; height:{0}mm; page-break-inside: avoid;\">";
-        const string HeaderFootClose = "</div>";
-        const string StyleLinkHtml = "<link rel=\"stylesheet\" href=\"{0}\"/>";
-        const string StyleHtml = "<style>{0}</style>";
-        const string ScriptLinkHtml = "<script type=\"text/javascript\" language=\"javascript\" src=\"{0}\"></script>";
-        const string ScriptHtml = "<script type=\"text/javascript\" language=\"javascript\">{0}</script>";
-        const string SplitDocumentUri = "itechopdf://splitdocument";
-        const string AnchorHtml = "<a href=\"{0}\">{1}</a>";
-        const string TableOverflowHeaderStyle = "thead { display: table-header-group; } tfoot { display: table-row-group; } tr { page-break-inside: avoid; }";
+        private const string PageBreak = "<div style=\"page-break-after: always;\"></div>";
+        private const string CloseHtml = "</body></html>";
+        private const string StartHtml = "<!DOCTYPE html><html><head><base href=\"file://{0}\"/>{1}</head><body>";
+
+        private const string HeaderFootStart =
+            "<div style=\"overflow: hidden; margin: 0; height:{0}mm; page-break-inside: avoid;\">";
+
+        private const string HeaderFootClose = "</div>";
+        private const string StyleLinkHtml = "<link rel=\"stylesheet\" href=\"{0}\"/>";
+        private const string StyleHtml = "<style>{0}</style>";
+        private const string ScriptLinkHtml = "<script type=\"text/javascript\" language=\"javascript\" src=\"{0}\"></script>";
+        private const string ScriptHtml = "<script type=\"text/javascript\" language=\"javascript\">{0}</script>";
+        private const string SplitDocumentUri = "itechopdf://splitdocument";
+        private const string AnchorHtml = "<a href=\"{0}\">{1}</a>";
+
+        private const string TableOverflowHeaderStyle =
+            "thead { display: table-header-group; } tfoot { display: table-row-group; } tr { page-break-inside: avoid; }";
 
 
         private string BuildHtml(PdfDocument doc)
         {
             var builder = new StringBuilder();
-            var res = new List<PdfResource>(doc.Resources);
-            res.Add(new PdfResource(PdfSource.FromHtml(TableOverflowHeaderStyle), ResourcePlacement.Head, ResourceType.StyleSheet));
-            builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(res)));
+            var res = new List<PdfResource>(doc.Resources)
+            {
+                new PdfResource(PdfSource.FromHtml(TableOverflowHeaderStyle), ResourcePlacement.Head,
+                    ResourceType.StyleSheet)
+            };
+            builder.Append(Format(StartHtml, doc.BaseUrl, RenderResources(res)));
 
             foreach (var page in doc.Pages)
             {
@@ -80,25 +88,29 @@ namespace ItechoPdf
                     // Split document pages by empty page to identify split
                     // Pages may overflow onto next page
                     builder.Append(PageBreak);
-                    builder.Append(String.Format(AnchorHtml, SplitDocumentUri, '-'));
+                    builder.Append(Format(AnchorHtml, SplitDocumentUri, '-'));
                     builder.Append(PageBreak);
                 }
+
                 var html = ResolveSource(page.Source);
                 builder.Append(html);
             }
+
             builder.Append(CloseHtml);
             return builder.ToString();
         }
 
-        private void BuildHeaderFooter(StringBuilder builder, PdfSource source, double height, List<VariableReplace> vars)
+        private void BuildHeaderFooter(StringBuilder builder, PdfSource source, double height,
+            IReadOnlyCollection<VariableReplace> vars)
         {
-            builder.Append(String.Format(HeaderFootStart, height));
+            builder.Append(Format(HeaderFootStart, height));
             var html = ResolveSource(source);
-            if (!String.IsNullOrEmpty(html))
+            if (!IsNullOrEmpty(html))
             {
                 html = ReplaceHtmlWithVariables(html, vars);
                 builder.Append(html);
             }
+
             builder.Append(HeaderFootClose);
         }
 
@@ -110,14 +122,16 @@ namespace ItechoPdf
             }
 
             var builder = new StringBuilder();
-            builder.Append(String.Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
+            builder.Append(Format(StartHtml, doc.BaseUrl, RenderResources(doc.Resources)));
 
-            foreach (var c in counts)
+            var list = counts.ToList();
+            foreach (var c in list)
             {
-                if (c != counts.First())
+                if (c != list.First())
                 {
                     builder.Append(PageBreak);
                 }
+
                 // all variables is zero based
                 var replace = new List<VariableReplace>
                 {
@@ -138,11 +152,12 @@ namespace ItechoPdf
                 BuildHeaderFooter(builder, c.RenderPage.Header ?? doc.HeaderSource, doc.HeaderHeight, replace);
                 builder.Append(PageBreak);
                 BuildHeaderFooter(builder, c.RenderPage.Footer ?? doc.FooterSource, doc.FooterHeight, replace);
-                if (c != counts.Last())
+                if (c != list.Last())
                 {
                     builder.Append(PageBreak);
                 }
             }
+
             builder.Append(CloseHtml);
             return builder.ToString();
         }
@@ -152,7 +167,7 @@ namespace ItechoPdf
         //   Elements[Keys.A] = new PdfLiteral("<</S/URI/URI{0}>>", //PdfEncoders.EncodeAsLiteral(this.url));
         //     PdfEncoders.ToStringLiteral(this.url, PdfStringEncoding.WinAnsiEncoding, writer.SecurityHandler));
         //   break;
-        private string GetUrlLink(PdfAnnotation ano)
+        private static string GetUrlLink(PdfAnnotation ano)
         {
             var d = ano.Elements["/A"];
             if (d is PdfDictionary dic)
@@ -163,6 +178,7 @@ namespace ItechoPdf
                     return str.Value;
                 }
             }
+
             return null;
         }
 
@@ -177,7 +193,7 @@ namespace ItechoPdf
             int pageCount = 0;
             int documentCount = 0;
 
-            foreach (var doc in _documents)
+            foreach (var doc in Documents)
             {
                 // Concatenate all pages into one HTML document for performance
                 // Try to minimize calls to native WkHtmlToPdf because it's slowish.
@@ -189,7 +205,7 @@ namespace ItechoPdf
                 // Now read / parse the generate PDF to determine page counts
                 var pdf = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
                 var overflowCount = 0;
-                int renderPageIndex = 0;
+                var renderPageIndex = 0;
                 for (var p = 0; p < pdf.PageCount; p++)
                 {
                     var page = pdf.Pages[p];
@@ -206,6 +222,7 @@ namespace ItechoPdf
                         renderPageIndex++;
                         continue;
                     }
+
                     var newPage = finalPdf.AddPage(page);
 
                     pageCounters.Add(new PageCount
@@ -225,6 +242,7 @@ namespace ItechoPdf
 
                 documentCount++;
             }
+
             // Update document and page count
             foreach (var c in pageCounters)
             {
@@ -233,9 +251,10 @@ namespace ItechoPdf
             }
 
             return pageCounters;
-        } 
-        
-        public byte[] RenderToBytes(string title = null, string author = null, string subject = null, string keywords = null)
+        }
+
+        public byte[] RenderToBytes(string title = null, string author = null, string subject = null,
+            string keywords = null)
         {
             // 1. For all PDF documents render pages with no header or footer, but with the correct header and footer heights.
             // The final output document
@@ -245,65 +264,68 @@ namespace ItechoPdf
             finalPdf.Info.Subject = subject;
             finalPdf.Info.Keywords = keywords;
             finalPdf.Info.Creator = "ItechoPDF";
-            
+
             var pageCounters = DocumentToPdf(finalPdf);
 
             // Now generate headers and footers
-            foreach (var doc in _documents)
+            foreach (var doc in Documents)
             {
                 // get all pages of the generated document
-                var counters = pageCounters.Where(c => c.RenderDocument == doc);
-                // and genereate a header / footer pair for each page
+                var counters = pageCounters
+                    .Where(c => c.RenderDocument == doc)
+                    .ToList();
+                
+                // and generate a header / footer pair for each page
                 // one page can be rendered as multiple pages
                 var html = BuildHeaderFooter(doc, counters);
 
-                if (html != null)
-                {                    
-                    // add 1mm extra to fill rounding height issues caused by wkhtmlopdf
-                    var height = Math.Max(doc.HeaderHeight, doc.FooterHeight) + 1;
-                    // Keep the same settings as the document except the height and y - margins
-                    var settings = ConvertToCoreSettings(doc);
-                    settings.Orientation = Orientation.Portrait;
-                    if (doc.Settings.Orientation == Orientation.Landscape)
-                    {
-                        settings.PaperHeight = height + "mm";
-                        settings.PaperWidth = doc.Settings.PaperSize.Height + "mm";
-                    }
-                    else 
-                    {
-                        settings.PaperHeight = height + "mm";
-                        settings.PaperWidth = doc.Settings.PaperSize.Width + "mm";
-                    }
-                    
-                    settings.MarginBottom = "0mm";
-                    settings.MarginTop = "0mm";
-                    
-                    var bytes = HtmlToPdf(html, settings);
-                    
-                    XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
+                if (html == null) continue;
+                // add 1mm extra to fill rounding height issues caused by WkhtmlToPdf
+                var height = Math.Max(doc.HeaderHeight, doc.FooterHeight) + 1;
+                // Keep the same settings as the document except the height and y - margins
+                var settings = ConvertToCoreSettings(doc);
+                settings.Orientation = Orientation.Portrait;
+                if (doc.Settings.Orientation == Orientation.Landscape)
+                {
+                    settings.PaperHeight = height + "mm";
+                    settings.PaperWidth = doc.Settings.PaperSize.Height + "mm";
+                }
+                else
+                {
+                    settings.PaperHeight = height + "mm";
+                    settings.PaperWidth = doc.Settings.PaperSize.Width + "mm";
+                }
 
-                    // HF can be 1 page more than pages because of page breaks or of manual page breaking inside headers or footers
-                    // But should never be less.
-                    if (hf.PageCount < counters.Count() * 2)
-                    {
-                        throw new Exception("Header and footer segments does not match number of pages.");
-                    }
-                    int pageCount = 0;
-                    foreach (var c in counters)
-                    {
-                        XGraphics gfx = XGraphics.FromPdfPage(c.PdfPage);
-                        // 1 inch = 72 points, 1 inch = 25.4 mm, 1 point = 0.352777778 mm
-                        // points per millimeter
-                        var ppm = c.PdfPage.Height.Point / c.PdfPage.Height.Millimeter; // or page.Width.Point / page.Width.Millimeter
-                        var mt = doc.Settings.Margins.Top ?? 0;
-                        var mb = doc.Settings.Margins.Bottom ?? 0;
+                settings.MarginBottom = "0mm";
+                settings.MarginTop = "0mm";
 
-                        hf.PageIndex = pageCount++;
-                        gfx.DrawImage(hf, 0, mt * ppm);
+                var bytes = HtmlToPdf(html, settings);
 
-                        hf.PageIndex = pageCount++;
-                        gfx.DrawImage(hf, 0, c.PdfPage.Height - ((doc.FooterHeight - mb) * ppm));
-                    }
+                XPdfForm hf = XPdfForm.FromStream(new MemoryStream(bytes));
+
+                // HF can be 1 page more than pages because of page breaks or of manual page breaking inside headers or footers
+                // But should never be less.
+                if (hf.PageCount < counters.Count() * 2)
+                {
+                    throw new Exception("Header and footer segments does not match number of pages.");
+                }
+
+                int pageCount = 0;
+                foreach (var c in counters)
+                {
+                    XGraphics gfx = XGraphics.FromPdfPage(c.PdfPage);
+                    // 1 inch = 72 points, 1 inch = 25.4 mm, 1 point = 0.352777778 mm
+                    // points per millimeter
+                    var ppm = c.PdfPage.Height.Point /
+                              c.PdfPage.Height.Millimeter; // or page.Width.Point / page.Width.Millimeter
+                    var mt = doc.Settings.Margins.Top ?? 0;
+                    var mb = doc.Settings.Margins.Bottom ?? 0;
+
+                    hf.PageIndex = pageCount++;
+                    gfx.DrawImage(hf, 0, mt * ppm);
+
+                    hf.PageIndex = pageCount++;
+                    gfx.DrawImage(hf, 0, c.PdfPage.Height - ((doc.FooterHeight - mb) * ppm));
                 }
             }
 
@@ -314,38 +336,17 @@ namespace ItechoPdf
             }
         }
 
-        public void RenderToFile(string output)
+        private static byte[] HtmlToPdf(string html, WkHtmlToPdfSettings settings)
         {
-            System.IO.File.WriteAllBytes(output, RenderToBytes());
+            return WkHtmlToPdf.HtmlToPdf(Encoding.UTF8.GetBytes(html), settings);
         }
 
-        private byte[] HtmlToPdf(string html, WkHtmlToPdfSettings settings)
-        {
-            try
-            {
-                return WkHtmlToPdf.HtmlToPdf(System.Text.Encoding.UTF8.GetBytes(html), settings);
-            }
-            finally
-            {
-                CleanUp();
-            }
-        }
-
-        private void CleanUp()
-        {
-            // Delete all temporiry files created
-            foreach (var tempFile in _tempFiles)
-            {
-                System.IO.File.Delete(tempFile);
-            }
-        }
-
-        private WkHtmlToPdfSettings ConvertToCoreSettings(PdfDocument document)
+        private static WkHtmlToPdfSettings ConvertToCoreSettings(PdfDocument document)
         {
             var settings = document.Settings;
 
             // 25mm header + 10mm spacing + 1mm margin top
-            // Set margins. Header and footers may affect marings
+            // Set margins. Header and footers may affect margins
             double? marginTop = settings.Margins.Top;
             double? marginBottom = settings.Margins.Bottom;
 
@@ -409,7 +410,7 @@ namespace ItechoPdf
             };
         }
 
-        private string ReplaceHtmlWithVariables(string html, List<VariableReplace> vars)
+        private static string ReplaceHtmlWithVariables(string html, IReadOnlyCollection<VariableReplace> vars)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
@@ -419,21 +420,25 @@ namespace ItechoPdf
             {
                 return html;
             }
+
             foreach (var n in varNodes)
             {
                 var name = n.GetAttributeValue("name", null);
-                if (String.IsNullOrEmpty(name))
+                if (IsNullOrEmpty(name))
                 {
                     continue;
                 }
+
                 var var = vars.FirstOrDefault(v => v.Name == name);
                 if (var == null)
                 {
                     continue;
                 }
+
                 var replace = doc.CreateTextNode(var.Replace);
                 n.ParentNode.ReplaceChild(replace, n);
             }
+
             using (var text = new StringWriter())
             {
                 doc.Save(text);
@@ -441,60 +446,49 @@ namespace ItechoPdf
             }
         }
 
-        private string CreateTempFile()
-        {
-            // For some reason it should end in html
-            var path = Path.GetTempFileName() + ".html";
-            // Keep reference to file can later delete it
-            _tempFiles.Add(path);
-            return path;
-        }
-
-        private string RenderResources(List<PdfResource> resources)
+        
+        private static string RenderResources(IReadOnlyCollection<PdfResource> resources)
         {
             if (resources == null)
             {
                 return null;
             }
-            StringBuilder content = new StringBuilder();
+
+            var content = new StringBuilder();
             foreach (var res in resources)
             {
-                if (res.Type == ResourceType.Javascript)
-                {
-                    content.Append(CreateJavascriptResource(res.Content));
-                }
-                else
-                {
-                    content.Append(CreateCSSResource(res.Content));
-                }
+                content.Append(res.Type == ResourceType.Javascript
+                    ? CreateJavascriptResource(res.Content)
+                    : CreateCssResource(res.Content));
             }
+
             return content.ToString();
         }
 
-        private string CreateCSSResource(PdfSource source)
+        private static string CreateCssResource(PdfSource source)
         {
-            if (source is PdfSourceFile file)
+            switch (source)
             {
-                return String.Format(StyleLinkHtml, file.Path);
+                case PdfSourceFile file:
+                    return Format(StyleLinkHtml, file.Path);
+                case PdfSourceHtml html:
+                    return Format(StyleHtml, html.Html);
+                default:
+                    return null;
             }
-            if (source is PdfSourceHtml html)
-            {
-                return String.Format(StyleHtml, html.Html);
-            }
-            return null;
         }
 
-        private string CreateJavascriptResource(PdfSource source)
+        private static string CreateJavascriptResource(PdfSource source)
         {
-            if (source is PdfSourceFile file)
+            switch (source)
             {
-                return String.Format(ScriptLinkHtml, file.Path);
+                case PdfSourceFile file:
+                    return Format(ScriptLinkHtml, file.Path);
+                case PdfSourceHtml content:
+                    return Format(ScriptHtml, content.Html);
+                default:
+                    return null;
             }
-            if (source is PdfSourceHtml content)
-            {
-                return String.Format(ScriptHtml, content.Html);
-            }
-            return null;
         }
     }
 }
