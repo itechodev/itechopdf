@@ -362,7 +362,17 @@ namespace ItechoPdf
             
             if (!settings.EnableJavascript && (settings.JSDelay.HasValue || !IsNullOrEmpty(settings.WindowStatus)))
             {
-                throw new Exception("Javascript cannot be disable if JSDelay or windowStatus is set.");
+                throw new Exception("Javascript cannot be disable if JSDelay or windowStatus is set. Please set EnabledJavascript to true.");
+            }
+            
+            if (!IsNullOrEmpty(settings.WindowStatus))
+            {
+                if (settings.JSDelay.HasValue)
+                    throw new Exception("JSDelay cannot be used in conjunction with WindowsStatus");
+                
+                // Set jsdelay to something else than 0
+                // 0 will ignore all and return page immediately 
+                settings.JSDelay = 1;
             }
 
             return new WkHtmlToPdfSettings
