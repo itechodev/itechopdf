@@ -195,7 +195,8 @@ namespace ItechoPdf.Core
             // Load settings
             ObjectSetting(objectSettings, "load.username", settings.Username);
             ObjectSetting(objectSettings, "load.password", settings.Password);
-            ObjectSetting(objectSettings, "load.jsdelay", settings.JSDelay ?? 0);
+            // Must set jsdelay something other than 0 when using window status
+            ObjectSetting(objectSettings, "load.jsdelay", !string.IsNullOrEmpty(settings.WindowStatus) ? 1 : settings.JSDelay ?? 0);
             ObjectSetting(objectSettings, "load.windowStatus", settings.WindowStatus);
             ObjectSetting(objectSettings, "load.blockLocalFileAccess", settings.BlockLocalFileAccess);
             ObjectSetting(objectSettings, "load.stopSlowScript", settings.StopSlowScript);

@@ -370,9 +370,6 @@ namespace ItechoPdf
                 if (settings.JSDelay.HasValue)
                     throw new Exception("JSDelay cannot be used in conjunction with WindowsStatus");
                 
-                // Set jsdelay to something else than 0
-                // 0 will ignore all and return page immediately 
-                settings.JSDelay = 1;
             }
 
             return new WkHtmlToPdfSettings
