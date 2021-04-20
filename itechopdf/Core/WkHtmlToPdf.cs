@@ -7,51 +7,50 @@ using System.Threading.Tasks;
 
 namespace ItechoPdf.Core
 {
-
     // Elegant wrapper around C bindings to WkHtmlToPdf
     internal static class WkHtmlToPdf
     {
         // Cannot use simple locking or mutexes. 
         // wkhtmltopdf doesn't support multithreading. You cannot invoke the library from different threads
-        private static Thread conversionThread;
+        private static Thread _conversionThread;
 
         // Queue all the tasks for conversions
 
-        private static BlockingCollection<Task> conversions = new BlockingCollection<Task>();
+        private static readonly BlockingCollection<Task> Conversions = new BlockingCollection<Task>();
 
-        private static bool kill = false;
+        private static bool _kill;
 
-        private static readonly object startLock = new object();
+        private static readonly object StartLock = new object();
 
         private static void StartThread()
         {
             // Start one thread to do all the convesions
-            lock (startLock)
+            lock (StartLock)
             {
-                if (conversionThread == null)
+                if (_conversionThread == null)
                 {
-                    conversionThread = new Thread(Run)
+                    _conversionThread = new Thread(Run)
                     {
                         IsBackground = true,
                         Name = "wkhtmltopdf worker thread"
                     };
 
-                    kill = false;
-                    conversionThread.Start();
+                    _kill = false;
+                    _conversionThread.Start();
                 }
             }
         }
 
-        public static T SpawnTask<T>(Func<T> callback)
+        private static T SpawnTask<T>(Func<T> callback)
         {
             StartThread();
 
-            Task<T> task = new Task<T>(callback);
+            var task = new Task<T>(callback);
 
             lock (task)
             {
                 //add task to blocking collection
-                conversions.Add(task);
+                Conversions.Add(task);
 
                 //wait for task to be processed by conversion thread 
                 Monitor.Wait(task);
@@ -66,19 +65,20 @@ namespace ItechoPdf.Core
             return task.Result;
         }
 
-        
+
         private static void StopThread()
         {
-            lock (startLock)
+            lock (StartLock)
             {
-                if (conversionThread != null)
+                if (_conversionThread != null)
                 {
-                    kill = true;
+                    _kill = true;
 
-                    while (conversionThread.ThreadState == ThreadState.Stopped)
-                    { }
+                    while (_conversionThread.ThreadState == ThreadState.Stopped)
+                    {
+                    }
 
-                    conversionThread = null;
+                    _conversionThread = null;
                 }
             }
         }
@@ -90,10 +90,10 @@ namespace ItechoPdf.Core
                 throw new Exception("Could not initialize WkHtmlToPDF library");
             }
 
-            while (!kill)
+            while (!_kill)
             {
                 //get next conversion taks from blocking collection
-                Task task = conversions.Take();
+                Task task = Conversions.Take();
 
                 lock (task)
                 {
@@ -119,7 +119,7 @@ namespace ItechoPdf.Core
 
         public static byte[] HtmlToPdf(byte[] bytes, WkHtmlToPdfSettings settings)
         {
-            return SpawnTask<byte[]>(() => _HtmlToPdf(bytes, settings));
+            return SpawnTask(() => _HtmlToPdf(bytes, settings));
         }
 
         private static byte[] _HtmlToPdf(byte[] bytes, WkHtmlToPdfSettings settings)
@@ -132,9 +132,8 @@ namespace ItechoPdf.Core
 
             var converter = WkHtmlToXBinding.wkhtmltopdf_create_converter(globalSettings);
 
-            WkHtmlToXBinding.wkhtmltopdf_set_error_callback(converter, (IntPtr cc, string str) => {
-                Console.WriteLine("Error: " + str);
-            });
+            WkHtmlToXBinding.wkhtmltopdf_set_error_callback(converter,
+                (cc, str) => { Console.WriteLine("Error: " + str); });
 
             WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, bytes);
             // WkHtmlToXBinding.wkhtmltopdf_add_object(converter, objectSettings, new byte[] { .. });
@@ -195,7 +194,7 @@ namespace ItechoPdf.Core
             // Load settings
             ObjectSetting(objectSettings, "load.username", settings.Username);
             ObjectSetting(objectSettings, "load.password", settings.Password);
-            ObjectSetting(objectSettings, "load.jsdelay",  settings.JSDelay ?? 0);
+            ObjectSetting(objectSettings, "load.jsdelay", settings.JSDelay ?? 0);
             ObjectSetting(objectSettings, "load.blockLocalFileAccess", settings.BlockLocalFileAccess);
             ObjectSetting(objectSettings, "load.stopSlowScript", settings.StopSlowScript);
             ObjectSetting(objectSettings, "load.debugJavascript", settings.DebugJavascript);
@@ -229,21 +228,23 @@ namespace ItechoPdf.Core
             {
                 return;
             }
+
             ObjectSetting(objectSettings, prefix + ".line", settings.Line);
             ObjectSetting(objectSettings, prefix + ".spacing", settings.Spacing);
             ObjectSetting(objectSettings, prefix + ".fontSize", settings.FontSize);
             ObjectSetting(objectSettings, prefix + ".fontName", settings.FontName);
             ObjectSetting(objectSettings, prefix + ".left", settings.Left);
             ObjectSetting(objectSettings, prefix + ".center", settings.Center);
-            ObjectSetting(objectSettings, prefix + ".htmlUrl", settings.Url);            
+            ObjectSetting(objectSettings, prefix + ".htmlUrl", settings.Url);
         }
 
         private static void GlobalSetting(IntPtr settings, string name, string value)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 return;
             }
+
             WkHtmlToXBinding.wkhtmltopdf_set_global_setting(settings, name, value);
         }
 
@@ -265,16 +266,16 @@ namespace ItechoPdf.Core
 
         private static void ObjectSetting(IntPtr settings, string name, string value)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 return;
             }
+
             WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value);
         }
 
         private static void ObjectSetting(IntPtr settings, string name, int? value)
         {
-
             if (value.HasValue)
             {
                 WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value.ToString());
@@ -293,15 +294,14 @@ namespace ItechoPdf.Core
         {
             if (value.HasValue)
             {
-                WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name, value.Value.ToString("0.##", CultureInfo.InvariantCulture));
+                WkHtmlToXBinding.wkhtmltopdf_set_object_setting(settings, name,
+                    value.Value.ToString("0.##", CultureInfo.InvariantCulture));
             }
         }
 
         private static byte[] GetConversionResult(IntPtr converter)
         {
-            IntPtr resultPointer;
-
-            int length = WkHtmlToXBinding.wkhtmltopdf_get_output(converter, out resultPointer);
+            var length = WkHtmlToXBinding.wkhtmltopdf_get_output(converter, out var resultPointer);
             var result = new byte[length];
             Marshal.Copy(resultPointer, result, 0, length);
 
@@ -325,8 +325,8 @@ namespace ItechoPdf.Core
             {
                 walk = buffer.Length;
             }
+
             return System.Text.Encoding.UTF8.GetString(buffer, 0, walk);
         }
-
     }
 }
