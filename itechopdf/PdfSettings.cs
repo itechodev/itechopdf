@@ -24,6 +24,7 @@ namespace ItechoPdf
             Username = settings.Username;
             Password = settings.Password;
             JSDelay = settings.JSDelay;
+            WindowStatus = settings.WindowStatus;
             ZoomFactor = settings.ZoomFactor;
             BlockLocalFileAccess = settings.BlockLocalFileAccess;
             StopSlowScript = settings.StopSlowScript;

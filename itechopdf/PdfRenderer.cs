@@ -284,6 +284,10 @@ namespace ItechoPdf
                 var height = Math.Max(doc.HeaderHeight, doc.FooterHeight) + 1;
                 // Keep the same settings as the document except the height and y - margins
                 var settings = ConvertToCoreSettings(doc);
+                // JSDelay and windows status in headers and footer not supported yet.
+                settings.JSDelay = 0;
+                settings.WindowStatus = null;
+                
                 settings.Orientation = Orientation.Portrait;
                 if (doc.Settings.Orientation == Orientation.Landscape)
                 {
