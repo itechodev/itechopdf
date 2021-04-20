@@ -74,6 +74,11 @@ namespace ItechoPdf
         public int? JSDelay { get; set; }
 
         /// <summary>
+        ///  Wait until window.status is equal to this string before rendering page
+        /// </summary>
+        public string WindowStatus { get; set; }
+        
+        /// <summary>
         /// How much should we zoom in on the content. Default = 1.0
         /// </summary>
         public double? ZoomFactor { get; set; }
@@ -260,6 +265,6 @@ namespace ItechoPdf
         public PaperSize PaperSize { get; set; } = PaperKind.A4;
 
         public MarginSettings Margins { get; set; } = new MarginSettings();
-
+        
     }
 }

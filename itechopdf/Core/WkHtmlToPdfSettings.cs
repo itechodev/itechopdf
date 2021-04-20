@@ -210,6 +210,10 @@ namespace ItechoPdf.Core
         /// The mount of time in milliseconds to wait after a page has done loading until it is actually printed. E.g. "1200". We will wait this amount of time or until, javascript calls window.print(). Default = 200
         /// </summary>
         public int? JSDelay { get; set; }
+        /// <summary>
+        /// Wait until window.status is equal to this string before rendering page
+        /// </summary>
+        public string WindowStatus { get; set; }
 
         /// <summary>
         /// How much should we zoom in on the content. Default = 1.0

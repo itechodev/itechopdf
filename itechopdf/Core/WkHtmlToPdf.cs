@@ -127,6 +127,7 @@ namespace ItechoPdf.Core
             var globalSettings = WkHtmlToXBinding.wkhtmltopdf_create_global_settings();
             var objectSettings = WkHtmlToXBinding.wkhtmltopdf_create_object_settings();
 
+            
             // Set global and object settings
             FillSettings(globalSettings, objectSettings, settings);
 
@@ -195,6 +196,7 @@ namespace ItechoPdf.Core
             ObjectSetting(objectSettings, "load.username", settings.Username);
             ObjectSetting(objectSettings, "load.password", settings.Password);
             ObjectSetting(objectSettings, "load.jsdelay", settings.JSDelay ?? 0);
+            ObjectSetting(objectSettings, "load.windowStatus", settings.WindowStatus);
             ObjectSetting(objectSettings, "load.blockLocalFileAccess", settings.BlockLocalFileAccess);
             ObjectSetting(objectSettings, "load.stopSlowScript", settings.StopSlowScript);
             ObjectSetting(objectSettings, "load.debugJavascript", settings.DebugJavascript);

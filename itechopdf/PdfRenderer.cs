@@ -359,12 +359,18 @@ namespace ItechoPdf
             {
                 marginBottom = marginBottom.Value + document.FooterHeight;
             }
+            
+            if (!settings.EnableJavascript && (settings.JSDelay.HasValue || !IsNullOrEmpty(settings.WindowStatus)))
+            {
+                throw new Exception("Javascript cannot be disable if JSDelay or windowStatus is set.");
+            }
 
             return new WkHtmlToPdfSettings
             {
                 BlockLocalFileAccess = settings.BlockLocalFileAccess,
                 DebugJavascript = settings.DebugJavascript,
                 JSDelay = settings.JSDelay,
+                WindowStatus = settings.WindowStatus,
                 LoadErrorHandling = settings.LoadErrorHandling,
                 Password = settings.Password,
                 Proxy = settings.Proxy,
