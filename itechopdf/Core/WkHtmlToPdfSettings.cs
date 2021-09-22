@@ -1,3 +1,5 @@
+using System;
+
 namespace ItechoPdf.Core
 {
     public enum ContentErrorHandling
@@ -245,5 +247,7 @@ namespace ItechoPdf.Core
         /// </summary>
         public string Proxy { get; set; }
 
+        public Action<string> WarningCallback { get; set; }
+        public Action<string> ErrorCallback { get; set; }
     }
 }

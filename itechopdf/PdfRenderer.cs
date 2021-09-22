@@ -373,11 +373,13 @@ namespace ItechoPdf
             {
                 if (settings.JSDelay.HasValue)
                     throw new Exception("JSDelay cannot be used in conjunction with WindowsStatus");
-                
             }
 
             return new WkHtmlToPdfSettings
             {
+                WarningCallback = settings.WarningCallback,
+                ErrorCallback = settings.WarningCallback,
+                
                 BlockLocalFileAccess = settings.BlockLocalFileAccess,
                 DebugJavascript = settings.DebugJavascript,
                 JSDelay = settings.JSDelay,

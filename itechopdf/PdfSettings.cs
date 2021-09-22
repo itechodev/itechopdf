@@ -1,3 +1,4 @@
+using System;
 using ItechoPdf.Core;
 
 namespace ItechoPdf
@@ -59,6 +60,9 @@ namespace ItechoPdf
             Margins = new MarginSettings(settings.Margins);
         }
 
+        public Action<string> WarningCallback { get; set;  }
+        public Action<string> ErrorCallback { get; set;  }
+        
         /// <summary>
         /// The user name to use when loging into a website. Default = ""
         /// </summary>
